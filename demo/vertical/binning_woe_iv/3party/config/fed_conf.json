@@ -1,0 +1,16 @@
+{
+    "fed_info": {
+       "scheduler": {
+            "node-1": "localhost:17000"
+        },
+        "trainer": {
+            "node-1": "localhost:17001",
+            "node-2": "localhost:17002",
+            "node-3": "localhost:17003"
+        }
+    },
+    "redis_server": "localhost:6379",
+    "grpc": {
+        "use_tls": false
+    } 
+}

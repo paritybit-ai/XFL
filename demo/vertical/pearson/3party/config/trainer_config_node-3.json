@@ -1,0 +1,47 @@
+[
+    {
+        "identity": "trainer",
+        "model_info": {
+            "name": "vertical_pearson",
+            "config": {}
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_vertical/3party",
+                    "name": "breast_cancer_wisconsin_vertical_2_train.csv",
+                    "has_label": false,
+                    "has_id": true
+                }
+            ],
+            "pretrain_model": {
+            }
+        },
+        "output": {
+            "model": {
+                "type": "file",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "pearson_2.pkl"
+            }
+        },
+        "train_info": {
+            "device": "cpu",
+            "interaction_params": {
+            },
+            "params": {
+                "column_indexes": -1,
+                "encryption_params": {
+                    "paillier": {
+                        "key_bit_size": 2048,
+                        "precision": 6,
+                        "djn_on": true,
+                        "parallelize_on": true
+                    }
+                },
+                "max_num_cores": 999,
+                "sample_size": 9999
+            }
+        }
+    }
+]

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package commu;
+
+message PostRequest {
+    string key = 1;
+    bytes value = 2;
+  }
+  
+message PostResponse {
+    int32 code = 1;
+}

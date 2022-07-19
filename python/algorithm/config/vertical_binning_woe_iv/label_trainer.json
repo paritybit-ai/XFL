@@ -1,0 +1,90 @@
+{
+        "identity": "label_trainer",
+        "model_info":
+        {
+            "name": "vertical_binning_woe_iv",
+            "config":
+            {}
+        },
+        "input":
+        {
+            "trainset":
+            [
+                {
+                    "type": "csv",
+                    "path": "../dataset/vertical_breast_with_validation",
+                    "name": "breast_vertical_guest_train.csv",
+                    "has_id": true,
+                    "has_label": true,
+                    "missing_values":
+                    {
+                        "has_missing": false,
+                        "format": null,
+                        "strategy": "mean",
+                        "fulfill_value": 0
+                    },
+                    "nan_list": [999, -999]
+                }
+            ],
+            "valset":
+            [
+                 {
+                    "type": "csv",
+                    "path": "../dataset/vertical_breast_with_validation",
+                    "name": "breast_vertical_guest_test.csv",
+                    "has_id": true,
+                    "has_label": true
+                }
+            ]
+        },
+        "output":
+        {
+          "save_model": true,
+         "model":
+            {
+            "type": "file",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "binning_woe_iv_guest.json"
+          },
+            "trainset":
+            {
+                "path": "../checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "vertical_binning_woe_iv_train"
+            },
+           "valset":
+            {
+                "path": "../checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "woe_breast_vertical_guest_test.csv"
+            }
+        },
+        "train_info":
+        {
+            "device": "cpu",
+            "params":
+            {
+                "encryption_params":
+                {
+                    "method": "paillier",
+                    "key_bit_size": 2048,
+                    "precision": 7,
+                    "djn_on": true,
+                    "parallelize_on": true
+                },
+                "binning_params":
+                {
+                    "method": "equalWidth",
+                    "bins": 5
+                },
+                "woe_iv_params":
+                {
+                    "cons_price_idx":
+                    {},
+                    "cons_conf_idx":
+                    {},
+                    "euribor3m":
+                    {}
+                },
+                "pool_num": 4
+            }
+        }
+    }

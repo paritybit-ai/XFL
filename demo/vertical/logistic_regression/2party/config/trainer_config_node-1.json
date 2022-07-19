@@ -1,0 +1,101 @@
+ [
+    {
+        "identity": "label_trainer",
+        "model_info": {
+            "name": "vertical_logistic_regression",
+            "config": {
+                "input_dim": null
+            }
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                    "name": "breast_cancer_wisconsin_vertical_labeled_train.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ],
+            "valset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                    "name": "breast_cancer_wisconsin_vertical_labeled_test.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ],
+            "pretrain_model": {
+            }
+        },
+        "output": {
+            "model": {
+                "type": "file",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "vertical_logistic_regression_labeled.pt"
+            },
+            "metrics": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "header": true
+            },
+            "evaluation": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "header": true
+            }
+        },
+        "train_info": {
+            "device": "cpu",
+            "interaction_params": {
+                "save_frequency": -1,
+                "save_probabilities": true,
+                "write_training_prediction": true,
+                "write_validation_prediction": true,
+                "echo_training_metrics": true
+            },
+            "params": {
+                "global_epoch": 30,
+                "batch_size": 2048,
+                "aggregation_config": {
+                    "encryption": {
+                        "method": "ckks",
+                        "poly_modulus_degree": 8192,
+                        "coeff_mod_bit_sizes": [
+                            60,
+                            40,
+                            40,
+                            60
+                        ],
+                        "global_scale_bit_size": 40
+                    }
+                },
+                "optimizer_config": {
+                    "lr": 0.01,
+                    "p": 2,
+                    "alpha": 1e-4
+                },
+                "lossfunc_config": {
+                    "method": "BCEWithLogitsLoss"
+                },
+                "metric_config": {
+                    "acc": {},
+                    "precision": {},
+                    "recall": {},
+                    "f1_score": {},
+                    "auc": {},
+                    "ks": {}
+                },
+                "early_stopping": {
+                    "key": "acc",
+                    "patience": -1,
+                    "delta": 0
+                },
+                "extra_config": {
+                    "shuffle_seed": 50
+                }
+            }
+        }
+    }
+ ]

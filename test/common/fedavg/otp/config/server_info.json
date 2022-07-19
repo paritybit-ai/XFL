@@ -1,0 +1,33 @@
+// {
+//     "use_tls": true,
+//     "cert": {
+//         "ca.crt": "../../../cert/ca.crt",
+//         "server.crt": "../../../cert/server.crt",
+//         "server.key": "../../../cert/server.key",
+//         "client.crt": "../../../cert/client.crt",
+//         "client.key": "../../../cert/client.key"
+//     },
+//     "scheduler": {
+//         "ip": "localhost",
+//         "host": "scheduler_0",
+//         "port": 55001
+//     },
+//     "node_id": "0",
+//     "trainer": {
+//         "1": {
+//             "ip": "localhost",
+//             "host": "trainer_1",
+//             "port": 56001
+//         },
+//         "2": {
+//             "ip": "localhost",
+//             "host": "trainer_2",
+//             "port": 56002
+//         },
+//         "3": {
+//             "ip": "localhost",
+//             "host": "trainer_2",
+//             "port": 56003
+//         }
+//     }
+// }

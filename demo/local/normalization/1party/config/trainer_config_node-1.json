@@ -1,0 +1,69 @@
+[
+    {
+        "identity": "label_trainer",
+        "model_info": {
+            "name": "local_normalization",
+            "config": {}
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                    "name": "breast_cancer_wisconsin_vertical_labeled_train.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ],
+            "valset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                    "name": "breast_cancer_wisconsin_vertical_labeled_test.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ]
+        },
+        "output": {
+            "model": {
+                "type": "file",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "local_normalizer_labeled.pt"
+            },
+            "trainset": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "normalized_breast_cancer_wisconsin_vertical_labeled_train.csv",
+                "header": true,
+                "has_id": true
+            },
+            "valset": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "normalized_breast_cancer_wisconsin_vertical_labeled_test.csv",
+                "header": true,
+                "has_id": true
+            }
+        },
+        "train_info": {
+            "device": "cpu",
+            "interaction_params": {},
+            "params": {
+                "norm": "l2",
+                "axis": 0,
+                "featureNormalizeConfig": {
+                    "x01": {
+                        "norm": "l1"
+                    },
+                    "x02": {
+                        "norm": "l2"
+                    },
+                    "x03": {
+                        "norm": "max"
+                    }
+                }
+            }
+        }
+    }
+]

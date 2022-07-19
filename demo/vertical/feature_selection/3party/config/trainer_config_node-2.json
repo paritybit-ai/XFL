@@ -1,0 +1,166 @@
+[
+    {
+        "identity": "trainer",
+        "model_info": {
+            "name": "vertical_binning_woe_iv",
+            "config": {}
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_vertical/3party",
+                    "name": "breast_cancer_wisconsin_vertical_1_train.csv",
+                    "has_id": true,
+                    "has_label": false,
+                    "missing_values":
+                    {
+                        "has_missing": false,
+                        "format": null,
+                        "strategy": "mean",
+                        "fulfill_value": 0
+                    },
+                    "nan_list": [999, -999]
+                }
+            ],
+            "valset": [
+
+            ]
+        },
+        "output": {
+            "trainset": {
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "vertical_binning_woe_iv_train"
+            },
+            "valset": {
+
+            }
+        },
+        "train_info": {
+            "device": "cpu",
+            "params": {
+                "encryption_params": {
+                    "method": "paillier",
+                    "key_bit_size": 2048,
+                    "precision": 7,
+                    "djn_on": true,
+                    "parallelize_on": true
+                },
+                "binning_params": {
+                    "method": "equalWidth",
+                    "bins": 5
+                },
+                "woe_iv_params": {
+                    "cons_price_idx": {},
+                    "cons_conf_idx": {},
+                    "euribor3m": {}
+                },
+                "pool_num": 4
+            }
+        }
+    },
+    {
+        "identity": "trainer",
+        "model_info": {
+            "name": "vertical_pearson",
+            "config": {}
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_vertical/3party",
+                    "name": "breast_cancer_wisconsin_vertical_1_train.csv",
+                    "has_label": false,
+                    "has_id": true
+                }
+            ],
+            "pretrain_model": {
+            }
+        },
+        "output": {
+            "model": {
+                "type": "file",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "pearson_1.pkl"
+            }
+        },
+        "train_info": {
+            "device": "cpu",
+            "interaction_params": {
+            },
+            "params": {
+                "column_indexes": -1,
+                "encryption_params": {
+                    "paillier": {
+                        "key_bit_size": 2048,
+                        "precision": 6,
+                        "djn_on": true,
+                        "parallelize_on": true
+                    }
+                },
+                "max_num_cores": 999,
+                "sample_size": 9999
+            }
+        }
+    },
+    {
+        "identity": "trainer",
+        "model_info": {
+            "name": "vertical_feature_selection"
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_vertical/3party",
+                    "name": "breast_cancer_wisconsin_vertical_1_train.csv",
+                    "has_label": false,
+                    "has_id": true
+                }
+            ],
+            "iv_result": {
+                "type": "file",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "vertical_binning_woe_iv_train_feature_mapping.json"
+            },
+            "corr_result": {
+                "type": "file",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "pearson_1.pkl"
+            }
+        },
+        "output": {
+            "trainset": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "selected_breast_cancer_wisconsin_vertical_1_train.csv",
+                "header": true,
+                "has_id": true
+            },
+            "model": {
+                "type": "file",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "feature_selection_1.pkl"
+            }
+        },
+        "train_info": {
+            "device": "cpu",
+            "interaction_params": {
+            },
+            "params": {
+                "filter_params": {
+                    "common": {
+                        "metrics": "iv",
+                        "filter_method": "threshold",
+                        "threshold": 0.01
+                    },
+                    "correlation": {
+                        "sort_metric": "iv",
+                        "threshold": 0.9
+                    }
+                }
+            }
+        }
+    }
+]

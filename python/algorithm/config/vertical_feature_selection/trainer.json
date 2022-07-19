@@ -1,0 +1,43 @@
+{
+    "identity": "trainer",
+    "model_info": {
+        "name": "vertical_feature_selection"
+    },
+    "input": {
+        "iv_result": {
+            "type": "file",
+            "path": "../checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "vertical_binning_woe_iv_feature_mapping.json"
+        },
+        "corr_result": {
+            "type": "file",
+            "path": "../checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "pearson_host.pkl"
+        }
+    },
+    "output": {
+        "model": {
+            "type": "file",
+            "path": "../checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "feature_selection_host.pkl"
+        }
+    },
+    "train_info": {
+        "device": "cpu",
+        "interaction_params": {
+        },
+        "params": {
+            "filter_params": {
+                "common": {
+                    "metrics": "iv",
+                    "filter_method": "threshold",
+                    "threshold": 0.01
+                },
+                "correlation": {
+                    "sort_metric": "iv",
+                    "correlation_threshold": 0.7
+                }
+            }
+        }
+    }
+}

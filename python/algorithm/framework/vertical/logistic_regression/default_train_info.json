@@ -1,0 +1,46 @@
+{
+    "global_epoch": 30,
+    "batch_size": 128,
+    "device": "cpu",
+    "aggregationConfig": {
+        "encryption": {
+            "method": "ckks",
+            "poly_modulus_degree": 8192,
+            "coeff_mod_bit_sizes": [60, 40, 40, 60],
+            "global_scale_bit_size": 40
+        }
+    },
+    "trainsetConfig": {
+        "load_method": "csv_loader"
+    },
+    "valsetConfig": {
+        "label_col_name": "y",
+        "ignore_col_name": [],
+        "load_method": "csv_loader"
+    },
+    "optimizerConfig" : {
+        "lr": 0.01,
+        "p": 0,
+        "alpha": 1e-4
+    },
+    "lossfuncConfig": {
+        "method": "BCEWithLogitsLoss"
+    },
+    "metricConfig": {
+    },
+    "pretrainModelPath": "",
+    "reportFrequency": 1,
+    "valFrequency": 1,
+    "saveConfig": {
+        "modelName": "vertical_logistic_regression_guest.pt",
+        "saveFrequency": 1
+    },
+    "extraConfig": {
+        "shuffleSeed": 50,
+        "earlyStopping": {
+            "key": "acc",
+            "patience": -1,
+            "delta": 0
+        }
+    }
+}

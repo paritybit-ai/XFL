@@ -1,0 +1,9 @@
+{
+    "redis": {
+        "host": "localhost",
+        "port": 6379,
+        "expire_seconds": 600
+    },
+    "retry_interval": 0.1,
+    "retry_duration": 99999
+}

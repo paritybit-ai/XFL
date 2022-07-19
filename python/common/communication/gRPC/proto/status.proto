@@ -1,0 +1,28 @@
+syntax = "proto3";
+package status;
+
+enum StatusEnum {
+    STATUS = 0;
+    IDLE = 1;
+    TRAINING = 2;
+    SUCCESSFUL = 3;
+    FAILED = 4;
+    START_TRAIN = 5;
+    STOP_TRAIN = 6;
+}
+
+message Status {
+    int32 code = 1;
+    string status = 2;
+}
+
+message StatusRequest {
+    int32 jobId = 1;
+}
+
+message StatusResponse {
+    int32 jobId = 1;
+    Status jobStatus = 2;
+    Status schedulerStatus = 3;
+    map<string, Status> trainerStatus = 4;
+}

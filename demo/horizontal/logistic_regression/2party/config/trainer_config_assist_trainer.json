@@ -1,0 +1,70 @@
+[
+    {
+        "identity": "assist_trainer",
+        "model_info": {
+            "name": "horizontal_logistic_regression",
+            "config": {
+                "input_dim": 30,
+                "bias": true
+            }
+        },
+        "input": {
+            "valset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_horizontal/2party",
+                    "name": "breast_cancer_wisconsin_horizontal_test.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ],
+            "pretrain_model": {}
+        },
+        "output": {
+            "model": {
+                "type": "file",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "horizontal_logistic_regression.pt"
+            },
+            "metrics": {}
+        },
+        "train_info": {
+            "device": "cpu",
+            "interaction_params": {},
+            "params": {
+                "global_epoch": 20,
+                "local_epoch": 2,
+                "batch_size": 16,
+                "aggregation_config": {
+                    "type": "fedavg",
+                    "encryption": {
+                        "method": "otp",
+                        "key_bitlength": 64,
+                        "data_type": "torch.Tensor",
+                        "key_exchange": {
+                            "key_bitlength": 3072,
+                            "optimized": true
+                        },
+                        "csprng": {
+                            "name": "hmac_drbg",
+                            "method": "sha512"
+                        }
+                    }
+                },
+                "lossfunc_config": {
+                    "BCELoss": {}
+                },
+                "metric_config": {
+                    "accuracy": {},
+                    "precision": {},
+                    "recall": {},
+                    "f1_score": {},
+                    "auc": {},
+                    "ks": {}
+                },
+                "early_stopping": {},
+                "extra_config": {}
+            }
+        }
+    }
+]

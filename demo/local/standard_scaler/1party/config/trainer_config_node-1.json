@@ -1,0 +1,66 @@
+[
+    {
+        "identity": "label_trainer",
+        "model_info": {
+            "name": "local_standard_scaler",
+            "config": {}
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                    "name": "breast_cancer_wisconsin_vertical_labeled_train.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ],
+            "valset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                    "name": "breast_cancer_wisconsin_vertical_labeled_test.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ]
+        },
+        "output": {
+            "model": {
+                "type": "file",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "local_standard_scaler_labeled.pt"
+            },
+            "trainset": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "standardized_breast_cancer_wisconsin_vertical_labeled_train.csv",
+                "header": true,
+                "has_id": true
+            },
+            "valset": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "standardized_breast_cancer_wisconsin_vertical_labeled_test.csv",
+                "header": true,
+                "has_id": true
+            }
+        },
+        "train_info": {
+            "device": "cpu",
+            "interaction_params": {
+                "save_frequency": -1
+            },
+            "params": {
+                "with_mean": true,
+                "with_std": true,
+                "featureStandardizeConfig": {
+                    "x01": {
+                        "with_mean": false,
+                        "with_std": false
+                    }
+                }
+            }
+        }
+    }
+]

@@ -1,0 +1,57 @@
+{
+    "identity": "label_trainer",
+    "model_info": {
+        "name": "local_normalization",
+        "config": {}
+    },
+    "input": {
+        "trainset": [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/vertical_breast_with_validation",
+                "name": "breast_vertical_guest_train.csv",
+                "has_label": true,
+                "has_id": true
+            }
+        ],
+        "valset": [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/vertical_breast_with_validation",
+                "name": "breast_vertical_guest_test.csv",
+                "has_label": true,
+                "has_id": true
+            }
+        ]
+    },
+    "output": {
+        "model": {
+            "type": "file",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "local_normalizer_guest.pt"
+        },
+        "trainset": {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "normalized_breast_vertical_guest_train.csv",
+            "header": true,
+            "has_id": true
+        },
+        "valset": {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "normalized_breast_vertical_guest_test.csv",
+            "header": true,
+            "has_id": true
+        }
+    },
+    "train_info": {
+        "device": "cpu",
+        "interaction_params": {
+        },
+        "params": {
+            "norm": "max",
+            "axis": 0
+        }
+    }
+}

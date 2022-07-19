@@ -1,0 +1,68 @@
+[
+    {
+        "identity": "assist_trainer",
+        "model_info": {
+            "name": "horizontal_linear_regression",
+            "config": {
+                "input_dim": 13,
+                "bias": true
+            }
+        },
+        "input": {
+            "valset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/horizontal_house_price",
+                    "name": "house_price_test.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ],
+            "pretrain_model": {}
+        },
+        "output": {
+            "model": {
+                "type": "file",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "name": "horizontal_linear_regression.pt"
+            },
+            "metrics": {},
+            "evaluation": {}
+        },
+        "train_info": {
+            "device": "cpu",
+            "interaction_params": {},
+            "params": {
+                "global_epoch": 30,
+                "local_epoch": 0,
+                "batch_size": 256,
+                "aggregation_config": {
+                    "type": "fedavg",
+                    "encryption": {
+                        "method": "otp",
+                        "key_bitlength": 64,
+                        "data_type": "torch.Tensor",
+                        "key_exchange": {
+                            "key_bitlength": 3072,
+                            "optimized": true
+                        },
+                        "csprng": {
+                            "name": "hmac_drbg",
+                            "method": "sha512"
+                        }
+                    }
+                },
+                "lossfunc_config": {
+                    "L1Loss": {}
+                },
+                "metric_config": {
+                    "mae": {},
+                    "mse": {},
+                    "mape": {}
+                },
+                "early_stopping": {},
+                "extra_config": {}
+            }
+        }
+    }
+]

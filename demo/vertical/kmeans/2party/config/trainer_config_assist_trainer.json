@@ -1,0 +1,47 @@
+[
+    {
+        "identity": "assist_trainer",
+        "model_info": {
+            "name": "vertical_kmeans",
+            "config": {
+
+            }
+        },
+        "input": {
+            "trainset": [
+            ]
+        },
+        "output": {
+        },
+        "train_info": {
+            "device": "cpu",
+            "interaction_params": {
+            },
+            "aggregation_config": {
+                "method": "FedAvg",
+                "weight_factor": 0.5,
+                "encryption": {
+                    "method": "otp",
+                    "key_bitlength": 128,
+                    "data_type": "torch.Tensor",
+                    "key_exchange": {
+                        "key_bitlength": 3072,
+                        "optimized": true
+                    },
+                    "csprng": {
+                        "name": "hmac_drbg",
+                        "method": "sha512"
+                    }
+                }
+            },
+            "params": {
+                "k": 5,
+                "max_iter": 99,
+                "tol": 1e-3,
+                "extra_config": {
+                    "shuffle_seed": 50
+                }
+            }
+        }
+    }
+]

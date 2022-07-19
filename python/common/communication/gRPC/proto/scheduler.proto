@@ -1,0 +1,39 @@
+syntax = "proto3";
+package scheduler;
+
+import "commu.proto";
+import "status.proto";
+import "control.proto";
+
+message GetConfigRequest {
+    string nodeId = 1;
+    string message = 4;
+}
+
+message GetConfigResponse {
+    int32 jobId = 1;
+    string config = 2;
+    int32 code = 3;
+    string message = 4;
+}
+
+message DefaultConfig {
+    map<string, string> config = 1;
+}
+
+message GetAlgorithmListRequest {
+}
+
+message GetAlgorithmListResponse {
+    int32 code = 1;
+    repeated string algorithmList = 2;
+    map<string, DefaultConfig> defaultConfigMap = 3;
+}
+
+service Scheduler {
+    rpc getConfig(GetConfigRequest) returns (GetConfigResponse) {}
+    rpc post(stream commu.PostRequest) returns (commu.PostResponse) {}
+    rpc control(control.ControlRequest) returns (control.ControlResponse) {}
+    rpc status(status.StatusRequest) returns (status.StatusResponse) {}
+    rpc getAlgorithmList(GetAlgorithmListRequest) returns (GetAlgorithmListResponse) {}
+}

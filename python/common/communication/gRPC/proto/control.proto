@@ -1,0 +1,20 @@
+syntax = "proto3";
+package control;
+
+enum Operation {
+    OPERATION = 0;
+    START = 1;
+    STOP = 2;
+    PAUSE = 3;
+    UPDATE = 4;
+}
+
+message ControlRequest {
+    Operation control = 1;
+}
+
+message ControlResponse {
+    int32 jobId = 1;
+    int32 code = 2;
+    string message = 3;
+}

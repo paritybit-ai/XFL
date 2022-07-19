@@ -1,0 +1,12 @@
+syntax = "proto3";
+package trainer;
+
+import "commu.proto";
+import "status.proto";
+import "control.proto";
+
+service Trainer {
+    rpc post(stream commu.PostRequest) returns (commu.PostResponse) {}
+    rpc control(control.ControlRequest) returns (control.ControlResponse) {}
+    rpc status(status.StatusRequest) returns (status.StatusResponse) {}
+}

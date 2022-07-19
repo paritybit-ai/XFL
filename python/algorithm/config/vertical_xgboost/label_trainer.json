@@ -1,0 +1,97 @@
+{
+    "identity": "label_trainer",
+    "model_info": {
+        "name": "vertical_xgboost",
+        "config": {}
+    },
+    "input": {
+        "trainset": [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/breast_cancer_wisconsin/2party",
+                "name": "breast_cancer_wisconsin_guest_train.csv",
+                "has_id": true,
+                "has_label": true
+            }
+        ],
+        "valset": [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/breast_cancer_wisconsin/2party",
+                "name": "breast_cancer_wisconsin_guest_test.csv",
+                "has_id": true,
+                "has_label": true
+            }
+        ]
+    },
+    "output": {
+        "model": {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "vertical_xgboost_guest.pkl"
+        },
+        "metrics": {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "header": true
+        },
+        "evaluation": {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "header": true
+        }
+    },
+    "train_info": {
+        "device": "cpu",
+        "interaction_params": {
+            "save_frequency": 1,
+            "echo_training_metrics": false,
+            "write_training_prediction": true,
+            "write_validation_prediction": true
+        },
+        "params": {
+            "task_type": "classification",
+            "lossfunc_config": {
+                "method": "BCEWithLogitsLoss"
+            },
+            "num_trees": 64,
+            "learning_rate": 0.3,
+            "gamma": 0,
+            "lambda_": 1,
+            "max_depth": 2,
+            "num_bins": 16,
+            "min_split_gain": 0,
+            "min_sample_split": 20,
+            "feature_importance_type": "gain",
+            "run_goss": true,
+            "top_rate": 0.5,
+            "other_rate": 0.5,
+            "metric_config": {
+                "acc": {},
+                "precision": {},
+                "recall": {},
+                "f1_score": {},
+                "auc": {},
+                "ks": {}
+            },
+            "early_stopping_params": {
+                "key": "ks",
+                "patience": 10,
+                "delta": 0.001
+            },
+            "encryption_params": {
+                "paillier": {
+                    "key_bit_size": 2048,
+                    "precision": 7,
+                    "djn_on": true,
+                    "parallelize_on": true
+                }
+            },
+            "subsample_feature_rate": 1.0,
+            "max_num_cores": 999,
+            "validation_batch_size": 40960,
+            "col_batch": 64,
+            "row_batch": 40000
+        }
+    }
+}
