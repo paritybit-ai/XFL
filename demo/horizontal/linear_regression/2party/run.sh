@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/sh
 
 if [ "$(uname)" = "Darwin" ]
 then
@@ -26,9 +25,12 @@ then
   echo "PROJECT_HOME:""$PROJECT_HOME"
 fi
 
-cd $PROJECT_HOME
-
 export PYTHONPATH=$PYTHONPATH:$PROJECT_HOME/python:$PROJECT_HOME/python/common/communication/gRPC/python
+
+datapath="${PROJECT_HOME}/dataset"
+if [ ! -d "${PROJECT_HOME}/dataset/boston_housing_price_horizontal/2party" ]; then
+  python "${PROJECT_HOME}/python/common/dataset/boston_housing_price.py" --mode "horizontal" --splits 2 --party "1" "2"
+fi
 
 type="horizontal"
 operator="linear_regression"
@@ -36,13 +38,8 @@ party="2party"
 code="${type}.${operator}.${party}"
 config_path="${PROJECT_HOME}/demo/${type}/${operator}/${party}/config"
 
-if [ ! -d "${PROJECT_HOME}/dataset/horizontal_house_price" ]; then
-    mkdir ${PROJECT_HOME}/dataset/horizontal_house_price
-    python ${PROJECT_HOME}/demo/${type}/${operator}/data_preprocess.py
-fi
-
 if [ ! -f "${PROJECT_HOME}/python/xfl.py" ]; then
-  EXECUTE_PATH=${PROJECT_HOME}/xfl.pyc
+  EXECUTE_PATH=${PROJECT_HOME}/xfl.py
 else
   EXECUTE_PATH=${PROJECT_HOME}/python/xfl.py
 fi

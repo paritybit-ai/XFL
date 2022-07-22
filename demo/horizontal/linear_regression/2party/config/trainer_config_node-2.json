@@ -12,8 +12,8 @@
             "trainset": [
                 {
                     "type": "csv",
-                    "path": "./dataset/horizontal_house_price",
-                    "name": "house_price_2.csv",
+                    "path": "./dataset/boston_housing_price_horizontal/2party",
+                    "name": "boston_housing_price_horizontal_2.csv",
                     "has_label": true,
                     "has_id": true
                 }

@@ -12,7 +12,7 @@
             "valset": [
                 {
                     "type": "csv",
-                    "path": "./dataset/boston_housing_price_horizontal/2party",
+                    "path": "./dataset/boston_housing_price_horizontal/3party",
                     "name": "boston_housing_price_horizontal_test.csv",
                     "has_label": true,
                     "has_id": true

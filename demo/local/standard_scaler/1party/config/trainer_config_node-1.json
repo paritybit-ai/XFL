@@ -48,9 +48,6 @@
         },
         "train_info": {
             "device": "cpu",
-            "interaction_params": {
-                "save_frequency": -1
-            },
             "params": {
                 "with_mean": true,
                 "with_std": true,

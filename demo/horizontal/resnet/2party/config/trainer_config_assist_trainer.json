@@ -12,7 +12,7 @@
             "valset": [
                 {
                     "type": "npz",
-                    "path": "../../../../dataset/cifar10/2party",
+                    "path": "./dataset/cifar10/2party",
                     "name": "cifar10_test.npz"
                 }
             ],

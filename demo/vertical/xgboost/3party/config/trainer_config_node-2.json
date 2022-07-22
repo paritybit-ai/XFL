@@ -27,19 +27,14 @@
         },
         "output": {
             "model": {
-                "type": "csv",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "name": "vertical_xgboost_1.pkl"
             },
             "metrics": {
-                "type": "csv",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "header": true
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]"
             },
             "evaluation": {
-                "type": "csv",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "header": true
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]"
             }
         },
         "train_info": {

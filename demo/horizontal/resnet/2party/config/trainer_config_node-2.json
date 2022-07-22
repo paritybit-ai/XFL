@@ -12,8 +12,8 @@
             "trainset": [
                 {
                     "type": "npz",
-                    "path": "../../../../dataset/cifar10/2party",
-                    "name": "cifar10_host.npz"
+                    "path": "./dataset/cifar10/2party",
+                    "name": "cifar10_2.npz"
                 }
             ]
         },
@@ -62,7 +62,8 @@
                 "optimizer_config": {
                     "Adam": {
                         "lr": 0.001,
-                        "amsgrad": true
+                        "amsgrad": true,
+                        "weight_decay": 0.001
                     }
                 },
                 "lossfunc_config": {

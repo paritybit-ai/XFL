@@ -4,7 +4,8 @@
         "model_info": {
             "name": "vertical_logistic_regression",
             "config": {
-                "input_dim": null
+                "input_dim": null,
+                "bias": false
             }
         },
         "input": {

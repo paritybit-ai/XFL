@@ -48,7 +48,6 @@
         },
         "train_info": {
             "device": "cpu",
-            "interaction_params": {},
             "params": {
                 "norm": "l2",
                 "axis": 0,

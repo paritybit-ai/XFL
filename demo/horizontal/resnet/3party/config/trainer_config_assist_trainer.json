@@ -12,7 +12,7 @@
             "valset": [
                 {
                     "type": "npz",
-                    "path": "../../../../dataset/cifar10/3party",
+                    "path": "./dataset/cifar10/3party",
                     "name": "cifar10_test.npz"
                 }
             ],
@@ -22,17 +22,17 @@
         "output": {
             "model": {
                 "type": "file",
-                "path": "/otp/checkpoints/[JOB_ID]/[NODE_ID]",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "name": "horizontal_resnet.pt"
             },
             "metrics": {
                 "type": "csv",
-                "path": "/otp/checkpoints/[JOB_ID]/[NODE_ID]",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "header": true
             },
             "evaluation": {
                 "type": "csv",
-                "path": "/otp/checkpoints/[JOB_ID]/[NODE_ID]",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "header": true
             }
         },
@@ -47,8 +47,8 @@
                 "echo_training_metrics": true
             },
             "params": {
-                "global_epoch": 10,
-                "local_epoch": 3,
+                "global_epoch": 15,
+                "local_epoch": 2,
                 "batch_size": 128,
                 "aggregation_config": {
                     "type": "fedavg",

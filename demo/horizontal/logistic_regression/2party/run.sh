@@ -39,7 +39,7 @@ code="${type}.${operator}.${party}"
 config_path="${PROJECT_HOME}/demo/${type}/${operator}/${party}/config"
 
 if [ ! -f "${PROJECT_HOME}/python/xfl.py" ]; then
-  EXECUTE_PATH=${PROJECT_HOME}/xfl.pyc
+  EXECUTE_PATH=${PROJECT_HOME}/xfl.py
 else
   EXECUTE_PATH=${PROJECT_HOME}/python/xfl.py
 fi

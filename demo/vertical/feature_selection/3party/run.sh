@@ -40,18 +40,18 @@ code="${type}.${operator}.${party}"
 config_path="${PROJECT_HOME}/demo/${type}/${operator}/${party}/config"
 
 if [ ! -f "${PROJECT_HOME}/python/xfl.py" ]; then
-  EXECUTE_PATH=${PROJECT_HOME}/xfl.pyc
+  EXECUTE_PATH=${PROJECT_HOME}/xfl.py
 else
   EXECUTE_PATH=${PROJECT_HOME}/python/xfl.py
 fi
 
 cd $PROJECT_HOME
-python "$EXECUTE_PATH" -s --config_path ${config_path} &
+python "${PROJECT_HOME}/python/xfl.py" -s --config_path ${config_path} &
 sleep 1
-python "$EXECUTE_PATH" -t node-1 --config_path ${config_path} &
+python "${PROJECT_HOME}/python/xfl.py" -t node-1 --config_path ${config_path} &
 sleep 1
-python "$EXECUTE_PATH" -t node-2 --config_path ${config_path} &
+python "${PROJECT_HOME}/python/xfl.py" -t node-2 --config_path ${config_path} &
 sleep 1
-python "$EXECUTE_PATH" -t node-3 --config_path ${config_path} &
+python "${PROJECT_HOME}/python/xfl.py" -t node-3 --config_path ${config_path} &
 sleep 1
-python "$EXECUTE_PATH" -c start --config_path ${config_path} &
+python "${PROJECT_HOME}/python/xfl.py" -c start --config_path ${config_path} &
