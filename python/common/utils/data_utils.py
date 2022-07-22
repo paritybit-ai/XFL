@@ -83,15 +83,14 @@ def extract_file_recursively(from_path: str, to_path: str) -> None:
     extract_file_recursively(from_path, to_path)
 
 
-def download_and_extract_data(url: str, md5: str, data_path: str, data_folder: str, to_path: Optional[str] = None) -> None:
-    if to_path is None:
+def download_and_extract_data(url: str, md5: str, data_path: str, data_folder: Optional[str] = None, to_path: Optional[str] = None) -> None:
+    if not to_path:
         to_path = pathlib.Path(data_path).parent
-    if not os.path.exists(to_path):
-        os.makedirs(to_path)
-    final_path = os.path.join(to_path, data_folder)
-    if os.path.exists(final_path) and os.path.getsize(final_path) > 0:
-        print("Dataset has already existed")
-        return
+    if data_folder:
+        final_path = os.path.join(to_path, data_folder)
+        if os.path.exists(final_path) and os.path.getsize(final_path) > 0:
+            print("Dataset has already existed")
+            return
     download_url(url, data_path, md5)
     extract_file_recursively(data_path, to_path)
     print("Data finished downloading and extraction")

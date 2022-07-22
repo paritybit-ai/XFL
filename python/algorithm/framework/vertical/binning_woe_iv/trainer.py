@@ -73,12 +73,13 @@ class VerticalBinningWoeIvTrainer(VerticalBinningWoeIvBase):
             self.encrypt_id_label_pair = pd.DataFrame(en_label).rename(columns={0: 'y'})
             self.encrypt_id_label_pair.index = self.df.index
 
-            print("Start count bins for trainer")
+            logger.info("Start count bins for trainer")
 
             time_s = time.time()
 
             # tmp = self.pool.map(self.woe_pre, list(self.df.columns))
             def woe_pre_plus(batch_data):
+                logger.info("Start pool map")
                 _tmp = pd.DataFrame(columns=['y', 'col_value', 'col_name'],
                                     index=range(len(batch_data[0]) * batch_size))
                 for _id in range(len(batch_data)):
@@ -95,6 +96,7 @@ class VerticalBinningWoeIvTrainer(VerticalBinningWoeIvBase):
                                                                for ii in tmp_gp.index.levels[0]]))
                 woe_feedback_list = dict(
                     zip(tmp_gp.index.levels[0], [tmp_gp.loc[ii]['sum'] for ii in tmp_gp.index.levels[0]]))
+                logger.info("One pool ends")
                 return bins_count, woe_feedback_list
 
             data_batch = []
@@ -116,17 +118,17 @@ class VerticalBinningWoeIvTrainer(VerticalBinningWoeIvBase):
             for i in tmp:
                 self.bins_count.update(i[0])
                 self.woe_feedback_list.update(i[1])
-            print("Trainer sum costs:" + str(time.time() - time_s))
+            logger.info("Trainer sum costs:" + str(time.time() - time_s))
         elif encryption_method == "plain":
             self.encrypt_id_label_pair = self.broadcast_channel.recv(use_pickle=True)
             self.encrypt_id_label_pair = pd.DataFrame(self.encrypt_id_label_pair)
             tmp = []
-            print("Start count bins for trainer")
+            logger.info("Start count bins for trainer")
             time_s = time.time()
             pd.Series(self.df.columns).apply(lambda x: tmp.append(self.woe_pre(x)))
             self.bins_count = dict(zip(self.df.columns, [i['count'] for i in tmp]))
             self.woe_feedback_list = dict(zip(self.df.columns, [i['sum'] for i in tmp]))
-            print("Trainer sum costs:" + str(time.time() - time_s))
+            logger.info("Trainer sum costs:" + str(time.time() - time_s))
         # else:
         #     raise ValueError(
         #         f"Encryption method {encryption_method} not supported! Valid methods are 'paillier', 'plain'.")

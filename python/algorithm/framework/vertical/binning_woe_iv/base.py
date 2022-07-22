@@ -136,7 +136,7 @@ class VerticalBinningWoeIvBase(TrainConfigParser):
         self.val = None
         self.label = label
         self.missing_conf = self.input_trainset[0]["missing_values"]
-        self.missing_strategy = self.missing_conf.get("has_missing", 'false')
+        self.missing_strategy = self.missing_conf.get("has_missing", False)
         self.woe_map = {}
         self.binning_split = {}
         self.save_model = self.output.get("save_model", False)
@@ -230,6 +230,7 @@ class VerticalBinningWoeIvBase(TrainConfigParser):
         Returns: None
 
         """
+        logger.info("Start binning")
         nan_l = self.input_trainset[0]["nan_list"]
         method = self.train_params["binning_params"]['method']
         bin_num = self.train_params["binning_params"]["bins"]

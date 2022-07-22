@@ -31,6 +31,11 @@ from algorithm.core.paillier_acceleration import embed, umbed
 
 class VerticalPearsonLabelTrainer(VerticalPearsonBase):
 	def __init__(self, train_conf: dict):
+		"""
+
+		Args:
+			train_conf:
+		"""
 		super().__init__(train_conf, label=False)
 		self.feature_mapping = dict()
 		self.channels = dict()
@@ -87,6 +92,10 @@ class VerticalPearsonLabelTrainer(VerticalPearsonBase):
 		remote_corr = dict()
 		for party_id in FedConfig.get_trainer():
 			remote_corr[party_id] = []
+			if len(feature_names):
+				self.channels["trainer_feature_com"][party_id].send(False)
+			else:
+				self.channels["trainer_feature_com"][party_id].send(True)
 
 		if isinstance(self.encryption_param, (PlainParam, type(None))):
 			for idx, f in enumerate(feature_names):
@@ -135,7 +144,8 @@ class VerticalPearsonLabelTrainer(VerticalPearsonBase):
 						result.append(r)
 					remote_corr[party_id].append(np.array(result) / (10 ** self.encryption_param.precision))
 			for party_id in FedConfig.get_trainer():
-				remote_corr[party_id] = np.concatenate(remote_corr[party_id]) / n
+				if remote_corr[party_id]:
+					remote_corr[party_id] = np.concatenate(remote_corr[party_id]) / n
 
 		logger.info("label trainer encrypted all features.")
 		for party_id in FedConfig.get_trainer():
@@ -151,7 +161,6 @@ class VerticalPearsonLabelTrainer(VerticalPearsonBase):
 			other_summary = self.channels["trainer_corr_com"][party_id].recv()
 			for k, v in other_summary.items():
 				if k[0] != k[1]:
-
 					if self.encryption == "plain":
 						self._summary["corr"][k] = v[0].T / n
 					elif self.encryption == "paillier":
@@ -165,8 +174,10 @@ class VerticalPearsonLabelTrainer(VerticalPearsonBase):
 								corr_mat.append(r)
 							corr_mat = np.array(corr_mat) / (10 ** self.encryption_param.precision)
 							remote_corr.append(corr_mat)
-
-						self._summary["corr"][k] = np.concatenate(remote_corr).T / n
+						if remote_corr:
+							self._summary["corr"][k] = np.concatenate(remote_corr).T / n
+						else:
+							self._summary["corr"][k] = []
 				else:
 					self._summary["corr"][k] = v
 		self.save()
@@ -192,9 +203,19 @@ class VerticalPearsonLabelTrainer(VerticalPearsonBase):
 			row = []
 			for j in range(len(parties)):
 				if (parties[i], parties[j]) in self._summary["corr"]:
-					row.append(self._summary["corr"][(parties[i], parties[j])])
+					corr_mat = self._summary["corr"][(parties[i], parties[j])]
+					if min(np.array(corr_mat).shape) > 0:
+						row.append(corr_mat)
+					else:
+						row.append(np.zeros(
+							(self._summary["num_features"][parties[i]], self._summary["num_features"][parties[j]])))
 				else:
-					row.append(self._summary["corr"][(parties[j], parties[i])].T)
+					corr_mat = self._summary["corr"][(parties[j], parties[i])]
+					if min(np.array(corr_mat).shape) > 0:
+						row.append(corr_mat.T)
+					else:
+						row.append(np.zeros(
+							(self._summary["num_features"][parties[i]], self._summary["num_features"][parties[j]])))
 			cor_mat.append(np.concatenate(row, axis=1))
 			features.extend(self._summary["features"][parties[i]])
 			sources.extend([parties[i]] * self._summary["num_features"][parties[i]])

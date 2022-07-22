@@ -100,7 +100,7 @@ class CIFAR10(torch.utils.data.Dataset):
             shutil.rmtree(os.path.join(self.dirpath, self.data_folder))
 
         download_and_extract_data(
-            self.url, self.md5, self.datapath, self.data_folder)
+            self.url, self.md5, self.datapath, data_folder=self.data_folder)
 
     def _load_metadata(self) -> None:
         metapath = os.path.join(

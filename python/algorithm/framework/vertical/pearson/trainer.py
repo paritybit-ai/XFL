@@ -31,6 +31,11 @@ from algorithm.core.paillier_acceleration import embed
 
 class VerticalPearsonTrainer(VerticalPearsonBase):
 	def __init__(self, train_conf: dict):
+		"""
+
+		Args:
+			train_conf:
+		"""
 		super().__init__(train_conf, label=False)
 		self.channels = {}
 		self.node_id = FedNode.node_id
@@ -96,7 +101,7 @@ class VerticalPearsonTrainer(VerticalPearsonBase):
 		self._local_summary["feature_mapping"] = self.feature_mapping
 		self._summary[(self.node_id, self.node_id)] = local_corr
 
-		feature_flag = False
+		feature_flag = self.channels["trainer_feature_com"].recv()
 		# remote_corr = pd.DataFrame()
 		j = 0
 		local_mat = np.array([])
@@ -117,13 +122,12 @@ class VerticalPearsonTrainer(VerticalPearsonBase):
 
 		for i in range(self.trainers.index(self.node_id)):
 			trainer_id = self.trainers[i]
-			flag = False
+			flag = self.channels["trainer_com"][trainer_id].recv()
 			j = 0
 			corr_mat = []
 			pack_nums = []
 			while not flag:
 				other, pack_num, flag = self.channels["trainer_com"][trainer_id].recv()
-
 				remote_corr = np.dot(local_mat.T, other)
 				self.channels["trainer_com"][trainer_id].send(True)
 				corr_mat.append(remote_corr)
@@ -134,6 +138,10 @@ class VerticalPearsonTrainer(VerticalPearsonBase):
 
 		for j in range(self.trainers.index(self.node_id) + 1, len(self.trainers)):
 			trainer_id = self.trainers[j]
+			if len(feature_names):
+				self.channels["trainer_com"][trainer_id].send(False)
+			else:
+				self.channels["trainer_com"][trainer_id].send(True)
 			if isinstance(self.encryption_param, (PlainParam, type(None))):
 				cnt = 0
 				for f in feature_names:

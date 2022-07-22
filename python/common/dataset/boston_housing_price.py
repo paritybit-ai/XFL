@@ -24,12 +24,12 @@ import torch
 from common.utils.data_utils import download_url, pd_train_test_split
 
 
-class WDBC(torch.utils.data.Dataset):
-    url = "http://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data"
+class Boston(torch.utils.data.Dataset):
+    url = "http://lib.stat.cmu.edu/datasets/boston"
     md5 = None
     dirpath = os.path.join(os.environ['PROJECT_HOME'], 'dataset')
-    datapath = os.path.join(dirpath, "wdbc.data")
-    datadir = "breast_cancer_wisconsin"
+    datapath = os.path.join(dirpath, "boston")
+    datadir = "boston_housing_price"
 
     def __init__(
         self,
@@ -40,14 +40,18 @@ class WDBC(torch.utils.data.Dataset):
         if not os.path.exists(self.dirpath):
             os.mkdir(self.dirpath)
         self._download(redownload)
-        self.data = pd.read_csv(self.datapath, names=[
-                                "id", "y"] + [f"x{i:0>2d}" for i in range(30)])
-        self.data["y"] = self.data["y"].map({"M": 1, "B": 0})
-        self.data[[f"x{i:0>2d}" for i in range(30)]] = self.data[[
-            f"x{i:0>2d}" for i in range(30)]].apply(lambda x: (x-x.mean())/x.std())
+        raw_df = pd.read_csv(self.datapath, sep="\s+", skiprows=22, header=None)
+        self.feature = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])
+        self.label = raw_df.values[1::2, 2]
+        self.feature_cols = [f'x{i}' for i in range(self.feature.shape[1])]
+        self.id = np.arange(len(self.label))
+        self.reconstruct_df = np.hstack([self.id.reshape(-1,1), self.label.reshape(-1,1),self.feature])
+        self.data = pd.DataFrame(data=self.reconstruct_df,
+        columns=["id","y"].extend(self.feature_cols)
+        )
 
     def __getitem__(self, index: int) -> Any:
-        return self.data[[f"x{i:0>2d}" for i in range(30)]].values[index], self.data["y"].values[index]
+        return self.feature[index], self.label[index]
 
     def __len__(self) -> int:
         return len(self.data.values)
@@ -72,7 +76,7 @@ class WDBC(torch.utils.data.Dataset):
         if not os.path.exists(final_dir_path):
             os.makedirs(final_dir_path)
         if mode == "vertical":
-            cols = [f"x{i:0>2d}" for i in range(30)]
+            cols = self.feature_cols
             split_cols = np.array_split(cols, splits)
             for i, span in enumerate(split_cols):
                 if "labeled" in parties[i]:
@@ -127,5 +131,5 @@ if __name__ == "__main__":
         "parties": args.party
     }
 
-    wdbc = WDBC()
-    wdbc.reallocate(reallocate_dict)
+    boston = Boston()
+    boston.reallocate(reallocate_dict)

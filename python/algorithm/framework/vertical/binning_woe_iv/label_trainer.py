@@ -59,7 +59,7 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
         #     raise ValueError(
         #         f"Encryption method {encryption_method} not supported! Valid methods are 'paillier', 'plain'.")
 
-        logger.info("Start calculate host IV with WOE values.")
+        # logger.info("Start calculate host IV with WOE values.")
         self.label_trainer_woe_iv()
 
         if encryption_method == "paillier":
@@ -96,7 +96,7 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
 
             woe_feedback_list, bins_count = feedback["woe_feedback_list"], feedback["bins_count"]
 
-            print("Start calculate woe for trainer")
+            logger.info("Start calculate woe for trainer")
             time_s = time.time()
             for k, v in woe_feedback_list.items():
                 # featName = "{}_{}".format(uid, k)
@@ -117,7 +117,7 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
 
                 client_woe_dict[k] = woe.to_dict()
                 client_iv_dict[k] += float("%.6f" % np.sum((pos_prob - neg_prob) * woe))
-            print("Trainer woe cost:" + str(time.time() - time_s))
+            logger.info("Trainer woe cost:" + str(time.time() - time_s))
 
             logger.info("Calculate host IV with WOE values completed.")
             # logger.info("Host WOE dictionary: {}".format(client_woe_dict))
@@ -145,7 +145,7 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
 
         feat_woe = set(self.df.columns).difference(set("y"))
 
-        print("Start calculate woe for label trainer")
+        logger.info("Start calculate woe for label trainer")
         time_s = time.time()
         for feature in feat_woe:
             woe_dict[feature], iv_dict[feature] = {}, 0
@@ -168,7 +168,7 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
 
             woe_dict[feature] = woe.to_dict()
 
-        print("label trainer cost:" + str(time.time() - time_s))
+        logger.info("label trainer cost:" + str(time.time() - time_s))
 
         logger.info("Calculate Guest IV with WOE values completed.")
         # # logger.info("Guest WOE dictionary: {}".format(woe_dict))

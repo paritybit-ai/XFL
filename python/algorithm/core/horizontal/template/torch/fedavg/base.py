@@ -54,7 +54,7 @@ class BaseTrainer(Hooker, TrainConfigParser):
         aggregation_config = self.train_params.get("aggregation_config", {})
         encryption_params = aggregation_config.get("encryption")
 
-        logger.info(encryption_params)
+        #logger.info(encryption_params)
 
         if party_type == "assist_trainer":
             aggregator = get_aggregation_root_inst(encryption_params)
