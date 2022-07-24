@@ -9,13 +9,11 @@ jobs:
     steps:
       - name: Sync to Gitee
         uses: Yikun/hub-mirror-action@master
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
         with:
           src: github/paritybit-ai
           dst: gitee/basebit-ai
           dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
+          dst_token:  ${{ secrets.GITEE_TOKEN }}
           static_list: "XFL"
-          clone_style: "ssh"
           account_type: org
           force_update: true
