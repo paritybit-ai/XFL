@@ -29,9 +29,12 @@ export PYTHONPATH=$PYTHONPATH:$PROJECT_HOME/python:$PROJECT_HOME/python/common/c
 
 datapath="${PROJECT_HOME}/dataset"
 if [ ! -d "${PROJECT_HOME}/dataset/breast_cancer_wisconsin_vertical/2party" ]; then
-   python "${PROJECT_HOME}/python/common/dataset/breast_cancer_wisconsin.py" --mode "vertical" --splits 2 --party "labeled" "1"
+  if [ ! -f "${PROJECT_HOME}/python/xfl.py" ]; then
+    python "${PROJECT_HOME}/common/dataset/breast_cancer_wisconsin.py" --mode "vertical" --splits 2 --party "labeled" "1"
+  else
+    python "${PROJECT_HOME}/python/common/dataset/breast_cancer_wisconsin.py" --mode "vertical" --splits 2 --party "labeled" "1"
+  fi
 fi
-
 
 type="vertical"
 operator="kmeans"
@@ -46,12 +49,12 @@ else
 fi
 
 cd $PROJECT_HOME
-python "${PROJECT_HOME}/python/xfl.py" -s --config_path ${config_path} &
+python "$EXECUTE_PATH" -s --config_path ${config_path} &
 sleep 1
-python "${PROJECT_HOME}/python/xfl.py" -t node-1 --config_path ${config_path} &
+python "$EXECUTE_PATH" -t node-1 --config_path ${config_path} &
 sleep 1
-python "${PROJECT_HOME}/python/xfl.py" -t node-2 --config_path ${config_path} &
+python "$EXECUTE_PATH" -t node-2 --config_path ${config_path} &
 sleep 1
-python "${PROJECT_HOME}/python/xfl.py" -a --config_path ${config_path} &
+python "$EXECUTE_PATH" -a --config_path ${config_path} &
 sleep 1
-python "${PROJECT_HOME}/python/xfl.py" -c start --config_path ${config_path} &
+python "$EXECUTE_PATH" -c start --config_path ${config_path} &

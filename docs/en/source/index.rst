@@ -6,29 +6,34 @@
 Welcome to XFL's documentation!
 ===============================
 
-XFL is a high-performance, high-flexibility, high-applicability, lightweight, open and easy-to-use Federated Learning framework. It supports various federation models such as horizontal federation and vertical federation. XFL uses homomorphic encryption, differential privacy, secure multi-party computing and other encryption computing technologies to protect users' original data from being leaked, and uses secure communication protocols to protect communication security, enabling users to conduct joint modeling on the basis of legal compliance to achieve data value.
+XFL is a high-performance, high-flexibility, high-applicability, lightweight, open and easy-to-use Federated Learning framework.
+It supports a variety of federation models in both horizontal and vertical federation scenarios. 
+To enable users to jointly train model legally and compliantly to unearth the value of their data, XFL adopts homomorphic encryption,
+differential privacy, secure multi-party computation and other security technologies to protect users' local data from leakage,
+and applies secure communication protocols to ensure communication security.
 
-Features:
+Highlights:
+
   - High-performance algorithm library
 
-    - Comprehensive algorithms: Support a variety of mainstream horizontal/vertical federation algorithms.
-    - Excellent performance: The performance greatly exceeds the average level of the performance evaluation of CAICT(China Academy of Information and Communications Technology).
-    - Network optimization: The training task can be completed in the case of weak network, high latency, massive packet loss, and long-term network disconnection.
+    - Comprehensive algorithms: support a variety of mainstream horizontal/vertical federation algorithms.
+    - Excellent performance: significantly exceeds the average performace evaluated by CAICT (China Academy of Information and Communications Technology).
+    - Network optimization: adapt to high latency, frequent packet loss, and unstable network environments.
 
-  - Flexible application deployment
+  - Flexible deployment
 
-    - Flexible computing nodes: Support two-party/multi-party computing nodes deployment.
-    - Flexible allocation of computing power: With or without label, any party can be the initiator, and assist computing nodes can be deployed on any party.
-    - Flexible installation and deployment: Support CPU/GPU/hybrid deployment.
+    - parties: support two-party/multi-party federated learning.
+    - schedulering: any participant can act as a task scheduler.
+    - hardware: support CPU/GPU/hybrid deployment.
 
-  - Lightweight and open
+  - Lightweight, open and easy to use:
 
-    - Lightweight: Low requirements on server performance, and some algorithms can be run in environments with poor performance.
-    - Open: Support mainstream machine learning frameworks such as Pytorch and Tensorflow, and support user-defined horizontal models.
-
+    - Lightweight: low requirements on host performance.
+    - Open: support mainstream machine learning frameworks such as Pytorch and Tensorflow, and user can conveniently design their own horizontal federation models.
+    - Easy to use: able to run in both docker environment and Conda environment.
 
 Function support
-----------
+--------------------
 
 ==================================    ==================
              Function                   Implementation
@@ -40,7 +45,7 @@ Function support
   Partial Homomorphic Encryption              ✅
    Fully Homomorphic Encryption               ✅
            One Time Pad                       ✅
-  Multi-party Secure Computation              ✅
+  Secure Multi-party Computation              ✅
        Differential Privacy                   ✅
    PSI(Private Set Intersection)              ✅
 PIR(Private Information Retrieval)            ✅
@@ -57,7 +62,7 @@ PIR(Private Information Retrieval)            ✅
    :caption: TUTORIAL
 
    Introduction <tutorial/introduction.md>
-   Usage <tutorial/usage.md>
+   Quickstart Guide <tutorial/usage.md>
 
 .. toctree::
    :maxdepth: 2

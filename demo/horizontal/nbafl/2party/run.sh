@@ -1,26 +1,23 @@
 #!/bin/sh
 
 # Copyright 2022 The XFL Authors. All rights reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-if [ "$(uname)" = "Darwin" ]
-then
+if [ "$(uname)" = "Darwin" ]; then
   export PROJECT_HOME=$(greadlink -f ../../../../)
   echo "PROJECT_HOME:""$PROJECT_HOME"
-elif [ "$(uname -s)" = "Linux" ]
-then
+elif [ "$(uname -s)" = "Linux" ]; then
   export PROJECT_HOME=$(readlink -f ../../../../)
   echo "PROJECT_HOME:""$PROJECT_HOME"
 fi
@@ -29,7 +26,11 @@ export PYTHONPATH=$PYTHONPATH:$PROJECT_HOME/python:$PROJECT_HOME/python/common/c
 
 datapath="${PROJECT_HOME}/dataset"
 if [ ! -d "${PROJECT_HOME}/dataset/breast_cancer_wisconsin_horizontal/2party" ]; then
-  python "${PROJECT_HOME}/python/common/dataset/breast_cancer_wisconsin.py" --mode "horizontal" --splits 2 --party "1" "2"
+  if [ ! -f "${PROJECT_HOME}/python/xfl.py" ]; then
+    python "${PROJECT_HOME}/common/dataset/breast_cancer_wisconsin.py" --mode "horizontal" --splits 2 --party "1" "2"
+  else
+    python "${PROJECT_HOME}/python/common/dataset/breast_cancer_wisconsin.py" --mode "horizontal" --splits 2 --party "1" "2"
+  fi
 fi
 
 type="horizontal"

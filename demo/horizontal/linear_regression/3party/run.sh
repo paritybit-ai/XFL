@@ -29,7 +29,11 @@ export PYTHONPATH=$PYTHONPATH:$PROJECT_HOME/python:$PROJECT_HOME/python/common/c
 
 datapath="${PROJECT_HOME}/dataset"
 if [ ! -d "${PROJECT_HOME}/dataset/boston_housing_price_horizontal/3party" ]; then
-  python "${PROJECT_HOME}/python/common/dataset/boston_housing_price.py" --mode "horizontal" --splits 3 --party "1" "2" "3"
+  if [ ! -f "${PROJECT_HOME}/python/xfl.py" ]; then
+    python "${PROJECT_HOME}/common/dataset/boston_housing_price.py" --mode "horizontal" --splits 3 --party "1" "2" "3"
+  else
+    python "${PROJECT_HOME}/python/common/dataset/boston_housing_price.py" --mode "horizontal" --splits 3 --party "1" "2" "3"
+  fi
 fi
 
 type="horizontal"

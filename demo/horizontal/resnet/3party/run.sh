@@ -29,7 +29,11 @@ export PYTHONPATH=$PYTHONPATH:$PROJECT_HOME/python:$PROJECT_HOME/python/common/c
 
 datapath="${PROJECT_HOME}/dataset"
 if [ ! -d "${PROJECT_HOME}/dataset/cifar-10/3party" ]; then
+   if [ ! -f "${PROJECT_HOME}/python/xfl.py" ]; then
+   python "${PROJECT_HOME}/common/dataset/cifar.py" --splits 3 --party "1" "2" "3" --keep_raw_data
+else
    python "${PROJECT_HOME}/python/common/dataset/cifar.py" --splits 3 --party "1" "2" "3" --keep_raw_data
+fi
 fi
 
 type="horizontal"
@@ -45,14 +49,14 @@ else
 fi
 
 cd $PROJECT_HOME
-python "${PROJECT_HOME}/python/xfl.py" -t node-1 --config_path ${config_path} &
+python "$EXECUTE_PATH" -t node-1 --config_path ${config_path} &
 sleep 1
-python "${PROJECT_HOME}/python/xfl.py" -t node-2 --config_path ${config_path} &
+python "$EXECUTE_PATH" -t node-2 --config_path ${config_path} &
 sleep 1
-python "${PROJECT_HOME}/python/xfl.py" -t node-3 --config_path ${config_path} &
+python "$EXECUTE_PATH" -t node-3 --config_path ${config_path} &
 sleep 1
-python "${PROJECT_HOME}/python/xfl.py" -a --config_path ${config_path} &
+python "$EXECUTE_PATH" -a --config_path ${config_path} &
 sleep 1
-python "${PROJECT_HOME}/python/xfl.py" -s --config_path ${config_path} &
+python "$EXECUTE_PATH" -s --config_path ${config_path} &
 sleep 1
-python "${PROJECT_HOME}/python/xfl.py" -c start --config_path ${config_path} &
+python "$EXECUTE_PATH" -c start --config_path ${config_path} &
