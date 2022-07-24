@@ -17,3 +17,5 @@ jobs:
           dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
           static_list: "XFL"
           clone_style: "ssh"
+          account_type: org
+          force_update: true
