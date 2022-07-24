@@ -4,7 +4,7 @@ To enable users to jointly train model legally and compliantly to unearth the va
 differential privacy, secure multi-party computation and other security technologies to protect users' local data from leakage,
 and applies secure communication protocols to ensure communication security.
 
-# Highlights:
+# Highlights
 
   - High-performance algorithm library
 
