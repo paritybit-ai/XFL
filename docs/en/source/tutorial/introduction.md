@@ -44,7 +44,7 @@ May include:
 - assist trainer: A node used to assist training, such as horizontal gradient aggregation.
 
 
-## Architecture diagram
+## Architecture
 
 
 

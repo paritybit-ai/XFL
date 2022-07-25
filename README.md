@@ -34,7 +34,7 @@ Running in standalone mode
 
 ```shell
 # create and activate the virtual environment
-conda create -n xfl python=3.9
+conda create -n xfl python=3.9.7
 conda activate xfl
 
 # install dependencies
