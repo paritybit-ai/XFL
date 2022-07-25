@@ -17,7 +17,7 @@ Highlights:
   - High-performance algorithm library
 
     - Comprehensive algorithms: support a variety of mainstream horizontal/vertical federation algorithms.
-    - Excellent performance: significantly exceeds the average performace evaluated by CAICT (China Academy of Information and Communications Technology).
+    - Excellent performance: significantly exceeds the average performace of federated learning products. 
     - Network optimization: adapt to high latency, frequent packet loss, and unstable network environments.
 
   - Flexible deployment
