@@ -33,7 +33,8 @@ and applies secure communication protocols to ensure communication security.
 Running in standalone mode
 
 ```shell
-# activate the virtual environment
+# create and activate the virtual environment
+conda create -n xfl python=3.9
 conda activate xfl
 
 # install dependencies
@@ -49,7 +50,7 @@ sh run.sh
 - [Quick Start](./docs/en/source/tutorial/usage.md)
 # Document
 
-- [Document](./docs/en/source/index.rst)
+- [Document](https://xfl.readthedocs.io/en/latest)
 ## Tutorial
 - [Introduction](./docs/en/source/tutorial/introduction.md)
 
