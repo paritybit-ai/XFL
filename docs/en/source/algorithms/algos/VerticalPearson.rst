@@ -16,16 +16,16 @@ Pearson correlation coefficient is the ratio between the covariance of two varia
 Parameter List
 --------------
 
-**identity**: ``str`` Federated identity of the party, should be one of the `label_trainer`, `trainer` or `assist trainer`.
+**identity**: ``str`` Federated identity of the party, should be one of `label_trainer`, `trainer` or `assist trainer`.
 
 **model_info**:  
     - **name**: ``str`` Model name, should be `vertical_pearson`.
-    - **config**: ``map`` Model configuration, `{}`, no need to config here.
+    - **config**: ``map`` Model configuration, no need to config here.
 
 **input**:  
     - **trainset**:
         - **type**: ``str`` Train dataset type, support `csv`.
-        - **path**: ``str`` If type is `csv`, folder name of train dataset.
+        - **path**: ``str`` If type is `csv`, folder path of train dataset.
         - **name**: ``bool`` If type is `csv`, file name of train dataset.
         - **has_id**: ``bool`` If type is `csv`, whether dataset has id column.
         - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
@@ -33,7 +33,7 @@ Parameter List
 **output**:  
     - **model**: 
         - **type**: ``str`` Model output format, support "file".
-        - **path**: ``str`` Folder name of output model.
+        - **path**: ``str`` Folder path of output model.
         - **name**: ``str`` File name of output model.
 
 **train_info**:  

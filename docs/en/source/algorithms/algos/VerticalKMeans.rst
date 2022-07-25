@@ -13,34 +13,34 @@ The calculation process for vertical Kmeans (two parties in this example) is sho
 Parameters List
 ---------------
 
-**identity**: ``str`` Federated identity of the party, should be one of the `label_trainer`, `trainer` or `assist trainer`.
+**identity**: ``str`` Federated identity of the party, should be one of `label_trainer`, `trainer` or `assist trainer`.
 
 **model_info**:  
     - **name**: ``str`` Model name, should be `vertical_kmeans`.
-    - **config**: ``map`` Model configuration, `{}`, no need to config here.
+    - **config**: ``map`` Model configuration, no need to config here.
 
 **input**:  
     - **trainset**:
         - **type**: ``str`` Train dataset type, support `csv`.
-        - **path**: ``str`` If type is `csv`, folder name of train dataset.
+        - **path**: ``str`` If type is `csv`, folder path of train dataset.
         - **name**: ``bool`` If type is `csv`, file name of train dataset.
         - **has_id**: ``bool`` If type is `csv`, whether dataset has id column.
         - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
 **output**:  
     - **model**: 
         - **type**: ``str`` Model output format, support "file".
-        - **path**: ``str`` Folder name of output model.
+        - **path**: ``str`` Folder path of output model.
         - **name**: ``str`` File name of output model.
 
 
 **train_info**:  
     - **device**: ``str`` Device on which the algorithm runs, support `cpu`.
     - **aggregation_config**:
-        - **type**: ``str`` Aggregation method, support "fedavg"。
+        - **type**: ``str`` Aggregation method, support "fedavg".
         - **encryption**:
-            - **method**: ``str`` Encryption, recommend "otp".
+            - **method**: ``str`` Encryption method, recommend "otp".
             - **key_bitlength**: ``int`` Key length of one time pad encryption, support 64 and 128.
-            - **data_type**: ``str`` Input data type, support `torch.Tensor` and `numpy.ndarray`, depending on model data type。
+            - **data_type**: ``str`` Input data type, support `torch.Tensor` and `numpy.ndarray`, depending on model data type.
             - **key_exchange**:
                 - **key_bitlength**: ``int`` Bit length of paillier key, recommend to be greater than or equal to 2048.
                 - **optimized**: ``bool`` Whether to use optimized method.

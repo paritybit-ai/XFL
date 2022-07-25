@@ -19,34 +19,34 @@ The algorithm can be described as follows,
 Parameters List
 ---------------
 
-**identity**: ``str`` Federated identity of the party, should be one of the `label_trainer`, `trainer` or `assist trainer`.
+**identity**: ``str`` Federated identity of the party, should be one of `label_trainer`, `trainer` or `assist trainer`.
 
 **model_info**:
     - **name**: ``str`` Model name, should be `vertical_xgboost`.
-    - **config**: ``map`` Model configuration, `{}`, no need to config here.
+    - **config**: ``map`` Model configuration, no need to config here.
 
 **input**:
     - **trainset**: 
         - **type**: ``str`` Train dataset type, support `csv`.
-        - **path**: ``str`` If type is `csv`, folder name of train dataset.
+        - **path**: ``str`` If type is `csv`, folder path of train dataset.
         - **name**: ``str`` If type is `csv`, file name of train dataset.
         - **has_id**: ``bool`` If type is `csv`, whether dataset has id column.
         - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
     - **valset**: 
         - **type**: ``str`` Validation dataset type, support `csv`.
+        - **path**: ``str`` If type is `csv`, folder path of validation dataset.
         - **name**: ``str`` If type is `csv`, file name of validation dataset.
-        - **path**: ``str`` If type is `csv`, folder name of validation dataset.
         - **has_id**: ``bool`` If type is `csv`, whether dataset has id column.
         - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
 
 **output**:
     - **model**:
-        - **path**: ``str`` Folder name of output model.
+        - **path**: ``str`` Folder path of output model.
         - **name**: ``str`` File name of output model.
     - **metrics**:
-        - **path**: ``str`` Folder name of output metrics.
+        - **path**: ``str`` Folder path of output metrics.
     - **evaluations**:
-        - **path**: ``str`` Folder name of output evaluations.
+        - **path**: ``str`` Folder path of output evaluations.
         
 **train_info**:
     - **device**: ``str`` Device on which the algorithm runs, support `cpu`.

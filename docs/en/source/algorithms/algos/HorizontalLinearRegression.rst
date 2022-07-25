@@ -50,7 +50,7 @@ Parameter List
         - **aggregation_config**:
             - **type**: ``str`` Aggregation method, support "fedavg".
             - **encryption**:
-                - **method**: ``str`` Encryption, recommend "otp".
+                - **method**: ``str`` Encryption method, recommend "otp".
                 - **key_bitlength**: ``int`` Key length of one time pad encryption，support 64 and 128.
                 - **data_type**: ``str`` Input data type, support `torch.Tensor` and `numpy.ndarray`, depending on model data type.
                 - **key_exchange**:
