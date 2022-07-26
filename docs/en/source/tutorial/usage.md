@@ -45,7 +45,7 @@ docker run -it --entrypoint /bin/bash \
 basebit/xfl:1.2.0
 ```
 
-### Quick start a demo
+### Quick start demo
 Running inside docker contrainer 
 ```shell
 cd demo/vertical/logistic_regression/2party
@@ -87,7 +87,7 @@ pip install -U pip
 pip install -r requirements.txt
 ```
 
-### Quick start a demo
+### Quick start demo
 
 Running in standalone mode
 ```shell
