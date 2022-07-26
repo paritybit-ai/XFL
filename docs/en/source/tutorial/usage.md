@@ -14,7 +14,7 @@ We provide two methods for users to start running with XFL: via docker or conda.
 ### Clone the repository
 ```shell
 git clone https://github.com/paritybit-ai/XFL
-cd federated-learning
+cd XFL
 ```
 
 ## Using docker
