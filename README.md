@@ -37,8 +37,24 @@ Running in standalone mode
 conda create -n xfl python=3.9.7
 conda activate xfl
 
+# install redis and other dependencies
+# Ubuntu
+apt install redis-server
+# CentOS
+yum install epel-release
+yum install redis
+# MacOS
+brew install redis
+brew install coreutils
+
+# install python dependencies
+# update pip
+pip install -U pip
 # install dependencies
 pip install -r requirements.txt
+
+# set permission
+sudo chmod 755 /opt
 
 # enter the project directory
 cd ./demo/vertical/logistic_regression/2party

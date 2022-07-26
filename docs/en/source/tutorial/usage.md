@@ -24,7 +24,7 @@ cd XFL
 # Get the redis image
 docker pull redis:7.0.3
 
-# start a redis server. Make sure
+# start a redis server, and make sure that port 6379 is open
 docker run --name my_redis -p 6379:6379 -d redis:7.0.3
 ```
 
@@ -54,7 +54,7 @@ sh run.sh
 
 ## Using Conda
 
-### Installation
+### Environment Preparation
 
 It is recommended to use anaconda to create a virtual environment.
 
@@ -62,6 +62,20 @@ It is recommended to use anaconda to create a virtual environment.
 conda create -n xfl python=3.9.7
 
 conda activate xfl
+```
+Install redis and other dependencies
+
+```shell
+# Ubuntu
+apt install redis-server
+
+# CentOS
+yum install epel-release
+yum install redis
+
+# MacOS
+brew install redis
+brew install coreutils
 ```
 
 install python dependencies
@@ -77,20 +91,25 @@ pip install -r requirements.txt
 
 Running in standalone mode
 ```shell
+# set permission
+sudo chmod 755 /opt
+
 # enter the project directory
-cd ./demo/vertical/logistic_regression/2party
+cd demo/vertical/logistic_regression/2party
 
 # activate the virtual environment
 conda activate xfl
 
 # start redis-server (skip if it is already run)
-redis-server &
+redis-server & # for Ubuntu and MacOS
+
+systemctl start redis # for CentOS
 
 # start running the demo
 sh run.sh
 ```
 
-## Demonstration use case tutorial
+## Demonstration tutorial
 
 We provide various examples in the `demo` directory of the project.
 
@@ -113,16 +132,16 @@ demo
 ```
 
 In each subdirectory, an executable script for demonstration is provided.
-For example, the following commands start the vertical logistic regression (two parties)
+For example, the following commands run the vertical logistic regression (two parties)
 ```
-cd ./demo/vertical/logistic_regression/2party
+cd demo/vertical/logistic_regression/2party
 
 sh run.sh
 ```
 
-* The read and write permissions to the `\opt` directory is required when running with the default configuration. Thus, if the permission cannot be obtained, one should modify the configuration under the corresponding subdirectory.  
-* After running the task, a `JOB_ID` will be automatically assigned. According to this `JOB_ID`, the output and log files of the task can be obtained.
-* After all tasks are executed, the log `INFO: All Stage Successful.` is printed to indicate that all tasks were executed successfully.
+* The read and write permissions to the `\opt` directory are required when running with the default configuration. If the permission cannot be obtained, one should modify the configuration under the corresponding subdirectory.  
+* A `JOB_ID` will be automatically assigned to the task after it is running. According to this `JOB_ID`, the output and log files of the task can be obtained.
+* After tasks are executed, the log `INFO: All Stage Successful.` will be printed, indicating that all tasks were executed successfully.
 
 A successfully executed *vertical logistic regression (two parties)* produces the following files:
 ```
@@ -140,7 +159,7 @@ A successfully executed *vertical logistic regression (two parties)* produces th
     └── 4               # [JOB_ID]
         └── xfl.log     # log file
 ```
-After the task is completed, one can clean up residual subprocesses with following script.
+After the task is completed, one can clean up residual processes with following script.
 ```shell
 # clean up residual processes
 sh stop.sh
