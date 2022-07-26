@@ -54,7 +54,7 @@ pip install -U pip
 pip install -r requirements.txt
 
 # set permission
-sudo chmod 777 /opt
+sudo chmod 755 /opt
 
 # enter the project directory
 cd ./demo/vertical/logistic_regression/2party
