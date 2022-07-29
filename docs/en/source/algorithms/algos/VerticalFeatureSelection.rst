@@ -4,18 +4,20 @@ Vertical Feature Selection
 
 Introduction
 ------------
-Feature selection is performed according to the iv value and the Pearson correlation coefficient (:ref:`vertical-pearson`) on the vertical federated learning system.
-This operator consists of three stages:
+
+Feature selection relies on the output of algorithm `VerticalBinningWoeIV` and `VerticalPearson`.
+
+The operator consists of three stages:
 
 1. Vertical Binning Woe IV
 2. Vertical Pearson
 3. Performing feature selection based on the results of the above two steps.
 
+
 Parameters List
 ---------------
 
-The first two stages are vertical_binning_woe_iv and vertical_pearson respectively. For detailed parameter explanation, see Vertical Binning Woe Iv and Vertical Pearson.
-The third stage is feature selection, and the specific parameters are defined as follows:
+The parameters given below is only for feature selection.
 
 **identity**: ``str`` Federated identity of the party, should be one of `label_trainer`, `trainer` or `assist trainer`.
 
@@ -36,40 +38,32 @@ The third stage is feature selection, and the specific parameters are defined as
         - **has_id**: ``bool`` If type is `csv`, whether dataset has id column.
         - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
     - **iv_result**:
-        - **path**: ``str`` Folder path of output iv model.
-        - **name**: ``str`` File name of output iv model.
-        - **type**: ``str`` File type of output iv model.
+        - **path**: ``str`` Folder path of the iv_result from `VerticalBinningWoeIV`.
+        - **name**: ``str`` File name.
     - **corr_result**:
-        - **path**: ``str`` Folder path of output pearson model.
-        - **name**: ``str`` File name of output pearson model.
-        - **type**: ``str`` File type of output pearson model.
+        - **path**: ``str`` Folder path of the result from `VerticalPearson`.
+        - **name**: ``str`` File namel.
 
 **output**:
     - **model**:
         - **path**: ``str`` Folder path of output model.
         - **name**: ``str`` File name of output model.
-        - **type**: ``str`` File type of output model.
+        - **type**: ``str`` File type, support "csv".
     - **trainset**:
-        - **type**: ``str`` Train dataset type after feature selection, support `csv`.
-        - **path**: ``str`` If type is `csv`, folder path of train dataset after feature selection.
-        - **name**: ``str`` If type is `csv`, file name of train dataset after feature selection.
-        - **has_id**: ``bool`` If type is `csv`, whether dataset has id column.
-        - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
+        - **path**: ``str`` Folder path of train dataset after feature selection.
+        - **name**: ``str`` File name of train dataset after feature selection.
     - **valset**:
-        - **type**: ``str`` Validation dataset type after feature selection, support `csv`.
-        - **path**: ``str`` If type is `csv`, folder path of validation dataset after feature selection.
-        - **name**: ``str`` If type is `csv`, file name of validation dataset after feature selection.
-        - **has_id**: ``bool`` If type is `csv`, whether dataset has id column.
-        - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
+        - **path**: ``str`` Folder path of validation dataset after feature selection.
+        - **name**: ``str`` File name of validation dataset after feature selection.
 
 **train_info**:
     - **device**: ``str`` Device on which the algorithm runs, support `cpu`.
     - **params**:
         - **filter_params**:
             - **common**:
-                - **metrics**: ``str`` Metrics evaluation parameters.
-                - **filter_method**: ``str`` Feature filtering method.
-                - **threshold**: ``float`` Feature filtering threshold.
+                - **metrics**: ``str`` Metric type, support `iv`.
+                - **filter_method**: ``str`` Feature filtering method, support `threshold`.
+                - **threshold**: ``float`` Feature filtering threshold if filter_method is `threshold`.
             - **correlation**:
-                - **sort_metric**: ``str`` Metric to sort on.
-                - **correlation_threshold**: ``float`` Correlation filtering threshold.
+                - **sort_metric**: ``str`` Metric type for sorting, support `iv`.
+                - **correlation_threshold**: ``float`` Correlation threshold.

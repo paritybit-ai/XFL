@@ -56,16 +56,16 @@ Parameter List
                 - **csprng**:
                     - **name**: ``str``  Pseudo-random number generation method.
                     - **method**: ``str`` Corresponding hash method.
-        - **optimizer_config**:
+        - **optimizer_config**: Support optimizers and their parameters defined in pytorch or registered by user. For example:
             - **Adam**:
                 - **lr**: ``float`` Optimizer learning rate.
                 - **amsgrad**: ``bool`` Whether to use the AMSGrad variant.
-        - **lr_scheduler_config**:
+        - **lr_scheduler_config**: Support lr_scheduler and their parameters defined in pytorch or registered by user. For example:
             - **StepLR**:
                 - **step_size**: ``int`` Period of learning rate decay.
                 - **gamma**: ``float`` Multiplicative factor of learning rate decay.
         - **lossfunc_config**: Loss function configuration, support `BCEWithLogitsLoss`.
-        - **metric_config**:
+        - **metric_config**: Support multiple metrics.
             - **accuracy**: Accuracy.
             - **precision**: Precision.
             - **recall**: Recall.

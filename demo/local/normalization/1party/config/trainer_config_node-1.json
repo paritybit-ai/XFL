@@ -27,23 +27,16 @@
         },
         "output": {
             "model": {
-                "type": "file",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "name": "local_normalizer_labeled.pt"
             },
             "trainset": {
-                "type": "csv",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "normalized_breast_cancer_wisconsin_vertical_labeled_train.csv",
-                "header": true,
-                "has_id": true
+                "name": "normalized_breast_cancer_wisconsin_vertical_labeled_train.csv"
             },
             "valset": {
-                "type": "csv",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "normalized_breast_cancer_wisconsin_vertical_labeled_test.csv",
-                "header": true,
-                "has_id": true
+                "name": "normalized_breast_cancer_wisconsin_vertical_labeled_test.csv"
             }
         },
         "train_info": {

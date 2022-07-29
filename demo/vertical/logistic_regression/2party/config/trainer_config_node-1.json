@@ -32,17 +32,14 @@
         },
         "output": {
             "model": {
-                "type": "file",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "name": "vertical_logistic_regression_labeled.pt"
             },
             "metrics": {
-                "type": "csv",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "header": true
             },
             "evaluation": {
-                "type": "csv",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "header": true
             }

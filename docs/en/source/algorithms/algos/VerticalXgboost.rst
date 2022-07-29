@@ -12,7 +12,7 @@ values of `trainer` as well as their comparative relationship. On the other side
 first and second order derivatives, ensuring no leakage on the label and features of the 
 `label trainer`, as well as the derivatives.
 
-The algorithm can be described as follows,
+The algorithm can be described as follows:
 
 .. image:: ../../images/vertical_xgb_en.png
 
@@ -87,3 +87,6 @@ Parameters List
         - **validation_batch_size**: ``int`` Batch size for validation.
         - **col_batch**: ``int`` Number of features used in a batch during node splitting.
         - **row_batch**: ``int`` Number of samples used in a batch during node splitting.
+
+
+.. [SecureBoost] Cheng K, Fan T, Jin Y, et al. Secureboost: A lossless federated learning framework[J]. IEEE Intelligent Systems, 2021, 36(6): 87-98.

@@ -19,7 +19,6 @@
         },
         "output": {
             "model": {
-                "type": "file",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "name": "kmeans_1.pkl"
             }

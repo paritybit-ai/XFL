@@ -5,8 +5,8 @@ Vertical K-means
 Introduction
 ------------
 
-Vertical Kmeans is a model obtained by building Kmeans model in machine learning on the vertical federated learning system.
-The calculation process for vertical Kmeans (two parties in this example) is shown as follows, where A is a labeled participant, B is an unlabeled participant, and C is an assist party that performs aggregation operations.
+The calculation process for vertical Kmeans (two parties in this example) is illustracted as follows, 
+where A and B are trainer or label_trainer who own the data, C is the assist_trainer who performs aggregation operations.
 
 .. image:: ../../images/vertical_kmeans_en.png
 
@@ -28,9 +28,8 @@ Parameters List
         - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
 **output**:  
     - **model**: 
-        - **type**: ``str`` Model output format, support "file".
-        - **path**: ``str`` Folder path of output model.
-        - **name**: ``str`` File name of output model.
+        - **path**: ``str`` Folder path of the output.
+        - **name**: ``str`` File name of the output.
 
 
 **train_info**:  
@@ -47,7 +46,7 @@ Parameters List
             - **csprng**:
                 - **name**: ``str`` Pseudo-random number generation method.
                 - **method**: ``str`` Corresponding hash method.
-            - **weight_factor**: ``list`` or ``float`` Weight factor. Each non-scheduler node needs to set weight_factor representing the weight of the model parameters of this node, while the scheduler does not need to be set.
+            - **weight_factor**: ``list`` or ``float`` Weight factor of the local data, need to be set for non-assist_trainer.
             - **params**:
                 - **k**: ``int`` Number of clusters.
                 - **max_iter**: ``int`` Maximum iteration.

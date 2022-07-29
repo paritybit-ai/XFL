@@ -5,9 +5,7 @@ Local Standard Scaler
 Introduction
 ------------
 
-Local standard scaler is a module that standardize each column of features by subtracting the mean and dividing by 
-the standard deviation to have a mean of 0 and standard deviation of 1. Parameter `train_info` defines different configuration information for each participant 
-during the training process.
+Local standard scaler is a module that standardize each column of features by subtracting the mean then and then scaling to unit variance. 
 
 Parameter List
 --------------
@@ -33,25 +31,18 @@ Parameter List
         - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
 **output**:
     - **model**:
-        - **type**: ``str`` Model output format, support "file".
         - **path**: ``str`` Folder path of output model.
         - **name**: ``str`` File name of output model.
     - **trainset**: 
-        - **type**: ``str`` Output train dataset type, support `csv`.
-        - **path**: ``str`` If type is `csv`, folder path of output train dataset.
-        - **name**: ``str`` If type is `csv`, file name of output train dataset.
-        - **has_id**: ``bool`` If type is `csv`, whether dataset has id column.
-        - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
+        - **path**: ``str`` Folder path of output train dataset.
+        - **name**: ``str`` File name of output train dataset.
     - **valset**: 
-        - **type**: ``str`` Output validation dataset type, support `csv`.
-        - **path**: ``str`` If type is `csv`, folder path of output validation dataset.
-        - **name**: ``str`` If type is `csv`, file name of output validation dataset.
-        - **has_id**: ``bool`` If type is `csv`, whether dataset has id column.
-        - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
+        - **path**: ``str`` Folder path of output validation dataset.
+        - **name**: ``str`` File name of output validation dataset.
 
 **train_info**:  
     - **device**: ``str`` Device on which the algorithm runs, support `cpu`.
-    - **params**:  
-        - **with_mean**: ``str`` Whether the mean is provided, if not set to 0.
-        - **with_std**: ``int`` Whether the std is provided, if not set to 1.
-        - **feature_standardize_config**: ``repeated<map>`` Different standardization settings for each column, of which the format is: {column name: {with_mean: `bool`, with_std: `bool`},...,column name: {with_mean: `bool`, with_std: `bool`}}.
+    - **params**:  Parameters `with_mean` and `with_std` is valid for all data except for the data involved in `feature_standardize_config`.
+        - **with_mean**: ``bool`` If True, center the data before scaling by column.
+        - **with_std**: ``bool`` If True, scale the data to unit standard deviation by column.
+        - **feature_standardize_config**: ``repeated<map>`` Fine-grained configuration for standardization. The format is defined as: {column name: {with_mean: `bool`, with_std: `bool`},..., column name: {with_mean: `bool`, with_std: `bool`}}.

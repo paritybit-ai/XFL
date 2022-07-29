@@ -5,7 +5,7 @@ Vertical Logistic Regression
 Introduction
 ------------
 
-Vertical logistic regression is a model obtained by building logistic regression model on the vertical federated learning system.
+The reaization of vertical logistic regression algorithm is based on [Yang2019]_ .
 
 Parameter List
 --------------
@@ -35,15 +35,12 @@ Parameter List
 
 **output**:  
     - **model**: 
-        - **type**: ``str`` Model output format, support "file".
         - **path**: ``str`` Folder path of output model.
         - **name**: ``str`` File name of output model.
     - **metrics**:  
-        - **type**: ``str`` Metrics file type, support `csv`.
         - **path**: ``str`` If type is `csv`, folder path of metrics.
         - **header**: ``bool`` Whether having a header.
     - **evaluations**:  
-        - **type**: ``str`` Evaluations file type, support `csv`.
         - **path**: ``str`` If type is `csv`, folder path of evaluations.
         - **header**: ``bool`` Whether having a header.
 
@@ -89,3 +86,6 @@ Parameter List
 
         - **extra_config**:
             - **shuffle_seed**: ``int`` Random seed.
+
+
+.. [Yang2019] Yang S, Ren B, Zhou X, et al. Parallel distributed logistic regression for vertical federated learning without third-party coordinator[J]. arXiv preprint arXiv:1911.09824, 2019.
