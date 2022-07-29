@@ -2,12 +2,15 @@
 Operator Development
 =======================
 
-Create Operator File
-=======================
+Create Operator File Structure
+=================================
 
-Before creating an operator in XFL, you must first create the directory and files where the operator will be located. The built-in operators in XFL are stored in the `python/alogorithm/framework` folder。
-when creating a new operator，you need to create the operator directory in consistent with the form "federation type" [#type]_ /"algorithm name", then you need to create corresponding .py file based on the “federation role” [#role]_ which the operator needs.
-Take the creation of Vertical Xgboost operator as an example. The operator federation type is vertical and the algorithm name is xgboost. The operator contains two roles: label_trainer and trainer. Therefore, the created file directory structure should be as follows:
+Before creating an operator in XFL, you need to first create the directory and files where the operator will be located. 
+The built-in operators in XFL are stored in the `python/alogorithm/framework` folder.
+To create a new operator, first, create the operator directory in consistent with the form `federation type` [#type]_ / `algorithm name`, 
+second, create the corresponding `.py` file according to the `federation role` [#role]_ that the operator will involve with.
+Take the creation of Vertical Xgboost operator as an example. The federation type is vertical and the algorithm name is xgboost. 
+The operator includes two roles: label_trainer and trainer. Therefore, the file structure should be as follows:
 
 ::
 
@@ -20,15 +23,17 @@ Take the creation of Vertical Xgboost operator as an example. The operator feder
 Create Operator Class
 =======================
 
-After creating the operator files, you need to create corresponding operator classes for each federated role. XFL supports automatic discovery of operators, which requires the following of naming conventions as below.
+After creating the operator files, you need to create corresponding operator classes for each federated role. 
+XFL supports automatic discovery of operators, which requires the developers to follow the following naming rules to name the class of operator.
 The operator name is obtained by the following steps:
 
-1. Join the federation type, operator name, and federation role with underscore'_';
-#. Change the initial letter and the letters after the underscores to uppercase;
+1. Concatenate the federation type, algorithm name, and federation role by underscore '_';
+#. Switch the first letter and the letters right after the underscores to uppercase;
 #. Remove the underscores to get the class name.
 
-Taking Vertical Xgboost operator as an example, you need to create the class VerticalXgboostLabelTrainer in label_trainer.py, and create the class VerticalXgboostTrainer in trainer.py.
-All operators accept the same parameter train_info, which is a dictionary type, see [Algorithm Parameter Explanation](section1.4/section1.4.3.md). Each class must contain a fit method which is implemented for the training process of operators and takes no other parameters. For example:
+Taking Vertical Xgboost operator as an example, you need to create class VerticalXgboostLabelTrainer in 'label_trainer.py', and class VerticalXgboostTrainer in 'trainer.py'.
+All operators accept a dictionary type parameter 'train_info'. Each class should implement a function called 'fit', 
+where the training process is expected to be implemented in. For example:
 
 .. code-block:: python
 
@@ -50,14 +55,15 @@ All operators accept the same parameter train_info, which is a dictionary type, 
             pass
 
 
-Develop Operator
-==================
+Develop of Operator
+======================
 
 Parameters of Operator
 ------------------------
 
 
-The operator receives train_conf as an input parameter, which is of dict type. The content of train_conf should be consistent with the parameters when the user calls the operator (through the API or through the json file). The main information in train_conf is as follows:
+The operator takes 'train_conf' as input, which is of type dict. The content of train_conf is read from the configuration(json format) of this operator for each party. 
+The major parameters define in 'train_conf' is as follows:
 
 .. code-block:: json
 
@@ -80,12 +86,17 @@ The operator receives train_conf as an input parameter, which is of dict type. T
         }
     }
 
-In the above, identity specifies the role of the operator caller. It should be one of label_trainer, trainer, or assist_trainer. model_info.name is the name of the operator, formed by operator type (horizontal, vertical or local) and algorithm name concatenated by underscore. input contains input data information, output contains output data information, and train_info contains necessary training information.
+In the above, identity specifies the role of party who call the operator. It should be one of `label_trainer`, `trainer`, and `assist_trainer`. 
+`model_info.name` is the name of the operator which consists of operator type (horizontal, vertical or local) and algorithm name concatenated by a underscore,
+`model_info.config` defines the construction of the model(if it is needed).
+`train_info` is supposed to contain parameters for training.
 
 Structure of Operator
 ----------------------
 
-The operator shoulc contain __init__ and fit methods. XLF initializes the operator through __init__, and trains the operator through fit. It is recommended to put code for one time operation such as data initialization, model instantiation, loss function, metric, optimizer, and communication channel in __init__ method and code for model training in fit.
+An operator should contain at least two functions, __init__ and fit. XLF initializes the operator by __init__, and trains the operator by calling fit function. 
+We suggest to put the code that called only once into __init__ function, such as initialization of dataset, model, loss function, metric, optimizer, and communication channel.
+
 
 Tools for Development
 ======================
@@ -93,7 +104,8 @@ Tools for Development
 Communication module
 ---------------------
 
-XFL has a concise communication module as a wrapper around grpc+redis. This communication module provides two modes of communication: point-to-point communication and broadcast communication. Developers can create channels, send and receive data using this module.
+XFL encapsulates a concise communication module based on grpc and redis. This communication module provides two modes of communication: 
+point-to-point communication and broadcast communication. Developers can create channels, send and receive data by using this module.
 
 1. Point-to-point communication
 
@@ -106,11 +118,9 @@ XFL has a concise communication module as a wrapper around grpc+redis. This comm
         """
         Args:
             name (str): channel name.
-            ids (list): id list for the two parties.
-            job_id (Union[str, int], optional): id of federated learning taks，retrieved automatically by default. Defaults to "".
-            auto_offset (bool, optional): if accumulate automatically communication numbers.
-                When setting to False, tag should be manually entered during communication and it is mandatory to ensure that different tags are used in different rounds.
-                Defaults to True.
+            ids (list): id list for both parties of communication.
+            job_id (Union[str, int], optional): id of the federated learning task, will be obtained interiorly if it is set to "".
+            auto_offset (bool, optional): whether to accumulate communication rounds automatically. When setting to false, the tag should be manually entered before calling a specific communication method while ensuring that different tags are used in different rounds. Default: True.
         """
    
 
@@ -122,13 +132,12 @@ XFL has a concise communication module as a wrapper around grpc+redis. This comm
 
         """"
         Args:
-            value (Any): data to send, arbitrary type.
-            tag (str, optional): If auto_offset is False, the tag need to be mannually entered and it is mandatory to ensure that different tags are used in different rounds. Defaults to '@'.
-            use_pickle (bool, optional): whether to serialize data with pickle. If data is already serialized, it should be set to true, otherwise set to false. 
-                Defaults to True.
+            value (Any): data to send. Any type.
+            tag (str, optional): if auto_offset is False, the tag need to be mannually entered while ensuring different tags are used in different rounds. Default: '@'.
+            use_pickle (bool, optional): whether to serialize data with pickle. If data is already serialized, it should be set to true, otherwise set to false. Default: True.
 
-        Returns:
-            int: 0 means success in sending，otherwise failure.
+        Returns: 
+            int: 0 means success in sending, otherwise failure.
         """
 
 - Receive data
@@ -138,13 +147,12 @@ XFL has a concise communication module as a wrapper around grpc+redis. This comm
     recv(tag: str = '@', use_pickle: bool = True, wait: bool = True) -> Any:
         """
         Args:
-            tag (str, optional): If auto_offset is False, the tag need to be mannually entered and it is mandatory to ensure that different tags are used in different rounds. Defaults to '@'.
-            use_pickle (bool, optional): whether to deserialize data with pickle. It should be identical to the sender's parameter. Defaults to True.
-                Defaults to True.
-            wait (bool, optional): wheter to wait for receiving to complete. If set to False, return immediately. Defaults to True.
+            tag (str, optional): if auto_offset is False, the tag need to be mannually entered and it is mandatory to ensure that different tags are used in different rounds. Default: '@'.
+            use_pickle (bool, optional): whether to deserialize data with pickle. It should be identical to the sender's setting. Default: True.
+            wait (bool, optional): wheter to wait for receiving to complete. If set to false, return immediately. Default: True.
 
-        Returns:
-            Any: If wait is set to True, return the data of the same round or the same tag from sender. If wait is set to False, return the data when receiving is complete or Nono otherwise.
+        Returns: 
+            Any: if wait is set to true, return the sender's data of same round or same tag. If wait is set to false, return the recieved data after complete data has been recieved or None otherwise.
         """
         
 - Swap data
@@ -155,18 +163,18 @@ XFL has a concise communication module as a wrapper around grpc+redis. This comm
 
         """
         Args:
-            value (Any): data to send, Any type.
-            tag (str, optional): If auto_offset is False, the tag need to be mannually entered and it is mandatory to ensure that different tags are used in different rounds. Defaults to '@'.
-            use_pickle (bool, optional): wheter to use pickle for data serialization and deserialization. Defaults to True.
+            value (Any): data to send. Any type.
+            tag (str, optional): if auto_offset is False, the tag need to be mannually entered while ensuring that different tags are used in different rounds. Default: '@'.
+            use_pickle (bool, optional): whether to use pickle for data serialization and deserialization. Default: True.
 
         Returns:
-            Any: data from the other party
+            Any: Data from the other party
         """
 
 
 :Example:
 
-Assume thers is one label trainer and one trainer.
+Assume there is only one label trainer and one trainer in the federated task.
 
 - trainer
 
@@ -204,14 +212,11 @@ Assume thers is one label trainer and one trainer.
     class BroadcastChannel(name: str, ids: List[str] = [], root_id: str = '', job_id: Union[str, int] = "", auto_offset: bool = True):
     
         """
-        Args:
             name (str): channel name.
-            ids (List[str], optional): id list of all parties, defautls to retrieve ids of all parties. Defaults to [].
-            root_id (str, optional): root node id of broadcast channel, retrieve the id of label trainer by default. Defaults to ''.
-            job_id (Union[str, int], optional): id of federated learning taks，retrieved automatically by default. Defaults to "".
-            auto_offset (bool, optional): if accumulate automatically communication numbers.
-                When setting to False, tag should be manually entered during communication and it is mandatory to ensure that different tags are used in different rounds.
-                Defaults to True.
+            ids (List[str], optional): id list of all communication parties, defaults to retrieve ids of all parties. Default: [].
+            root_id (str, optional): root node id of broadcast channel, as which the id of label trainer by default is obtained. Default: ''.
+            job_id (Union[str, int], optional): id of the federated learning task, will be obtained interiorly if it is set to "".
+            auto_offset (bool, optional): whether to accumulate communication rounds automatically. When setting to false, the tag should be manually entered before calling a specific communication method while ensuring that different tags are used in different rounds. Default: True.
         """
 
 -  Broadcast data from root node
@@ -221,14 +226,13 @@ Assume thers is one label trainer and one trainer.
     broadcast(value: Any, tag: str = '@', use_pickle: bool = True) -> int:
 
         """
-        Args:
-            value (Any): data to broadcast. Any type.
-            tag (str, optional): If auto_offset is False, the tag need to be mannually entered and it is mandatory to ensure that different tags are used in different rounds. Defaults to '@'.
-            use_pickle (bool, optional): whether to serialize data with pickle. If data is already serialized, it should be set to true, otherwise set to false. 
-                Defaults to True.
+            Args:
+                value (Any): data to broadcast. Any type.
+                tag (str, optional): if auto_offset is False, the tag need to be mannually entered while ensuring that different tags are used in different rounds. Default: '@'.
+                use_pickle (bool, optional): whether to serialize data with pickle. If data is already serialized, it should be set to true, otherwise set to false. Default: True.
 
-        Returns:
-            int: 0 means success in sending，otherwise failure.
+            Returns:
+                int: 0 means success in sending, otherwise failure.
         """
 
 
@@ -240,13 +244,12 @@ Assume thers is one label trainer and one trainer.
 
         """
         Args:
-            values (List[Any]): data to scatter. The length of the list should equal the number of non-root nodes. The i-th data is sent to the i-th node. The order of noda and data is that when initializing nodes (excluding root node).
-            tag (str, optional): If auto_offset is False, the tag need to be mannually entered and it is mandatory to ensure that different tags are used in different rounds. Defaults to '@'.
-            use_pickle (bool, optional): whether to serialize data with pickle. If data is already serialized, it should be set to true, otherwise set to false. 
-                Defaults to True.
+            values (List[Any]): data to scatter. The length of the list should equal to the number of non-root nodes. The i-th data is sent to the i-th node. The order of the communication nodes is the same as that of the nodes in the ids at initialization (excluding root node).
+            tag (str, optional): if auto_offset is False, the tag need to be mannually entered while ensuring that different tags are used in different rounds. Default: '@'.
+            use_pickle (bool, optional): whether to serialize data with pickle. If data is already serialized, it should be set to true, otherwise set to false. Default: True.
 
         Returns:
-            int: 0 means success in sending，otherwise failure.
+            int: 0 means success in sending, otherwise failure.
         """
 
 - Collect data by root node
@@ -257,12 +260,11 @@ Assume thers is one label trainer and one trainer.
 
         """
         Args:
-            tag (str, optional): If auto_offset is False, the tag need to be mannually entered and it is mandatory to ensure that different tags are used in different rounds. Defaults to '@'.
-            use_pickle (bool, optional): whether to serialize data with pickle. If data is already serialized, it should be set to true, otherwise set to false. 
-                Defaults to True.
+            tag (str, optional): if auto_offset is false, the tag need to be mannually entered while ensuring that different tags are used in different rounds. Default: '@'.
+            use_pickle (bool, optional): whether to serialize data with pickle. If data is already serialized, it should be set to true, otherwise set to false. Defaults: True.
 
         Returns:
-            List[Any]: received data.The length of the list should equal the number of non-root nodes. The i-th data is sent to the i-th node. The order of noda and data is that when initializing nodes (excluding root node).
+            List[Any]: collected data. The length of the list equals to the number of non-root nodes. The i-th data is sent to the i-th node. The order of the communication nodes is the same as that of the nodes in the ids at initialization (excluding root node).
         """
 
 - Send data to root node from leaf node
@@ -274,11 +276,11 @@ Assume thers is one label trainer and one trainer.
         """
         Args:
             value (Any): data to send, Any type.
-            tag (str, optional): If auto_offset is False, the tag need to be mannually entered and it is mandatory to ensure that different tags are used in different rounds. Defaults to '@'.
-            use_pickle (bool, optional): whether to serialize data with pickle. If data is already serialized, it should be set to true, otherwise set to false. 
-                Defaults to True.
-        Returns:
-            int: 0 means success in sending，otherwise failure.
+            tag (str, optional): if auto_offset is False, the tag need to be mannually entered while ensuring that different tags are used in different rounds. Default: '@'.
+            use_pickle (bool, optional): whether to serialize data with pickle. If data is already serialized, it should be set to true, otherwise set to false. Default: True.
+
+        Returns: 
+            int: 0 means success in sending, otherwise failure.
         """
 
 - Receive data from root node by leaf node
@@ -289,18 +291,17 @@ Assume thers is one label trainer and one trainer.
 
         """
         Args:
-            tag (str, optional): If auto_offset is False, the tag need to be mannually entered and it is mandatory to ensure that different tags are used in different rounds. Defaults to '@'.
-            use_pickle (bool, optional): whether to serialize data with pickle. If data is already serialized, it should be set to true, otherwise set to false. 
-                Defaults to True.
+            tag (str, optional): if auto_offset is false, the tag need to be mannually entered while ensuring that different tags are used in different rounds. Default: '@'.
+            use_pickle (bool, optional): whether to serialize data with pickle. If data is already serialized, it should be set to true, otherwise set to false. Default: True.
 
-        Returns:
-            Any: data received
+        Returns: 
+            Any: data received.
         """
 
 
 :Example:
 
-Assume assist_trainer is the root node, non-root nodes include two trainers: node-1 and node-2.
+Assume assist_trainer is the root node while leaf nodes include two trainers: node-1 and node-2.
 
 - assist_trainer
 
@@ -310,8 +311,8 @@ Assume assist_trainer is the root node, non-root nodes include two trainers: nod
     from service.fed_config import FedConfig
 
     demo_chann = BroadcastChannel(name='demo_broadcast_chann',
-                                ids=FedConfig.get_trainer() + [FedConfig.get_assist_trainer()],
-                                root_id=FedConfig.get_assist_trainer())
+                                  ids=FedConfig.get_trainer() + [FedConfig.get_assist_trainer()],
+                                  root_id=FedConfig.get_assist_trainer())
 
     demo_chann.broadcast(1)
     demo_chann.scatter([2, 3])
@@ -326,8 +327,8 @@ Assume assist_trainer is the root node, non-root nodes include two trainers: nod
     from service.fed_config import FedConfig
 
     demo_chann = BroadcastChannel(name='demo_broadcast_chann',
-                                ids=FedConfig.get_trainer() + [FedConfig.get_assist_trainer()],
-                                root_id=FedConfig.get_assist_trainer())
+                                  ids=FedConfig.get_trainer() + [FedConfig.get_assist_trainer()],
+                                  root_id=FedConfig.get_assist_trainer())
     a = demo_chann.recv()
     # a = 1
     a = demo_chann.recv()
@@ -342,18 +343,21 @@ Assume assist_trainer is the root node, non-root nodes include two trainers: nod
     from service.fed_config import FedConfig
 
     demo_chann = BroadcastChannel(name='demo_broadcast_chann',
-                                ids=FedConfig.get_trainer() + [FedConfig.get_assist_trainer()],
-                                root_id=FedConfig.get_assist_trainer())
+                                  ids=FedConfig.get_trainer() + [FedConfig.get_assist_trainer()],
+                                  root_id=FedConfig.get_assist_trainer())
     a = demo_chann.recv()
     # a = 1
     a = demo_chann.recv()
     # a = 3
     demo_chann.send(5)
 
+
 Aggregation Module
 --------------------
 
-There are two types of participants in the aggregation module: root and leaf. Root is the center node, which can broadcast and aggregate parameters. Leaf is a non-center node, which can upload and download parameters. We will use root/center, lean/non-center interchangeably. The aggregation module supports plain aggregation and encrypted aggregation. The encrypted aggregation supports one-time pad (OTP [#FedAvg]_ ) encryption.
+There are two types of participants in the aggregation module: root and leaf. Root is the center node, which can broadcast and aggregate parameters. 
+Leaf is non-center node, which can upload and download parameters. 
+The aggregation module supports plain aggregation and encrypted aggregation. The encrypted aggregation supports one time pad (OTP [#FedAvg]_ ) encryption.
 
 1. Root node
 
@@ -367,12 +371,12 @@ XFL supports two types of root node initialization: AggregationPlainRoot and Agg
 
         """
         Args:
-            sec_conf (dict): configuration of security. Includes the key method, with values 'plain' or 'otp'. If method is 'otp', configuration for opt should also be included. See the example below.
-            root_id (str, optional): id of root node. Assister_trainer id by default. Defaults to ''.
-            leaf_ids (list[str], optional): id list of leaf node. The union of label_trainer and trainer by default. Defaults to [].
+            sec_conf (dict): security configuration. Detailed configurations are shown as below.
+            root_id (str, optional): id of root node. it will be set to assister_trainer by default. Default: ''.
+            leaf_ids (list[str], optional): id list of leaf nodes. By default it will be set to the union of label_trainer and trainer. Default: [].
 
         Returns:
-            Union[AggregationPlainRoot, AggregationOTPRoot]: instance of AggregationPlainRoot or AggregationOTPRoot configured with the sec_conf.
+            Union[AggregationPlainRoot, AggregationOTPRoot]: instance of AggregationPlainRoot or AggregationOTPRoot.
         """
 
 Example of sec_conf:
@@ -403,7 +407,7 @@ Example of sec_conf:
         }
     }
 
-Methods of root node:
+Methods bound to root node: 
 
 - set initial parameters to send by root node
 
@@ -413,7 +417,7 @@ Methods of root node:
 
         """
         Args:
-            params (OrderedDict): dictionary of initial parameters.
+            params (OrderedDict): initial parameters of model.
         """
 
 - receive data from leaf nodes and aggregate with the formula: :math:`\sum_{i} parameters_i \cdot parameters\_weight_i`
@@ -424,10 +428,10 @@ Methods of root node:
 
         """
         Returns:
-            OrderedDict: data after aggregation.
+            OrderedDict: result after aggregation.
         """
 
-- broadcast data to all leaf node
+- broadcast data to all the leaf nodes
 
 .. code-block:: python
 
@@ -443,7 +447,7 @@ Methods of root node:
 
 2. leaf node
 
-Inline with root node, there are also two types of leaf node: AggregationPlainLeaf and AggregationOTPLeaf. The initialization is as follows:
+Corresponds with the root node, there are also two types of leaf node instance: AggregationPlainLeaf and AggregationOTPLeaf. The initialization function is as follows:
 
 - Create instance
 
@@ -453,17 +457,17 @@ Inline with root node, there are also two types of leaf node: AggregationPlainLe
 
         """
         Args:
-            sec_conf (dict): configuration of security. Must be the same with that of get_aggregation_root_inst.
-            root_id (str, optional): id of root node. Assister_trainer id by default. Defaults to ''.
-            leaf_ids (list[str], optional): id list of leaf node. The union of label_trainer and trainer by default. Defaults to [].
+            sec_conf (dict): security configuration. The same with the security configuration of get_aggregation_root_inst.
+            root_id (str, optional): id of root node. it will be set to assister_trainer by default. Default: ''.
+            leaf_ids (list[str], optional): id list of leaf nodes. By default it will be set to the union of label_trainer and trainer. Default: [].
 
         Returns:
-            Union[AggregationPlainLeaf, AggregationOTPLeaf]: instance of AggregationPlainLeaf or AggregationOTPLeaf configured with sec_conf.
+            Union[AggregationPlainLeaf, AggregationOTPLeaf]: instance of AggregationPlainLeaf or AggregationOTPLeaf.
         """
 
-Leaf node has the following methods:
+Methods bound to leaf node:
 
-- Upload data and weight to root node
+- Upload data and data's weight to root node
 
 .. code-block:: python
 
@@ -475,7 +479,7 @@ Leaf node has the following methods:
             parameters_weight (float): weight of uploading data.
 
         Returns:
-            int: 0 means success in sending，otherwise failure.
+            int: 0 means success in sending, otherwise failure.
         """
 
 - Download data from root node
@@ -495,9 +499,13 @@ Leaf node has the following methods:
 Develop Horizontal Operator
 =============================
 
-Different from its vertical counterpart, horizontal federated learning communication is rather standard. XFL provides preset template classes, which can be leveraged to develop horizontal models conveniently. For the moment, XFL provides template classes based on FedAvg, cf `FedAvgTemplateAssistTrainer <../../../../python/algorithm/core/horizontal/template/torch/fedavg/assist_trainer.py>`_ , 
-`FedAvgTemplateLabelTrainer <../../../../python/algorithm/core/horizontal/template/torch/fedavg/label_trainer.py>`_ . An example of developing with this template can be found at `HorizontalLogisticRegressionAssistTrainer <../../../../python/algorithm/framework/horizontal/logistic_regression/assist_trainer.py>`_ , `HorizontalLogisticRegressionLabelTrainer <../../../../python/algorithm/framework/horizontal/logistic_regression/label_trainer.py>`_ .
-
+Differ from the diversity of the communication patterns in vertical federation learning,
+the communication model of horizontal federation is universal.
+XFL provides several preseted template classes, which can be inherited by custom classes to develop new horizontal operators. 
+For example, the FedAvg template contains `FedAvgTemplateAssistTrainer` (`python/algorithm/core/horizontal/template/torch/fedavg/assist_trainer.py`) 
+and `FedAvgTemplateLabelTrainer` (`python/algorithm/core/horizontal/template/torch/fedavg/label_trainer.py`).
+An example of developing an operator using this template can be found at `python/algorithm/framework/horizontal/logistic_regression/assist_trainer.py`, 
+`python/algorithm/framework/horizontal/logistic_regression/label_trainer.py`.
 
 :Notes:
 
