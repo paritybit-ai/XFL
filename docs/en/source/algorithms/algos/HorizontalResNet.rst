@@ -5,7 +5,8 @@ Horizontal ResNet
 Introduction
 ------------
 
-Horizontal ResNet model is a model obtained by building the classic model ResNet proposed in the paper "Deep Residual Learning for Image Recognition" on the horizontal federation system, and is implemented based on the deep learning framework.
+Horizontal ResNet model is a model obtained by building the classic model ResNet proposed in the paper "Deep Residual Learning for Image Recognition" on the horizontal federation system, 
+and is implemented based on the deep learning framework.
 
 Parameter List
 --------------
@@ -51,21 +52,21 @@ Parameter List
                 - **key_bitlength**: ``int`` Key length of one time pad encryption, support 64 and 128.
                 - **data_type**: ``str`` Input data type, support `torch.Tensor` and `numpy.ndarray`, depending on model data type.
                 - **key_exchange**:
-                    - **key_bitlength**: ``int`` Bit length of paillier key, recommend to be greater than or equal to 2048.
+                    - **key_bitlength**: ``int`` Bitlength of paillier key, recommend to be greater than or equal to 2048.
                     - **optimized**: ``bool`` Whether to use optimized method.
                 - **csprng**:
                     - **name**: ``str`` Pseudo-random number generation method.
                     - **method**: ``str`` Corresponding hash method.
-        - **optimizer_config**:
+        - **optimizer_config**: Support optimizers and their parameters defined in pytorch or registered by user. For example:
             - **Adam**:
                 - **lr**: ``float`` Optimizer earning rate.
                 - **amsgrad**: ``bool`` Whether to use the AMSGrad variant.
-        - **lr_scheduler_config**:
+        - **lr_scheduler_config**: Support lr_scheduler and their parameters defined in pytorch or registered by user. For example:
             - **StepLR**:
                 - **step_size**: ``int`` Period of learning rate decay.
                 - **gamma**: ``float`` Multiplicative factor of learning rate decay.
         - **lossfunc_config**: Loss function configuration, support `CrossEntropyLoss`.
-        - **metric_config**:
+        - **metric_config**: Support multiple metrics.
             - **accuracy**: Accuracy.
             - **precision**: Precision.
             - **recall**: Recall.

@@ -120,26 +120,20 @@
                 }
             ],
             "iv_result": {
-                "type": "file",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "name": "vertical_binning_woe_iv_train_feature_mapping.json"
             },
             "corr_result": {
-                "type": "file",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "name": "pearson_2.pkl"
             }
         },
         "output": {
             "trainset": {
-                "type": "csv",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "selected_breast_cancer_wisconsin_vertical_2_train.csv",
-                "header": true,
-                "has_id": true
+                "name": "selected_breast_cancer_wisconsin_vertical_2_train.csv"
             },
             "model": {
-                "type": "file",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "name": "feature_selection_2.pkl"
             }

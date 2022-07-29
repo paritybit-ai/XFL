@@ -20,7 +20,6 @@
         },
         "output": {
             "model": {
-                "type": "file",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "name": "pearson_labeled.pkl"
             }
@@ -31,14 +30,14 @@
             },
             "params": {
                 "column_indexes": -1,
-                    "encryption_params": {
-                        "paillier": {
-                            "key_bit_size": 2048,
-                            "precision": 6,
-                            "djn_on": true,
-                            "parallelize_on": true
-                        }
-                    },
+                "encryption_params": {
+                    "paillier": {
+                        "key_bit_size": 2048,
+                        "precision": 6,
+                        "djn_on": true,
+                        "parallelize_on": true
+                    }
+                },
                 "max_num_cores": 999,
                 "sample_size": 9999
             }

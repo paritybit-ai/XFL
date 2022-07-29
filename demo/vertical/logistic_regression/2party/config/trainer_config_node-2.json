@@ -32,7 +32,6 @@
         },
         "output": {
             "model": {
-                "type": "file",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
                 "name": "vertical_logistic_regression_1.pt"
             }

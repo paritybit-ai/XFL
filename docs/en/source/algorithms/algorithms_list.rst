@@ -5,9 +5,9 @@ List of Availble Algorithms
 Notation
 -----------
 
-For the sake of clarity and consistency, we use the following notations.
+To avoid confusion of terms and notations, we make the following basic definitions:
 
-- :math:`X`：feature matrix
+- :math:`X`: feature matrix
 
 .. math::
 
@@ -19,9 +19,10 @@ For the sake of clarity and consistency, we use the following notations.
     \end{pmatrix}
 
 
-Here, each row denotes a sample (or an observation) :math:`x_i (i=1, \dots, n)` or :math:`X_{i.}` . Each column denotes a feature, :math:`X_{.j} (j = 1, \dots , p)`
+Here, each row denotes a sample (or an observation) :math:`x_i (i=1, \dots, n)` or :math:`X_{i.}` . 
+Each column denotes a feature, :math:`X_{.j} (j = 1, \dots , p)`
 
-- :math:`Y`: label in supervised learning
+- :math:`Y`: the label in supervised learning
 
 .. math::
    
@@ -32,10 +33,11 @@ Here, each row denotes a sample (or an observation) :math:`x_i (i=1, \dots, n)` 
    y_n \\
    \end{pmatrix}
 
-For regression, :math:`y_i \in \mathcal{R}`. For classification, :math:`y_i \in [1, 2, \dots, K]`, where :math:`K` is the number of classes.
+We have :math:`y_i \in \mathcal{R}` for regression problem, and :math:`y_i \in \mathcal{Z}` for classification
 
-- Training set, validation set, and test set: for machine learning, data are usually split into training set, validation set, and test set. We use the superscript train, val, and test to distinguish them。For example, :math:`X^{train}`, :math:`X^{val}`, and :math:`X^{test}` denote training set features, validation set features, and test set features respectively.
-
+- Training/Validation dataset: in XFL, we mainly use two types of dataset, one for training and the other for validation.
+We use the superscript "train", "val" to identify them.
+For example, :math:`X^{train}`, :math:`X^{val}` denote training dataset, validation dataset respectively.
 
 
 List of Algorithms
@@ -48,7 +50,7 @@ List of Algorithms
    ":doc:`Local Standard Scaler <./algos/LocalStandardScaler>`", "local/standard_scaler", "standardize data"
    ":doc:`Horizontal Linear Regression <./algos/HorizontalLinearRegression>`", "horizontal/linear_regression", "two-party or multi-party horizontal linear regression"
    ":doc:`Horizontal Logistic Regression <./algos/HorizontalLogisticRegression>`", "horizontal/logistic_regression", "two-party or multi-party horizontal logistic regression"
-   ":doc:`Horizontal ResNet <./algos/HorizontalResNet>`", "horizontal/Resnet", "two-party or multi-party horizontal horizontal ResNet"
+   ":doc:`Horizontal ResNet <./algos/HorizontalResNet>`", "horizontal/Resnet", "two-party or multi-party horizontal ResNet"
    ":doc:`Vertical Feature Binning <./algos/VerticalBinningWoeIV>`", "vertical/binning_woe_iv", "calulate WoE and IV using equal-frequency binning or equal-width binning"
    ":doc:`Vertical Pearson <./algos/VerticalPearson>`", "vertical/pearson", "two-party or multi-party vertical Pearson correlation coefficient"
    ":doc:`Vertical Feature Selection <./algos/VerticalFeatureSelection>`", "vertical/feature_selection", "two-party or multi-party vertical feature selection"

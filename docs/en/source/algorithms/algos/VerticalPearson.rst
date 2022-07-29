@@ -1,5 +1,3 @@
-.. _vertical-pearson:
-
 =================
 Vertical Pearson
 =================
@@ -7,7 +5,7 @@ Vertical Pearson
 Introduction
 ------------
 
-The Pearson correlation coefficient between features is calculated, and the correlation coefficient matrix is retained on the vertical federated learning system.
+This algorithm calculates the pearson correlation coefficient matrix for the data owned by all the parties. 
 Pearson correlation coefficient is the ratio between the covariance of two variables and the product of their standard deviations.
 
 :math:`\rho_{X,Y} = \frac{cov(X, Y)}{\sigma_X \sigma_Y} = \frac{\mathbb{E}[(X-\mu_X)(Y-\mu_Y)]}{\sigma_X \sigma_Y}`
@@ -32,20 +30,19 @@ Parameter List
 
 **output**:  
     - **model**: 
-        - **type**: ``str`` Model output format, support "file".
         - **path**: ``str`` Folder path of output model.
         - **name**: ``str`` File name of output model.
 
 **train_info**:  
     - **device**: ``str`` Device on which the algorithm runs, support `cpu`.
     - **params**:
-        - **column_indexes**: ``list`` Column indexes that participates in the calculation of the Pearson correlation coefficient. If it is -1, all columns participate in the calculation.
-        - **column_names**: ``str`` Column names that participates in the calculation of the Pearson correlation coefficient, the feature names are separated by commas. if column_indexes is set to -1, this parameter could be null.
+        - **column_indexes**: ``list or int`` Column indexes involved in calculation. If it is -1, all columns participate in the calculation.
+        - **column_names**: ``str`` Column names involved in calculation. the format is "name1, ..., nameN". If both name and index are provided, the union set of them will be applied.
         - **encryption_params**:
             - **paillier**:
                 - **key_bit_size**: ``int`` Bit length of paillier key, recommend to be greater than or equal to 2048.
                 - **precision**: ``int`` Precison.
                 - **djn_on**: ``bool`` Whether to use djn method to generate key pair.
                 - **parallelize_on**: ``bool`` Whether to use multicore for computing.
-        - **max_num_core**: ``int`` Max number of cpu cores for computing.
+        - **max_num_core**: ``int`` Max number of cpu cores used for computing.
         - **sample_size**: ``int`` Row sampling size for speeding up pearson computation.
