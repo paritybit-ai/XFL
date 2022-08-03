@@ -1,0 +1,103 @@
+[
+    {
+        "identity": "label_trainer",
+        "model_info": {
+            "name": "horizontal_nbafl",
+            "config": {
+                "input_dim": 30,
+                "layer_dim": [
+                    24,
+                    1
+                ],
+                "activation": [
+                    "ReLU",
+                    "Sigmoid"
+                ],
+                "bias": true
+            }
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "csv",
+                    "path": "../dataset/horizontal_breast",
+                    "name": "breast_horizontal_host.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ]
+        },
+        "output": {
+            "metrics": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "header": true
+            },
+            "evaluation": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "header": true
+            }
+        },
+        "train_info": {
+            "device": "cpu",
+            "interaction_params": {
+                "save_frequency": -1,
+                "save_probabilities": true,
+                "save_probabilities_bins_number": 10,
+                "write_training_prediction": true,
+                "write_validation_prediction": false,
+                "echo_training_metrics": true
+            },
+            "params": {
+                "global_epoch": 5,
+                "local_epoch": 20,
+                "batch_size": 32,
+                "input_dim": 30,
+                "mu": 0.5,
+                "epsilon": 1,
+                "delta": 0.1,
+                "C": 5,
+                "aggregation_config": {
+                    "type": "fedavg",
+                    "encryption": {
+                        "method": "otp",
+                        "key_bitlength": 64,
+                        "data_type": "torch.Tensor",
+                        "key_exchange": {
+                            "key_bitlength": 3072,
+                            "optimized": true
+                        },
+                        "csprng": {
+                            "name": "hmac_drbg",
+                            "method": "sha512"
+                        }
+                    }
+                },
+                "optimizer_config": {
+                    "Adam": {
+                        "lr": 0.01,
+                        "amsgrad": true
+                    }
+                },
+                "lossfunc_config": {
+                    "BCELoss": {}
+                },
+                "metric_config": {
+                    "accuracy": {},
+                    "precision": {},
+                    "recall": {},
+                    "f1_score": {},
+                    "auc": {},
+                    "ks": {}
+                },
+                "early_stopping": {
+                    "key": "acc",
+                    "patience": -1,
+                    "delta": 0
+                },
+                "extra_config": {}
+            }
+        }
+    }
+]
