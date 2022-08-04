@@ -1,0 +1,40 @@
+{
+    "identity": "label_trainer",
+    "model_info": {
+        "name": "vertical_sampler",
+        "config": {}
+    },
+    "input": {
+        "dataset": [
+            {
+                "type": "csv",
+                "path": "../dataset/vertical_breast_with_validation",
+                "name": "breast_vertical_guest_train.csv",
+                "has_label": true,
+                "has_id": true
+            }
+        ]
+    },
+    "output": {
+        "model": {
+            "type": "file",
+            "path": "../checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "sample_id.json"
+        },
+        "trainset": {
+            "type": "csv",
+            "path": "../checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "sampled_data.csv",
+            "header": true,
+            "has_id": true
+        }
+    },
+    "train_info": {
+        "params": {
+            "method": "random",
+            "strategy": "downsample",
+            "random_state": 42,
+            "fraction": 0.1
+        }
+    }
+}
