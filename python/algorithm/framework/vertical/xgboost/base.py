@@ -73,7 +73,7 @@ class VerticalXgboostBase(VerticalModelBase):
         
         if self.xgb_config.num_bins <= 256:
             dtype = np.uint8
-        elif self.xgb_config.num_bins <= 1e16:
+        elif self.xgb_config.num_bins <= 2 ** 16:
             dtype = np.uint16
         else:
             dtype = np.uint32
