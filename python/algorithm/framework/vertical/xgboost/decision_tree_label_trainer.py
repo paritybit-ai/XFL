@@ -78,9 +78,8 @@ class VerticalDecisionTreeLabelTrainer(object):
             self.hess[self.goss_selected_idx] = hess
             goss.update_gradients(self.grad, self.hess)
         else:
-            self.hess = loss_inst.cal_hess(
-                self.y, self.y_pred, after_prediction=True)
-            self.goss_selected_idx = range(features.shape[0])
+            self.hess = loss_inst.cal_hess(self.y, self.y_pred, after_prediction=True)
+            self.goss_selected_idx = range(self.y.shape[0])
 
         sample_index = self.goss_selected_idx
 
