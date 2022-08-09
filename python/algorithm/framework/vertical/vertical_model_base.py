@@ -32,7 +32,7 @@ class VerticalModelBase(TrainConfigParser):
 
 	def _parse_config(self) -> None:
 		# output_path
-		self.save_dir = Path(self.output.get("model").get("path"))
+		self.save_dir = Path(self.output.get("model", {}).get("path", ""))
 		if self.output.get("metrics"):
 			self.metric_path = Path(self.output["metrics"].get("path"))
 		else:
