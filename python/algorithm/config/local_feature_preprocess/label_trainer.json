@@ -1,0 +1,102 @@
+{
+    "identity": "label_trainer",
+    "model_info":
+    {
+        "name": "local_feature_preprocess",
+        "config":
+        {}
+    },
+    "input":
+    {
+        "trainset":
+        [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/data/vertical_breast_with_validation",
+                "name": "breast_vertical_guest_train.csv",
+                "has_label": true,
+                "has_id": true
+            }
+        ],
+        "valset":
+        [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/data/vertical_breast_with_validation",
+                "name": "breast_vertical_guest_test.csv",
+                "has_label": true,
+                "has_id": true
+            }
+        ]
+    },
+    "output":
+    {
+        "model":
+        {
+            "type": "file",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "local_preprocess_guest.pt"
+        },
+        "trainset":
+        {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "preprocessed_breast_vertical_guest_train.csv",
+            "header": true,
+            "has_id": true
+        },
+        "valset":
+        {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "preprocessed_breast_vertical_guest_test.csv",
+            "header": true,
+            "has_id": true
+        }
+    },
+    "train_info":
+    {
+        "device": "cpu",
+        "params":
+        {
+            "missing_params":
+            {
+                "missing_values": null,
+                "strategy": "mean",
+                "fill_value": null,
+                "missing_feat_params":
+                    {
+                        "x00":
+                        {
+                            "missing_values": null,
+                            "strategy": "median",
+                            "fill_value": null
+                        },
+                        "x01":
+                        {}
+                    }
+            },
+            "outlier_params":
+            {
+                "outlier_values": 999,
+                "outlier_feat_params":
+                    {
+                        "x00":
+                        {
+                            "outlier_values": 999
+                        },
+                        "x01":
+                        {}
+                    }
+            },
+            "onehot_params":
+            {
+                "feature_params":
+                    {
+                        "x02":
+                        {}
+                    }
+            }
+        }
+    }
+}
