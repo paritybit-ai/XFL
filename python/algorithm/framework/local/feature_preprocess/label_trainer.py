@@ -18,14 +18,13 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder
 import torch
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
 
 from algorithm.core.data_io import CsvReader
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
-from sklearn.impute import SimpleImputer
-
 from common.utils.utils import save_model_config
 
 
