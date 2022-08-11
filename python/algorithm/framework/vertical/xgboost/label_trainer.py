@@ -22,6 +22,7 @@ from typing import Any, Dict
 import numpy as np
 import pandas as pd
 
+from algorithm.core.activation import sigmoid
 from algorithm.core.data_io import ValidationNumpyDataset
 from algorithm.core.encryption_param import PaillierParam, PlainParam
 from algorithm.core.tree.tree_structure import Tree
@@ -36,7 +37,6 @@ from common.utils.utils import save_model_config
 from service.fed_config import FedConfig
 from .base import VerticalXgboostBase
 from .decision_tree_label_trainer import VerticalDecisionTreeLabelTrainer
-from algorithm.core.activation import sigmoid
 
 
 class VerticalXgboostLabelTrainer(VerticalXgboostBase):
