@@ -20,7 +20,9 @@ from pathlib import Path
 from typing import Any, Dict
 
 import numpy as np
+import pandas as pd
 
+from algorithm.core.activation import sigmoid
 from algorithm.core.data_io import ValidationNumpyDataset
 from algorithm.core.encryption_param import PaillierParam, PlainParam
 from algorithm.core.tree.tree_structure import Tree
@@ -88,17 +90,18 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
                                 patience=self.xgb_config.early_stopping_param["patience"],
                                 delta=self.xgb_config.early_stopping_param["delta"])
         self.best_round = -1
-        self.best_prediction = None
+        self.best_prediction_val = None
+        self.best_prediction_train = None
         self.export_conf = [{
             "class_name": "VerticalXGBooster",
             "identity": self.identity,
-            "filename": self.output.get("model")["name"]
+            "filename": self.output.get("model", {"name": "vertical_xgboost_guest.pt"})["name"]
         }]
 
     def fit(self):
         train_y_pred_primitive, tree_list = np.zeros_like(self.train_label), []
         val_y_pred_primitive = np.zeros_like(self.val_label)
-        
+
         loss_inst = get_xgb_loss_inst(self.xgb_config.loss_param['method'])
         train_y_pred, val_y_pred = loss_inst.predict(train_y_pred_primitive), loss_inst.predict(val_y_pred_primitive)
 
@@ -141,7 +144,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
 
             tree_list.append(label_trainer_tree_transfer(tree=tree))
             logger.info("Tree {} training done.".format(tree_idx))
-            
+
             # validation section
             logger.info("Validation on tree {} start.".format(tree_idx))
             val_y_pred_primitive = self.validation(self.val_dataset, tree, val_y_pred_primitive)
@@ -157,7 +160,8 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
 
             if save_flag:
                 self.best_round = tree_idx + 1
-                self.best_prediction = copy.deepcopy(val_y_pred)
+                self.best_prediction_train = copy.deepcopy(train_y_pred)
+                self.best_prediction_val = copy.deepcopy(val_y_pred)
 
             for party_id in FedConfig.get_trainer():
                 self.channels["early_stop_com"][party_id].send(early_stop_flag)
@@ -165,7 +169,8 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
                 logger.info("label trainer early stopped. best round: {}.".format(self.best_round))
                 break
 
-            if self.interaction_params.get("save_frequency") > 0 and (tree_idx + 1) % self.interaction_params.get("save_frequency") == 0:
+            if self.interaction_params.get("save_frequency") > 0 and (tree_idx + 1) % self.interaction_params.get(
+                    "save_frequency") == 0:
                 self.save(tree_list, epoch=tree_idx + 1)
                 self._write_prediction(self.train_label, train_y_pred, self.train_ids, epoch=tree_idx + 1)
                 self._write_prediction(self.val_label, val_y_pred, self.val_ids, epoch=tree_idx + 1, stage='val')
@@ -173,7 +178,8 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         # model preserve
         if self.xgb_config.early_stopping_param["patience"] <= 0:
             self.best_round = len(tree_list)
-            self.best_prediction = copy.deepcopy(val_y_pred)
+            self.best_prediction_train = copy.deepcopy(train_y_pred)
+            self.best_prediction_val = copy.deepcopy(val_y_pred)
         logger.info("num trees: %d, best: %d" % (len(tree_list), self.best_round))
 
         if tree_list:
@@ -195,10 +201,14 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         # dump out ks plot
         suggest_threshold = 0.5
         if "ks" in self.xgb_config.metrics or "auc_ks" in self.xgb_config.metrics:
-            tc = ThresholdCutter(os.path.join(save_dir, "ks_plot.csv"))
-            tc.cut_by_value(self.val_label, self.best_prediction)
+            tc = ThresholdCutter(os.path.join(save_dir, "ks_plot_valid.csv"))
+            tc.cut_by_value(self.val_label, self.best_prediction_val)
             suggest_threshold = tc.bst_threshold
             tc.save()
+            if self.interaction_params.get("echo_training_metrics"):
+                tc = ThresholdCutter(os.path.join(save_dir, "ks_plot_train.csv"))
+                tc.cut_by_value(self.train_label, self.best_prediction_train)
+                tc.save()
 
         model_name_list = self.output.get("model")["name"].split(".")
         name_prefix, name_postfix = ".".join(model_name_list[:-1]), model_name_list[-1]
@@ -207,7 +217,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         else:
             model_name = name_prefix + "." + name_postfix
         model_path = os.path.join(save_dir, model_name)
-        
+
         node_id_of_owner = {}
         for tree in tree_list:
             for node_id in tree.nodes:
@@ -221,7 +231,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
 
         for owner_id in node_id_of_owner:
             node_id_of_owner[owner_id].sort()
-            
+
         node_id_group = {}
         for k, v in node_id_of_owner.items():
             node_id_group[v[0]] = v
@@ -230,6 +240,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
             "trees": tree_list[:self.best_round],
             "num_trees": self.best_round,
             "lr": self.xgb_config.learning_rate,
+            "max_depth": self.xgb_config.max_depth,
             "suggest_threshold": suggest_threshold,
             "node_id_group": node_id_group
         }
@@ -304,3 +315,35 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         feature_id_mapping = {a: b for a, b in enumerate(sampled_idx)}
         sampled_features = self.train_features.iloc[:, sampled_idx]
         return sampled_features, feature_id_mapping
+
+    def load_model(self):
+        model_path = Path(
+            self.input.get("pretrain_model", {}).get("path", ''),
+            self.input.get("pretrain_model", {}).get("name", '')
+        )
+        with open(model_path, 'rb') as f:
+            model = pickle.load(f)
+        self.xgb_config.learning_rate = model["lr"]
+        self.xgb_config.max_depth = model["max_depth"]
+        trees = []
+        for tree in model["trees"]:
+            t = Tree(tree.party_id, tree.root_node_id)
+            t.nodes = tree.nodes
+            t.root_node = tree.root_node
+            trees.append(t)
+        return trees
+
+    def predict(self):
+        trees = self.load_model()
+        test_y_pred_primitive = np.zeros_like(self.test_label)
+        for tree in trees:
+            test_y_pred_primitive = self.validation(self.test_dataset, tree, test_y_pred_primitive)
+        test_y_pred = sigmoid(test_y_pred_primitive)
+        save_path = self.output.get("testset", {}).get("path", '')
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        save_path = Path(save_path, self.output.get("testset", {}).get("name", ''))
+        logger.info("predicted results saved at {}".format(save_path))
+        pd.DataFrame({"id": self.test_ids, "pred": test_y_pred}).to_csv(
+            save_path, float_format="%.6g", index=False, header=True
+        )

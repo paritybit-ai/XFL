@@ -79,9 +79,13 @@ def train(status):
     try:
         FedConfig.get_config()
         identity = FedConfig.stage_config["identity"]
+        inference = FedConfig.stage_config.get("inference", False)
         logger.info(f"{identity} Start Training...")
         model = FedJob.get_model(identity, FedConfig.stage_config)
-        model.fit()
+        if inference:
+            model.predict()
+        else:
+            model.fit()
         status.value = status_pb2.SUCCESSFUL
         logger.info("Train Model Successful.")
     except Exception as ex:

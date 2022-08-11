@@ -63,10 +63,10 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
         self.export_conf = [{
             "class_name": "VerticalXGBooster",
             "identity": self.identity,
-            "filename": self.output.get("model")["name"]
+            "filename": self.output.get("model", {"name": "vertical_xgboost_host.pt"})["name"]
         }]
-        
-        ray.init(num_cpus=get_core_num(self.xgb_config.max_num_cores), 
+
+        ray.init(num_cpus=get_core_num(self.xgb_config.max_num_cores),
                  ignore_reinit_error=True)
 
     def fit(self):
@@ -108,7 +108,8 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
                 break
             logger.info("Validation on tree {} done.".format(tree_idx))
 
-            if self.interaction_params.get("save_frequency") > 0 and (tree_idx + 1) % self.interaction_params.get("save_frequency") == 0:
+            if self.interaction_params.get("save_frequency") > 0 and (tree_idx + 1) % self.interaction_params.get(
+                    "save_frequency") == 0:
                 self.save(nodes_list, epoch=tree_idx + 1)
         # model preserve
         self.save(nodes_list, final=True)
@@ -125,7 +126,7 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
         sampled_features = self.train_features.iloc[:, sampled_idx]
         return sampled_features, feature_id_mapping
 
-    def save(self, node_list,  epoch: int = None, final: bool = False):
+    def save(self, node_list, epoch: int = None, final: bool = False):
         if final:
             save_model_config(stage_model_config=self.export_conf, save_path=Path(self.output.get("model")["path"]))
 
@@ -143,15 +144,30 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
 
         xgb_output = {
             # "nodes": node_list,
-            "nodes": {k: v for k, v in sorted(node_list.items())}
+            "nodes": {k: v for k, v in sorted(node_list.items())},
+            "num_trees": self.xgb_config.num_trees
         }
 
         with open(model_path, 'wb') as f:
             pickle.dump(xgb_output, f)
         logger.info("model saved as: {}.".format(model_path))
 
-    # def infer(self, nodes: Dict[str, NodePickle], data: np.array):
-    #     node_feedback = {}
-    #     for node_idx, node in nodes.items():
-    #         node_feedback[node_idx] = data[:, node.feature_idx] < node.split_point
-    #     self.channels["val_com"].send(node_feedback)
+    def load_model(self):
+        model_path = Path(
+            self.input.get("pretrain_model", {}).get("path", ''),
+            self.input.get("pretrain_model", {}).get("name", '')
+        )
+        with open(model_path, 'rb') as f:
+            model = pickle.load(f)
+        self.xgb_config.num_trees = model["num_trees"]
+        nodes = model["nodes"]
+        return nodes
+
+    def predict(self):
+        nodes = self.load_model()
+        for i in range(self.xgb_config.num_trees):
+            for _, (x, _) in enumerate(self.test_dataset):
+                node_feedback = {}
+                for node_idx, node in nodes.items():
+                    node_feedback[node_idx] = x[:, node.feature_idx] < node.split_point
+                self.channels["val_com"].send(node_feedback)
