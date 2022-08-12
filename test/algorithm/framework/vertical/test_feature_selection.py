@@ -20,6 +20,7 @@ import pytest
 import pickle
 
 import pandas as pd
+import numpy as np
 
 import service.fed_config
 from common.communication.gRPC.python.channel import DualChannel, BroadcastChannel
@@ -90,6 +91,19 @@ def prepare_data():
 	data[["y", "x0", "x1", "x2"]].to_csv(
 		"/opt/checkpoints/unit_test/train_guest.csv", header=True, index=True, index_label='id')
 	data[["x3", "x4"]].to_csv("/opt/checkpoints/unit_test/train_host.csv", header=True, index=True, index_label='id')
+
+	woe_mapping = {
+		"x0": {
+			"woe": [-2.550868, -0.386166, 0.382953, 0.69536, 0.385522],
+			"binning_split": [26.0, 33.0, 41.0, 50.0, np.inf]
+		},
+		"x1": {
+			"woe": [-0.93796, 0.325627],
+			"binning_split": [0.0, np.inf]
+		}
+	}
+	with open("/opt/checkpoints/unit_test/binning_woe_iv_guest.json", 'w') as f:
+		json.dump(woe_mapping, f)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -190,7 +204,7 @@ def get_trainer_conf():
 	yield conf
 
 
-class TestVerticalPearsonTrainer:
+class TestFeatureSelection:
 	@pytest.mark.parametrize("iv, corr, remain", [(0.001, 0.7, 4), (0.01, 1.0, 5), (0.5, 0.7, 2), (0.99, 0.7, 0)])
 	def test_label_trainer(self, get_label_trainer_conf, mocker, iv, corr, remain):
 		conf = get_label_trainer_conf
@@ -228,6 +242,47 @@ class TestVerticalPearsonTrainer:
 		with open("/opt/checkpoints/unit_test/feature_selection_guest.pkl", 'rb') as f:
 			model = pickle.load(f)
 			assert model["num_of_features"] == remain
+
+	def test_rewrite_model(self, get_label_trainer_conf, mocker):
+		conf = get_label_trainer_conf
+		conf["input"]["model"] = {
+			"type": "file",
+			"path": "/opt/checkpoints/unit_test",
+			"name": "binning_woe_iv_guest.json"
+		}
+		mocker.patch.object(
+			DualChannel, "__init__", return_value=None
+		)
+		mocker.patch.object(
+			DualChannel, "send", return_value=0
+		)
+		mocker.patch.object(
+			BroadcastChannel, "broadcast", return_value=0
+		)
+		mocker.patch.object(
+			service.fed_config.FedConfig, "get_label_trainer", return_value="node-1"
+		)
+		mocker.patch.object(
+			service.fed_config.FedConfig, "get_trainer", return_value=["node-2"]
+		)
+		vfslt = VerticalFeatureSelectionLabelTrainer(conf)
+		vfslt.node_id = "node-1"
+		mocker.patch.object(
+			vfslt.channels["feature_id_com"],
+			"collect",
+			return_value=[{
+				"ZY8HUnfdEtpr6LIW": "sIcVutHjKxZyqUg1",
+				"McqB4XwT3NSoWEyt": "FkYzRlp1ySwdnm0N"
+			}]
+		)
+		vfslt.fit()
+		with open("/opt/checkpoints/unit_test/feature_selection_guest.pkl", 'rb') as f:
+			model = pickle.load(f)
+			assert model["num_of_features"] == 4
+
+		with open("/opt/checkpoints/unit_test/binning_woe_iv_guest.json", 'r') as f:
+			model = json.load(f)
+			assert len(model) == 1
 
 	def test_trainer(self, get_trainer_conf, mocker):
 		mocker.patch.object(
