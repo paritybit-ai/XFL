@@ -18,6 +18,7 @@ import os
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import tenseal as ts
 import torch
 from sklearn.metrics import confusion_matrix
@@ -29,6 +30,7 @@ from common.utils.algo_utils import earlyStopping
 from common.utils.logger import logger
 from common.utils.model_preserver import ModelPreserver
 from common.utils.utils import save_model_config
+from service.fed_node import FedNode
 from .base import VerticalLogisticRegressionBase
 
 
@@ -56,7 +58,8 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
                                 patience=self.early_stopping_config["patience"],
                                 delta=self.early_stopping_config["delta"])
         self.best_model = None
-        self.best_prediction = None
+        self.best_prediction_val = None
+        self.best_prediction_train = None
 
     def fit(self):
         logger.debug("Vertical logistic regression training start")
@@ -140,9 +143,9 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
                 elif encryption_method == "plain":
                     broadcast_channel.broadcast(pred_residual)
 
+                training_pred_prob_list += torch.squeeze(pred_total, dim=-1).tolist()
+                training_y_list += torch.squeeze(y_batch, dim=-1).tolist()
                 if self.echo_training_metrics:
-                    training_pred_prob_list += torch.squeeze(pred_total, dim=-1).tolist()
-                    training_y_list += torch.squeeze(y_batch, dim=-1).tolist()
                     pred_total = (pred_total > 0.5).float()
                     training_cm += confusion_matrix(y_true=y_batch.detach().numpy(), y_pred=pred_total.detach().numpy())
 
@@ -215,7 +218,8 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
 
             if save_flag:
                 self.best_model = copy.deepcopy(self.model)
-                self.best_prediction = copy.deepcopy(np.array(pred_prob_list))
+                self.best_prediction_train = copy.deepcopy(training_pred_prob_list)
+                self.best_prediction_val = copy.deepcopy(np.array(pred_prob_list))
 
             broadcast_channel.broadcast([early_stop_flag, save_flag, self.early_stopping_config["patience"]],
                                         use_pickle=True)
@@ -234,13 +238,16 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
 
         if self.early_stopping_config["patience"] <= 0:
             self.best_model = copy.deepcopy(self.model)
-            self.best_prediction = copy.deepcopy(np.array(pred_prob_list))
+            self.best_prediction_train = copy.deepcopy(training_pred_prob_list)
+            self.best_prediction_val = copy.deepcopy(np.array(pred_prob_list))
 
-        self.save(y_list)
+        self.save(y_list, training_y_list)
         if self.save_probabilities:
             self._save_prob(best_model=self.best_model, channel=broadcast_channel)
 
-    def save(self, y_list):
+        self._save_feature_importance(broadcast_channel)
+
+    def save(self, y_list, training_y_list=None):
         save_model_config(stage_model_config=self.export_conf, save_path=Path(self.save_dir))
 
         if not os.path.exists(self.evaluation_path):
@@ -249,13 +256,34 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
         # dump out ks plot
         suggest_threshold = 0.5
         if "ks" in self.metric_config or "auc_ks" in self.metric_config:
-            tc = ThresholdCutter(os.path.join(self.evaluation_path, "ks_plot.csv"))
-            tc.cut_by_value(np.array(y_list, dtype=float), self.best_prediction)
+            tc = ThresholdCutter(os.path.join(self.evaluation_path, "ks_plot_valid.csv"))
+            tc.cut_by_value(np.array(y_list, dtype=float), self.best_prediction_val)
             suggest_threshold = tc.bst_threshold
             tc.save()
+            if self.interaction_params.get("echo_training_metrics"):
+                tc = ThresholdCutter(os.path.join(self.evaluation_path, "ks_plot_train.csv"))
+                tc.cut_by_value(np.array(training_y_list, dtype=float), self.best_prediction_train)
+                tc.save()
 
         ModelPreserver.save(save_dir=self.save_dir, model_name=self.save_model_name,
                             state_dict=self.best_model.state_dict(), final=True, suggest_threshold=suggest_threshold)
+
+    def _save_feature_importance(self, channel):
+        res = {"owner_id": [], "fid": [], "importance": []}
+        other_weight_list = channel.collect()
+        for (owner_id, weights) in other_weight_list:
+            for fid, weight in enumerate(weights):
+                res["owner_id"].append(owner_id)
+                res["fid"].append(fid)
+                res["importance"].append(float(weight))
+        for fid, weight in enumerate(self.best_model.state_dict()["linear.weight"][0]):
+            res["owner_id"].append(FedNode.node_id)
+            res["fid"].append(fid)
+            res["importance"].append(float(weight))
+        res = pd.DataFrame(res).sort_values(by="importance", key=lambda col: np.abs(col), ascending=False)
+        res.to_csv(
+            Path(self.save_dir, "feature_importances.csv"), header=True, index=False, float_format="%.6g"
+        )
 
     def _save_prob(self, best_model, channel):
         train_prob_list, train_label_list, train_id_list = [], [], []
@@ -285,19 +313,3 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
             val_label_list += torch.squeeze(y_batch, dim=-1).tolist()
             val_prob_list += torch.squeeze(pred_total, dim=-1).tolist()
         self._write_prediction(val_label_list, val_prob_list, val_id_list, stage="val", final=True)
-        # self._bins_summary(df=train_df).to_csv("{}/predicted_probabilities_train.csv".
-        #                                        format(self.save_dir))
-        # self._bins_summary(df=val_df).to_csv("{}/predicted_probabilities_val.csv".
-        #                                      format(self.save_dir))
-    #
-    # def _bins_summary(self, df: pd.DataFrame) -> pd.DataFrame:
-    #     bindata, bins = pd.qcut(df['pred'], self.save_probabilities_bins_number, labels=False,
-    #                             duplicates='drop', retbins=True)
-    #     df['pred'] = bindata
-    #     bins[0], bins[-1] = 0, 1
-    #     df_bin, df_pos, df_neg = [], [], []
-    #     for bin_idx in range(self.save_probabilities_bins_number):
-    #         df_bin.append("{}~{}".format(round(bins[bin_idx], 4), round(bins[bin_idx + 1], 4)))
-    #         df_pos.append(df.query('pred == {} and label == 1'.format(bin_idx)).shape[0])
-    #         df_neg.append(df.query('pred == {} and label == 0'.format(bin_idx)).shape[0])
-    #     return pd.DataFrame({"prob_bins": df_bin, "neg_count": df_neg, "pos_count": df_pos})
