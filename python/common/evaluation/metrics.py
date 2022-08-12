@@ -118,8 +118,7 @@ class ThresholdCutter:
     def __init__(self, output_file=None):
         self.bst_threshold = 0.5
         self.bst_score = 0
-        self.default_threshold = [0, 0.1, 0.2, 0.3, 0.35, 0.4, 0.45, 0.46, 0.47, 0.48, 0.49, 0.5,
-                                  0.51, 0.52, 0.53, 0.54, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9]
+        self.default_percentile = np.arange(95, 0.0, -5)
         self.output_file = output_file
         self.metrics = {
             "threshold": [],
@@ -134,11 +133,16 @@ class ThresholdCutter:
 
     def cut_by_value(self, y_true: np.array, y_pred: np.array, values: List = None):
         probs = np.unique(y_pred)
-        if len(probs) < len(self.default_threshold):
-            self.default_threshold = probs
+        logger.info("num of probs: %d" % len(probs))
         if values is None:
-            values = self.default_threshold
-        # -	Threshold, TP, FN, FP, TN, TPR, FPR, KS
+            if len(probs) < len(self.default_percentile):
+                logger.warning(
+                    "ks points %d less than the default num: %d" % (len(probs), len(self.default_percentile)))
+                values = np.array(sorted(probs, reverse=True))
+                self.default_percentile = np.array([sum(y_pred < _) / (len(y_pred) - 1) * 100 for _ in values])
+            else:
+                values = np.percentile(y_pred, self.default_percentile)
+        # - Threshold, TP, FN, FP, TN, TPR, FPR, KS
         for threshold in values:
             tn, fp, fn, tp = confusion_matrix(y_true, y_pred >= threshold).ravel()
             if tp + fn > 0:
@@ -167,7 +171,9 @@ class ThresholdCutter:
             self.bst_threshold = thresholds[idx]
 
     def save(self):
-        pd.DataFrame(self.metrics).to_csv(self.output_file, header=True, index=False, float_format='%.6g')
+        df = pd.DataFrame(self.metrics)
+        df["top_percentile"] = 100 - self.default_percentile
+        df.to_csv(self.output_file, header=True, index=False, float_format='%.6g')
 
 
 class DecisionTable:
@@ -179,29 +185,39 @@ class DecisionTable:
     def fit(self, y_true: np.array, y_pred: np.array):
         df = pd.DataFrame({"label": y_true, "pred": y_pred})
         if self.method == "equal_frequency":
-            groups = pd.qcut(y_pred, self.bin_number, duplicates='drop')
+            groups = pd.qcut(y_pred, self.bin_number, duplicates='drop', precision=3)
         elif self.method == "equal_width":
-            groups = pd.cut(y_pred, self.bin_number, right=False, duplicates='drop')
+            groups = pd.cut(y_pred, self.bin_number, right=True, duplicates='drop', precision=3)
         else:
             raise NotImplementedError("decision table's method {} is not implemented.".format(self.method))
-        df["评分区间"] = groups
-        self.stats["组内总人数"] = df.groupby("评分区间").size()
-        self.stats["组内坏客户数"] = df.groupby("评分区间")["label"].agg(lambda x: sum(x == 0))
-        self.stats["组内好客户数"] = df.groupby("评分区间")["label"].agg(lambda x: sum(x == 1))
-        self.stats["坏客户占比"] = self.stats["组内坏客户数"] / self.stats["组内坏客户数"].sum()
-        self.stats["好客户占比"] = self.stats["组内好客户数"] / self.stats["组内好客户数"].sum()
-        self.stats["累计坏客户占比"] = self.stats["坏客户占比"].cumsum()
-        self.stats["累计好客户占比"] = self.stats["好客户占比"].cumsum()
-        self.stats["区间违约率"] = self.stats["组内坏客户数"] / self.stats["组内总人数"]
-        self.stats["累计拒绝人数"] = self.stats["组内总人数"].cumsum()
-        self.stats["累计拒绝坏人数"] = self.stats["组内坏客户数"].cumsum()
-        self.stats["累计拒绝率"] = self.stats["累计拒绝人数"] / self.stats["累计拒绝人数"].max()
-        self.stats["累计拒绝坏人占比"] = self.stats["累计拒绝坏人数"] / self.stats["累计拒绝坏人数"].max()
-        for _ in ["坏客户占比", "好客户占比", "累计坏客户占比", "累计好客户占比",
-                  "区间违约率", "累计拒绝率", "累计拒绝坏人占比"]:
-            self.stats[_] = self.stats[_].apply(lambda x: "%.2f%%" % (x * 100))
+        df["区间"] = groups
+        self.stats["样本数"] = df.groupby("区间").size()
+        self.stats["负样本数"] = df.groupby("区间")["label"].agg(lambda x: sum(x == 0))
+        self.stats["正样本数"] = df.groupby("区间")["label"].agg(lambda x: sum(x == 1))
+        self.stats["区间内负样本占比"] = self.stats["负样本数"] / self.stats["样本数"]
+        self.stats["区间内正样本占比"] = self.stats["正样本数"] / self.stats["样本数"]
+        self.stats["样本占比"] = self.stats["样本数"] / self.stats["样本数"].sum()
+        self.stats["负样本占比"] = self.stats["负样本数"] / self.stats["负样本数"].sum()
+        self.stats["正样本占比"] = self.stats["正样本数"] / self.stats["正样本数"].sum()
+        self.stats["累计总样本数"] = self.stats["样本数"].cumsum()
+        self.stats["累计负样本数"] = self.stats["负样本数"].cumsum()
+        self.stats["累计正样本数"] = self.stats["正样本数"].cumsum()
+        self.stats["累计负样本/负样本总数"] = self.stats["累计负样本数"] / self.stats["负样本数"].sum()
+        self.stats["累计正样本/正样本总数"] = self.stats["累计正样本数"] / self.stats["正样本数"].sum()
+        self.stats["累计负样本/累计总样本"] = self.stats["累计负样本数"] / self.stats["累计总样本数"]
+        self.stats["累计正样本/累计总样本"] = self.stats["累计正样本数"] / self.stats["累计总样本数"]
+        self.stats["累计样本数/总样本数"] = self.stats["累计总样本数"] / self.stats["样本数"].sum()
+        self.stats["累计正样本占比/累计总样本占比"] = self.stats["正样本占比"].cumsum() / self.stats["样本占比"].cumsum()
+        for _ in ["区间内负样本占比", "区间内正样本占比", "样本占比", "负样本占比", "正样本占比",
+                  "累计负样本/负样本总数", "累计正样本/正样本总数", "累计负样本/累计总样本", "累计正样本/累计总样本",
+                  "累计样本数/总样本数", "累计正样本占比/累计总样本占比"]:
+            self.stats[_] = np.where(
+                self.stats[_].isnull(),
+                np.nan,
+                self.stats[_].apply(lambda x: "%.2f%%" % (x * 100))
+            )
         self.stats = self.stats.reset_index()
-        self.stats["评分区间"] = self.stats["评分区间"].apply(str)
+        self.stats["区间"] = self.stats["区间"].apply(str)
 
     def save(self, file_name):
         self.stats.to_csv(file_name, header=True, index=False, float_format='%.2g')

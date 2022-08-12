@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from common.evaluation.metrics import DecisionTable
+from common.evaluation.metrics import DecisionTable, ThresholdCutter
 
 
 @pytest.fixture()
@@ -46,12 +46,11 @@ class TestDecisionTable:
 		# read_from_file
 		df = pd.read_csv(file_path)
 		assert len(df) == bins
-		assert df.iloc[-1]["累计拒绝人数"] == 100000
-		assert df.iloc[-1]["累计拒绝坏人数"] == 50000
-		assert df.iloc[-1]["累计好客户占比"] == "100.00%"
-		assert df.iloc[-1]["累计坏客户占比"] == "100.00%"
-		assert df.iloc[-1]["累计拒绝率"] == "100.00%"
-		assert df.iloc[-1]["累计拒绝坏人占比"] == "100.00%"
+		assert df.iloc[-1]["累计总样本数"] == 100000
+		assert df.iloc[-1]["累计负样本数"] == 50000
+		assert df.iloc[-1]["累计负样本/负样本总数"] == "100.00%"
+		assert df.iloc[-1]["累计正样本/正样本总数"] == "100.00%"
+		assert df.iloc[-1]["累计负样本/累计总样本"] == "50.00%"
 
 	@pytest.mark.parametrize("method", ["equal_frequency", "equal_width", 'other'])
 	def test_difference_method(self, method, env):
@@ -69,6 +68,17 @@ class TestDecisionTable:
 			# read_from_file
 			df = pd.read_csv(file_path)
 			if method == "equal_frequency":
-				assert (df["组内总人数"] == 10000).all()
+				assert (df["样本数"] == 100000 / dt.bin_number).all()
 
+	def test_threshold_cutter(self):
+		y = [1] * 10 + [0] * 40 + [1] * 40 + [0] * 10
+		p = np.arange(0.5, 1, 0.005)
+		tc = ThresholdCutter()
+		tc.cut_by_index(y, p)
+		np.testing.assert_almost_equal(tc.bst_score, 0.6)
+		np.testing.assert_almost_equal(tc.bst_threshold, 0.75)
+		tc2 = ThresholdCutter()
+		tc2.cut_by_value(y, p)
+		np.testing.assert_almost_equal(tc2.bst_score, 0.6)
+		np.testing.assert_almost_equal(tc2.bst_threshold, 0.7475)
 

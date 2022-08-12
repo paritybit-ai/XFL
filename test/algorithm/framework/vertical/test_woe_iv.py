@@ -246,4 +246,5 @@ class TestBinningWoeIv:
 
         with open("/opt/checkpoints/unit_test/vertical_binning_woe_iv_train.json", "r", encoding='utf-8') as f:
             conf = json.loads(f.read())
-            assert list(conf.keys()) == ["woe", "iv", "count_neg", "count_pos"]
+            for k in ["woe", "iv", "count_neg", "count_pos", "ratio_pos", "ratio_neg"]:
+                assert k in conf
