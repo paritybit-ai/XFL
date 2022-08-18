@@ -173,6 +173,8 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
             self.neg_bin_count[feature] = neg_bin_count.to_dict()
             pos_prob = pos_prob.apply(lambda x: float("%.6f" % x))
             neg_prob = neg_prob.apply(lambda x: float("%.6f" % x))
+            pos_prob.index = pd.Series(pos_prob.index).apply(lambda x: self.woe_map[feature][x])
+            neg_prob.index = pd.Series(neg_prob.index).apply(lambda x: self.woe_map[feature][x])
             self.pos_bin_ratio[feature] = pos_prob.to_dict()
             self.neg_bin_ratio[feature] = neg_prob.to_dict()
             woe_dict[feature] = woe.to_dict()
