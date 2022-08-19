@@ -42,6 +42,8 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
         self.iv_dict_total = {}
         self.neg_bin_count = {}
         self.pos_bin_count = {}
+        self.neg_bin_ratio = {}
+        self.pos_bin_ratio = {}
         self.broadcast_channel = BroadcastChannel(name="vertical_binning_woe_iv_channel")
 
     def fit(self):
@@ -114,7 +116,10 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
                 # neg_.index = pd.Series(neg_.index).apply(lambda x: int(x))
                 self.pos_bin_count[k] = v.to_dict()
                 self.neg_bin_count[k] = neg_.to_dict()
-
+                pos_prob = pos_prob.apply(lambda x: float("%.6f" % x))
+                neg_prob = neg_prob.apply(lambda x: float("%.6f" % x))
+                self.pos_bin_ratio[k] = pos_prob.to_dict()
+                self.neg_bin_ratio[k] = neg_prob.to_dict()
                 client_woe_dict[k] = woe.to_dict()
                 client_iv_dict[k] += float("%.6f" % np.sum((pos_prob - neg_prob) * woe))
             logger.info("Trainer woe cost:" + str(time.time() - time_s))
@@ -131,7 +136,8 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
             guest_file_path = f'{save_dir}/{self.output["trainset"]["name"]}.json'
             with open(guest_file_path, "w") as wf:
                 json.dump({"woe": self.woe_dict_total, "iv": self.iv_dict_total, "count_neg": self.neg_bin_count,
-                           "count_pos": self.pos_bin_count}, wf)
+                           "count_pos": self.pos_bin_count, "ratio_pos": self.pos_bin_ratio,
+                           "ratio_neg": self.neg_bin_ratio}, wf)
             logger.info("Host {} WOE & IV values saved as {}.".format(uid, guest_file_path))
 
     def label_trainer_woe_iv(self):
@@ -165,7 +171,12 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
             neg_bin_count.index = pd.Series(neg_bin_count.index).apply(lambda x: self.woe_map[feature][x])
             self.pos_bin_count[feature] = tmp_count['sum'].to_dict()
             self.neg_bin_count[feature] = neg_bin_count.to_dict()
-
+            pos_prob = pos_prob.apply(lambda x: float("%.6f" % x))
+            neg_prob = neg_prob.apply(lambda x: float("%.6f" % x))
+            pos_prob.index = pd.Series(pos_prob.index).apply(lambda x: self.woe_map[feature][x])
+            neg_prob.index = pd.Series(neg_prob.index).apply(lambda x: self.woe_map[feature][x])
+            self.pos_bin_ratio[feature] = pos_prob.to_dict()
+            self.neg_bin_ratio[feature] = neg_prob.to_dict()
             woe_dict[feature] = woe.to_dict()
 
         logger.info("label trainer cost:" + str(time.time() - time_s))

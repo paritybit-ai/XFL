@@ -102,7 +102,7 @@ class VerticalPearsonBase(TrainConfigParser):
 			if self.label:
 				feature_start_index += 1
 			feature_names = self.train_features.columns.to_list()
-			select_feature_cols = [feature_names[_ + feature_start_index] for _ in self.column_indexes]
+			select_feature_cols = [feature_names[_ - feature_start_index] for _ in self.column_indexes]
 			if self.column_names:
 				for f in self.column_names.split(','):
 					if f not in select_feature_cols:

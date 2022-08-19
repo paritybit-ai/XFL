@@ -172,6 +172,8 @@ class TestLogisticRegression:
             elif encryption_method == "paillier":
                 return []
             elif encryption_method == "plain":
+                if mock_channel_collect.call_count >= 9:
+                    return []
                 if mock_channel_collect.call_count % 2 == 1:
                     return [torch.tensor(np.zeros([800, 1]))]
                 else:

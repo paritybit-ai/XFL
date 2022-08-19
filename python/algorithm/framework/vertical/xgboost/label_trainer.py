@@ -335,7 +335,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
 
     def predict(self):
         trees = self.load_model()
-        test_y_pred_primitive = np.zeros_like(self.test_label)
+        test_y_pred_primitive = np.zeros_like(self.test_ids, dtype=np.float32)
         for tree in trees:
             test_y_pred_primitive = self.validation(self.test_dataset, tree, test_y_pred_primitive)
         test_y_pred = sigmoid(test_y_pred_primitive)

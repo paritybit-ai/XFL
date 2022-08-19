@@ -25,6 +25,7 @@ import torch
 from common.communication.gRPC.python.channel import BroadcastChannel
 from common.crypto.paillier.paillier import Paillier
 from common.utils.logger import logger
+from service.fed_node import FedNode
 from common.utils.model_preserver import ModelPreserver
 from common.utils.utils import save_model_config
 from .base import VerticalLogisticRegressionBase
@@ -189,6 +190,8 @@ class VerticalLogisticRegressionTrainer(VerticalLogisticRegressionBase):
         if self.save_probabilities:
             self._save_prob(best_model=self.best_model, channel=broadcast_channel)
 
+        self._save_feature_importance(broadcast_channel)
+
     def _save_prob(self, best_model, channel):
         for batch_idx, (x_batch) in enumerate(self.train_dataloader):
             x_batch = x_batch[0].to(self.device)
@@ -199,3 +202,6 @@ class VerticalLogisticRegressionTrainer(VerticalLogisticRegressionBase):
             x_batch = x_batch[0].to(self.device)
             pred_trainer = best_model(x_batch)
             channel.send(pred_trainer)
+
+    def _save_feature_importance(self, channel):
+        channel.send((FedNode.node_id, self.best_model.state_dict()["linear.weight"][0]))
