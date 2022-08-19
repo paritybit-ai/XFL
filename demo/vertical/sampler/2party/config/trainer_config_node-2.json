@@ -1,0 +1,42 @@
+[
+{
+    "identity": "trainer",
+    "model_info": {
+        "name": "vertical_sampler",
+        "config": {}
+    },
+    "input": {
+        "dataset": [
+            {
+                "type": "csv",
+                "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                "name": "breast_cancer_wisconsin_vertical_1_train.csv",
+                "has_label": false,
+                "has_id": true
+            }
+        ]
+    },
+    "output": {
+        "model": {
+            "type": "file",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "sample_id.json"
+        },
+        "trainset": {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "sampled_data.csv",
+            "header": true,
+            "has_id": true
+        }
+    },
+    "train_info": {
+        "params": {
+            "method": "random",
+            "strategy": "downsample",
+            "random_state": 42,
+            "fraction": 0.1
+        }
+    }
+}
+    ]

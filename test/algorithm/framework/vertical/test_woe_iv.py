@@ -106,18 +106,14 @@ def simu_data():
 
 
 class TestBinningWoeIv:
-    @pytest.mark.parametrize("encryption_method, has_missing, strategy, binning", [
-        ("paillier", "false", "mean", "equalWidth"), ("plain", "true", "constant", "equalWidth"),
-        ("plain", "true", "mean", "equalFrequency")])
-    def test_trainer(self, get_trainer_conf, encryption_method, has_missing, strategy, binning, mocker):
+    @pytest.mark.parametrize("encryption_method, strategy, binning", [
+        ("paillier", "mean", "equalWidth"), ("plain", "constant", "equalWidth"),
+        ("plain", "mean", "equalFrequency")])
+    def test_trainer(self, get_trainer_conf, encryption_method, strategy, binning, mocker):
         case_df = simu_data()
         train_conf = get_trainer_conf
-        if strategy == "constant":
-            train_conf["input"]["trainset"][0]["missing_values"]["strategy"] = "constant"
         if binning == "equalFrequency":
             train_conf["train_info"]["params"]['binning_params']['method'] = "equalFrequency"
-        if has_missing == "true":
-            train_conf["input"]["trainset"][0]["missing_values"]['has_missing'] = "true"
         bwi = VerticalBinningWoeIvTrainer(train_conf)
 
         if encryption_method == "plain":
@@ -155,17 +151,13 @@ class TestBinningWoeIv:
         )
         bwi.fit()
 
-    @pytest.mark.parametrize("encryption_method, has_missing, strategy, binning", [
-        ("paillier", "false", "mean", "equalWidth"), ("plain", "true", "constant", "equalWidth"),
-        ("plain", "true", "mean", "equalFrequency")])
-    def test_label_trainer(self, get_label_trainer_conf, encryption_method, has_missing, strategy, binning, mocker):
+    @pytest.mark.parametrize("encryption_method, strategy, binning", [
+        ("paillier", "mean", "equalWidth"), ("plain", "constant", "equalWidth"),
+        ("plain", "mean", "equalFrequency")])
+    def test_label_trainer(self, get_label_trainer_conf, encryption_method, strategy, binning, mocker):
         label_train_conf = get_label_trainer_conf
-        if strategy == "constant":
-            label_train_conf["input"]["trainset"][0]["missing_values"]["strategy"] = "constant"
         if binning == "equalFrequency":
             label_train_conf["train_info"]["params"]['binning_params']['method'] = "equalFrequency"
-        if has_missing == "true":
-            label_train_conf["input"]["trainset"][0]["missing_values"]['has_missing'] = "true"
         mocker.patch.object(
             BroadcastChannel, "__init__", return_value=None
         )

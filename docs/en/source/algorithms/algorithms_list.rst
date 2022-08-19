@@ -48,6 +48,8 @@ List of Algorithms
    
    ":doc:`Local Normalization <./algos/LocalNormalization>`", "local/normalization", "normalize data"
    ":doc:`Local Standard Scaler <./algos/LocalStandardScaler>`", "local/standard_scaler", "standardize data"
+   ":doc:`Local Data Split <./algos/LocalDataSplit>`", "local/data_split", "split data into train and validation set"
+   ":doc:`Local Feature Preprocess <./algos/LocalFeaturePreprocess>`", "local/feature_preprocess", "preprocess feature"
    ":doc:`Horizontal Linear Regression <./algos/HorizontalLinearRegression>`", "horizontal/linear_regression", "two-party or multi-party horizontal linear regression"
    ":doc:`Horizontal Logistic Regression <./algos/HorizontalLogisticRegression>`", "horizontal/logistic_regression", "two-party or multi-party horizontal logistic regression"
    ":doc:`Horizontal ResNet <./algos/HorizontalResNet>`", "horizontal/Resnet", "two-party or multi-party horizontal ResNet"
@@ -57,3 +59,4 @@ List of Algorithms
    ":doc:`Vertical Logistic Regression <./algos/VerticalLogisticRegression>`", "vertical/logistic_regression", "two-party or multi-party vertical logistic regression"
    ":doc:`Vertical XGBoost <./algos/VerticalXgboost>`", "vertical/xgboost", "two-party or multi-party vertical xgboost"
    ":doc:`Vertical Kmeans <./algos/VerticalKMeans>` ", "vertical/kmeans", "two-party or multi-party vertical kmeans"
+   ":doc:`Vertical Sampler <./algos/VerticalSampler>` ", "vertical/sampler", "two-party or multi-party vertical sampler"

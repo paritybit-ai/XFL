@@ -1,0 +1,49 @@
+{
+    "identity": "label_trainer",
+    "model_info":
+    {
+        "name": "local_data_split",
+        "config":
+        {}
+    },
+    "input":
+    {
+        "dataset":
+        [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/2party",
+                "name": "epsilon_2party_guest_with_id.csv",
+                "has_label": true,
+                "header": true
+            }
+        ]
+    },
+    "output":
+    {
+        "trainset":
+        {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "epsilon_2party_guest_with_id_train.csv"
+        },
+        "valset":
+        {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "epsilon_2party_guest_with_id_val.csv"
+        }
+    },
+    "train_info":
+    {
+        "device": "cpu",
+        "params":
+        {
+            "shuffle_params": true,
+            "worker_num": 4,
+            "batch_size": 100000,
+            "train_weight": 8,
+            "val_weight": 2
+        }
+    }
+}
