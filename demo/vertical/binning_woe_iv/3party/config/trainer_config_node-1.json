@@ -16,13 +16,6 @@
                     "name": "breast_cancer_wisconsin_vertical_labeled_train.csv",
                     "has_id": true,
                     "has_label": true,
-                    "missing_values":
-                    {
-                        "has_missing": false,
-                        "format": null,
-                        "strategy": "mean",
-                        "fulfill_value": 0
-                    },
                     "nan_list": [999, -999]
                 }
             ]

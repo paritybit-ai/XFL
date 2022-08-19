@@ -135,8 +135,6 @@ class VerticalBinningWoeIvBase(TrainConfigParser):
         self.df = None
         self.val = None
         self.label = label
-        self.missing_conf = self.input_trainset[0]["missing_values"]
-        self.missing_strategy = self.missing_conf.get("has_missing", False)
         self.woe_map = {}
         self.binning_split = {}
         self.save_model = self.output.get("save_model", False)
@@ -192,37 +190,6 @@ class VerticalBinningWoeIvBase(TrainConfigParser):
             self.transform_switch = True
             self.val = pd.read_csv(
                 str(Path(self.input_valset[0]["path"], self.input_valset[0]["name"])), index_col=index_col)
-
-        # missing value fulfill
-        def get_fulfill(form, strategy, fulfill=0):
-            if strategy != 'constant':
-                return SimpleImputer(missing_values=form, strategy=strategy, copy=False)
-            else:
-                return SimpleImputer(missing_values=form, strategy=strategy, fill_value=fulfill, copy=False)
-
-        if self.missing_strategy:
-            if not self.missing_conf.get("format", None):
-                missing_format = np.nan
-            else:
-                missing_format = self.missing_conf.get("format")
-            missing_strategy = self.missing_conf.get("strategy", 'mean')
-            missing_fulfill = self.missing_conf.get("fulfill_value", 0)
-            df_transform = get_fulfill(
-                missing_format, missing_strategy, missing_fulfill)
-            self.df = pd.DataFrame(df_transform.fit_transform(
-                self.df), columns=self.df.columns)
-            self.df.index = index
-            if self.transform_switch:
-                y_val = None
-                if label_name:
-                    y_val = self.val[label_name]
-                    self.val = self.val.drop(columns=label_name)
-                val_ind = self.val.index
-                self.val = pd.DataFrame(df_transform.transform(
-                    self.val), columns=self.val.columns)
-                self.val.index = val_ind
-                if y_val is not None:
-                    self.val = pd.concat([y_val, self.val], axis=1)
 
     def feature_binning(self) -> None:
         """Parse and execute feature binning.

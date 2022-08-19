@@ -80,8 +80,11 @@ PIR(Private Information Retrieval)            ✅
    ./algorithms/algos/VerticalFeatureSelection
    ./algorithms/algos/VerticalKMeans
    ./algorithms/algos/VerticalPearson
+   ./algorithms/algos/VerticalSampler
    ./algorithms/algos/LocalNormalization
    ./algorithms/algos/LocalStandardScaler
+   ./algorithms/algos/LocalDataSplit
+   ./algorithms/algos/LocalFeaturePreprocess
 
 .. toctree::
    :maxdepth: 2

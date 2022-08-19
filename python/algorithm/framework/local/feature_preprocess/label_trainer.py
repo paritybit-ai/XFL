@@ -89,8 +89,9 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
     def _parse_config(self) -> None:
         """
         parse algo config
-        missing_values: int, float, np.nan, None, pandas.NA or str (a list of values),
-        e.g. "[-999, 999]" or "[None, 'none', 'null', 'na','']", default=np.nan
+        missing_values: int, float, or str (a list of values),
+        e.g. "[-999, 999]" or "[None, 'none', 'null', 'na','']",
+        default="[np.NaN, '', None, ' ', 'nan', 'none', 'null', 'na', 'None']"
         strategy: str, default="mean"
         fill_value: str or numerical value if strategy == "constant", default=None
         Returns:
