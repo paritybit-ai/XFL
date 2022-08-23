@@ -18,8 +18,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder
 import torch
+from sklearn.preprocessing import OneHotEncoder
 
 from algorithm.core.data_io import CsvReader
 from common.utils.config_parser import TrainConfigParser
