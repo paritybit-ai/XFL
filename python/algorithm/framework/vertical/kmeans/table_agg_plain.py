@@ -45,6 +45,8 @@ class TableAggregatorPlainAssistTrainer(TableAggregatorAbstractAssistTrainer):
         message = self.broadcast_chan.collect()
         ret = None
         for table in message:
+            if table is None:
+                continue
             if ret is None:
                 ret = copy.deepcopy(table)
             else:
