@@ -24,9 +24,8 @@ from sklearn.preprocessing import OneHotEncoder
 from algorithm.core.data_io import CsvReader
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
-from sklearn.impute import SimpleImputer
-
 from common.utils.utils import save_model_config
+from sklearn.impute import SimpleImputer
 
 
 def data_impute(form, strategy, fill=None):
