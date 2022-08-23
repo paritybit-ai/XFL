@@ -62,10 +62,12 @@ class VerticalKmeansBase(TrainConfigParser):
 			index_col = input_info.get("index_col", 'id')
 		else:
 			index_col = None
-		if input_info.get("has_label", False):
+		if input_info.get("has_label", True):
 			label_name = input_info.get("label_name", 'y')
+			self.label = True
 		else:
 			label_name = None
+			self.label = False
 		if type_ == "csv":
 			if self.computing_engine == "local":
 				df = pd.read_csv(file_path, index_col=index_col)
@@ -77,7 +79,7 @@ class VerticalKmeansBase(TrainConfigParser):
 			raise NotImplementedError("Dataset type {} is not supported.".format(type_))
 		if self.label:
 			feature_cols = [_ for _ in df.columns if _ != label_name]
-			self.train_features = df.iloc[:, feature_cols]
+			self.train_features = df[feature_cols]
 			if label_name:
 				self.train_label = df[label_name]
 			else:
@@ -139,6 +141,8 @@ class VerticalKmeansBase(TrainConfigParser):
 		elif isinstance(centers, list):
 			centers = np.array(centers)
 		n = len(self.train_features)
+		if self.train_features.empty:
+			return
 		d = functools.partial(self.euclid_distance, center_list=centers)
 		dt = self.train_features.apply(d, axis=1)
 		return torch.Tensor(list(chain.from_iterable(dt.to_numpy()))).reshape(n, self.k)

@@ -105,6 +105,10 @@ class TableAggregatorOTPTrainer(TableAggregatorAbstractTrainer):
         def f(t):
             return reduce(lambda x, y: x * y, t.shape, 1) * self.otp_context.modulus_exp // 8
 
+        if table is None:
+            self.broadcast_chan.send(value=None)
+            return
+
         num_bytes_array = list(map(f, table))
         csprng_generators = []
         for remote_id in self.csprngs:
@@ -134,6 +138,8 @@ class TableAggregatorOTPAssistTrainer(TableAggregatorAbstractAssistTrainer):
         message = self.broadcast_chan.collect()
         ciphertext = None
         for table in message:
+            if table is None:
+                continue
             if ciphertext is None:
                 ciphertext = OneTimePadCiphertext(data=table, context_=self.otp_context)
             else:
