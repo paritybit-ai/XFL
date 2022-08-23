@@ -52,12 +52,12 @@ Parameter List
     - **device**: ``str`` Device on which the algorithm runs, support `cpu`.
     - **params**:
         - **missing_params**:
-            - **missing_values**: ``int`` or ``float`` or ``str`` The placeholder for the missing values.
+            - **missing_values**: ``int`` or ``float`` or ``str`` or ``list`` The placeholder for the missing values.
             - **strategy**: ``str`` The imputation strategy.
             - **fill_value**: ``str`` or ``numerical value`` When strategy == “constant”, fill_value is used to replace all occurrences of missing_values.
             - **missing_feat_params**: ``map`` Fine-grained configuration for column preprocess(axis = 0). The format is defined as: {column name: {"missing_values": placeholder for the missing values, "strategy": imputation strategy, "fill_value": imputation value when strategy == “constant”}, ...}.
         - **outlier_params**:
-            - **outlier_values**: ``int`` or ``float`` or ``str`` The placeholder for the outlier values.
+            - **outlier_values**: ``int`` or ``float`` or ``str`` or ``list`` The placeholder for the outlier values.
             - **outlier_feat_params**: ``map`` Fine-grained configuration for column preprocess(axis = 0). The format is defined as: {column name: {"outlier_values": placeholder for the outlier values}, ...}.
         - **onehot_params**:
             - **feature_params**: ``map`` Fine-grained configuration for column preprocess(axis = 0). The format is defined as: {column name: {}, ..., column name: {}}.

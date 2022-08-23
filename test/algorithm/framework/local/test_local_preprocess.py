@@ -103,7 +103,7 @@ class TestLocalNormalization:
 
     @pytest.mark.parametrize('missing_params, outlier_params', [
         ({}, {"outlier_feat_params": {"x03": {"outlier_values": 999}, "x01": {}},
-              "outlier_values": "[np.NaN, '', None, ' ', 'nan', 'none', 'null', 'na', 'None']"}),
+              "outlier_values": ["", " ", "nan", "none", "null", "na", "None"]}),
         ({}, {"outlier_feat_params": {"x03": {"outlier_values": 999}, "x01": {}}}),
         ({"fill_value": None, "missing_feat_params":
             {"x01": {"fill_value": None, "missing_values": None, "strategy": "median"}, "x00": {}},
@@ -116,7 +116,7 @@ class TestLocalNormalization:
          {"outlier_feat_params": {"x03": {"outlier_values": 999}, "x01": {}}, "outlier_values": 999}),
         ({}, {}),
         ({"fill_value": 1, "missing_values": 'nan', "strategy": "constant"},
-         {"outlier_feat_params": {"x03": {"outlier_values": 999}, "x01": {}}, "outlier_values": "[999,-999]"}),
+         {"outlier_feat_params": {"x03": {"outlier_values": 999}, "x01": {}}, "outlier_values": [999, -999]}),
         ({"fill_value": 1, "missing_values": 'nan', "strategy": "constant"},
          {"outlier_feat_params": {"x03": {"outlier_values": 999}, "x01": {}}, "outlier_values": 999})
     ])

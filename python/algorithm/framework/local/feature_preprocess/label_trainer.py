@@ -18,13 +18,14 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import torch
-from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
+import torch
 
 from algorithm.core.data_io import CsvReader
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
+from sklearn.impute import SimpleImputer
+
 from common.utils.utils import save_model_config
 
 
@@ -52,12 +53,6 @@ def config_combination(config_a, config_b):
         return list(config_combine)[0]
     else:
         return config_combine
-
-
-def str_eval(str_config):
-    if isinstance(str_config, str) and len(str_config) > 0 and str_config[0] == "[":
-        str_config = eval(str_config)
-    return str_config
 
 
 class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
@@ -88,9 +83,7 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
     def _parse_config(self) -> None:
         """
         parse algo config
-        missing_values: int, float, or str (a list of values),
-        e.g. "[-999, 999]" or "[None, 'none', 'null', 'na','']",
-        default="[np.NaN, '', None, ' ', 'nan', 'none', 'null', 'na', 'None']"
+        missing_values: int, float, str or list, e.g. [-999, 999] or ["none", "null", "na", ""], default=null
         strategy: str, default="mean"
         fill_value: str or numerical value if strategy == "constant", default=None
         Returns:
@@ -115,8 +108,6 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
             # transform null: None to default missing_values config
             if self.missing_values_overall is None:
                 self.missing_values_overall = [np.NaN, '', None, ' ', 'nan', 'none', 'null', 'na', 'None']
-            # transform the str to list when missing_values is a string of list
-            self.missing_values_overall = str_eval(self.missing_values_overall)
             self.missing_strategy_overall = self.missing_conf.get("strategy", "mean")
             self.missing_fillvalue_overall = self.missing_conf.get("fill_value", None)
             self.missing_feat_conf = self.missing_conf.get("missing_feat_params", {})
@@ -128,7 +119,6 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
         self.outlier_conf = self.train_params.get("outlier_params", {})
         if len(self.outlier_conf) > 0:
             self.outlier_values_overall = self.outlier_conf.get("outlier_values", [])
-            self.outlier_values_overall = str_eval(self.outlier_values_overall)
             self.outlier_feat_conf = self.outlier_conf.get("outlier_feat_params", {})
             self.imputer_values_overall = config_combination(self.imputer_values_overall, self.outlier_values_overall)
             logger.info("Outlier values need to be imputed")
@@ -144,7 +134,6 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
                 for key in self.missing_feat_conf.keys():
                     if len(self.missing_feat_conf[key]) > 0:
                         missing_values_feat = self.missing_feat_conf[key].get("missing_values", None)
-                        missing_values_feat = str_eval(missing_values_feat)
                         if missing_values_feat is not None:
                             self.impute_dict[key]["missing_values"] = missing_values_feat
                             self.feature_flag = True
@@ -162,7 +151,6 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
                 for key in self.outlier_feat_conf.keys():
                     if len(self.outlier_feat_conf[key]) > 0:
                         outlier_values_feat = self.outlier_feat_conf[key].get("outlier_values", None)
-                        outlier_values_feat = str_eval(outlier_values_feat)
                         if outlier_values_feat is not None:
                             if key in self.impute_dict.keys():
                                 self.impute_dict[key]["missing_values"] = config_combination(
