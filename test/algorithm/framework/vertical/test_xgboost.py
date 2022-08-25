@@ -1,11 +1,11 @@
 # Copyright 2022 The XFL Authors. All rights reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,6 @@ from common.communication.gRPC.python.commu import Commu
 from common.crypto.paillier.paillier import Paillier
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
-from common.utils.tree_pickle_structure import NodePickle, TreePickle
 from algorithm.core.tree.tree_structure import Node, SplitInfo
 
 random.seed(1)
@@ -87,53 +86,15 @@ def prepare_test_data():
         "/opt/dataset/unit_test/infer_host.csv", index=True
     )
 
-    nodes = {
-        "C6PR8y73s1qxt9Zc": Node(
-            "C6PR8y73s1qxt9Zc", 1, None,
-            "yJnqV0wsemk5fxgR", "8D5tWZ2GgmIYrACd", None,
-            SplitInfo("node-1", 0, True, 30.0), False, -0.1, ""
-        ),
-        "yJnqV0wsemk5fxgR": Node(
-            "yJnqV0wsemk5fxgR", 1, None,
-            None, None, "C6PR8y73s1qxt9Zc",
-            SplitInfo("node-1", 0, True, 10.0), True, 0.5, "left"
-        ),
-        "8D5tWZ2GgmIYrACd": Node(
-            "8D5tWZ2GgmIYrACd", 1, None,
-            None, None, "C6PR8y73s1qxt9Zc",
-            SplitInfo("node-2", 0, True, 80.0), True, -0.2, "right"
-        )
-    }
-    nodes_pkl = {
-        "C6PR8y73s1qxt9Zc": NodePickle(
-            "C6PR8y73s1qxt9Zc", 1, None, "yJnqV0wsemk5fxgR", "8D5tWZ2GgmIYrACd", False, -0.1, "", 30.0, 0, True,
-            "node-1"
-        ),
-        "yJnqV0wsemk5fxgR": NodePickle(
-            "yJnqV0wsemk5fxgR", 1, "C6PR8y73s1qxt9Zc", None, None, True, 0.5, "left", 10.0, 0, True, "node-1"
-        ),
-        "8D5tWZ2GgmIYrACd": NodePickle(
-            "8D5tWZ2GgmIYrACd", 1, "C6PR8y73s1qxt9Zc", None, None, True, -0.2, "right", 80.0, 0, True, "node-2"
-        )
-    }
-    tree = TreePickle("node-1", nodes, nodes["C6PR8y73s1qxt9Zc"], "C6PR8y73s1qxt9Zc")
-    xgb_output = {
-        "trees": [tree],
-        "num_trees": 1,
-        "lr": 0.3,
-        "max_depth": 1,
-        "suggest_threshold": 0.5,
-        "node_id_group": {"C6PR8y73s1qxt9Zc": ["C6PR8y73s1qxt9Zc", "yJnqV0wsemk5fxgR", "8D5tWZ2GgmIYrACd"]}
-    }
-    with open("/opt/checkpoints/unit_test/node-1/vertical_xgboost_guest.pkl", 'wb') as f:
-        pickle.dump(xgb_output, f)
-
-    xgb_output = {
-        "nodes": nodes_pkl,
-        "num_trees": 1
-    }
-    with open("/opt/checkpoints/unit_test/node-2/vertical_xgboost_host.pkl", 'wb') as f:
-        pickle.dump(xgb_output, f)
+    xgb_output = {"suggest_threshold": 0.6161117553710938, "lr": [0.3], "max_depth": [2], "trees": [{"party_id": "node-1", "tree_index": 0, "root_node_id": "0_4lN0P7QTwWq25Eei", "nodes": {"0_4lN0P7QTwWq25Eei": {"id": "0_4lN0P7QTwWq25Eei", "depth": 0, "left_node_id": "0_gw94EBW5tiD8kCqG", "right_node_id": "0_vpKZWumTxYcojXLq", "split_info": {"owner_id": "node-1", "feature_idx": 0, "is_category": True, "split_point": None, "left_cat": [4, 2, 6, 1]}, "is_leaf": False, "weight": None, "linkage": None}, "0_gw94EBW5tiD8kCqG": { \
+        "id": "0_gw94EBW5tiD8kCqG", "depth": 1, "left_node_id": None, "right_node_id": None, "split_info": None, "is_leaf": True, "weight": 1.5769230769230769, "linkage": "left"}, "0_vpKZWumTxYcojXLq": {"id": "0_vpKZWumTxYcojXLq", "depth": 1, "left_node_id": None, "right_node_id": None, "split_info": None, "is_leaf": True, "weight": -1.5, "linkage": "right"}}}], "version": "1.0", "loss_method": "BCEWithLogitsLoss", "num_trees": 1, "node_id_group": {"0_4lN0P7QTwWq25Eei": ["0_4lN0P7QTwWq25Eei"]}}
+    
+    with open("/opt/checkpoints/unit_test/node-1/vertical_xgboost_guest.model", 'w') as f:
+        json.dump(xgb_output, f)
+    
+    xgb_output = {"4_WTqDQjPt39iMc7Ug": {"id": "4_WTqDQjPt39iMc7Ug", "split_info": {"owner_id": "node-2", "feature_idx": 0, "is_category": True, "split_point": None, "left_cat": [1, 0, 2, 5]}}}
+    with open("/opt/checkpoints/unit_test/node-2/vertical_xgboost_host.model", 'w') as f:
+        json.dump(xgb_output, f)
 
 
 def enc_grad_hess(grad, hess):
@@ -151,7 +112,7 @@ def enc_grad_hess(grad, hess):
                                 num_cores=1)
     else:
         grad_hess = embed([grad, hess], interval=(
-                1 << 128), precision=64)
+            1 << 128), precision=64)
         enc_grad_hess = Paillier.encrypt(context=private_context,
                                          data=grad_hess,
                                          precision=0,  # must be 0
@@ -166,7 +127,7 @@ def get_label_trainer_infer_conf():
         "identity": "label_trainer",
         "model_info": {
             "name": "vertical_xgboost",
-            "config": {}
+                    "config": {}
         },
         "inference": True,
         "input": {
@@ -181,7 +142,7 @@ def get_label_trainer_infer_conf():
             ],
             "pretrain_model": {
                 "path": "/opt/checkpoints/unit_test/node-1",
-                "name": "vertical_xgboost_guest.pkl"
+                "name": "vertical_xgboost_guest.model"
             }
         },
         "output": {
@@ -209,7 +170,7 @@ def get_trainer_infer_conf():
         "identity": "trainer",
         "model_info": {
             "name": "vertical_xgboost",
-            "config": {}
+                    "config": {}
         },
         "inference": True,
         "input": {
@@ -224,7 +185,7 @@ def get_trainer_infer_conf():
             ],
             "pretrain_model": {
                 "path": "/opt/checkpoints/unit_test/node-2",
-                "name": "vertical_xgboost_host.pkl"
+                "name": "vertical_xgboost_host.model"
             }
         },
         "output": {
@@ -259,7 +220,6 @@ def get_label_trainer_conf():
         conf["train_info"]["params"]["num_trees"] = 1
         conf["train_info"]["params"]["max_num_cores"] = 2
         conf["train_info"]["params"]["row_batch"] = 20
-
         conf["train_info"]["params"]["metric_config"] = {
             "acc": {},
             "precision": {},
@@ -299,53 +259,100 @@ def env():
         os.makedirs("/opt/checkpoints/unit_test/node-1")
     if not os.path.exists("/opt/checkpoints/unit_test/node-2"):
         os.makedirs("/opt/checkpoints/unit_test/node-2")
+    if not os.path.exists("/opt/config/unit_test"):
+        os.makedirs("/opt/config/unit_test")
     prepare_data()
     prepare_test_data()
     yield
     if os.path.exists("/opt/dataset/unit_test"):
         shutil.rmtree("/opt/dataset/unit_test")
+    if os.path.exists("/opt/config/unit_test"):
+        shutil.rmtree("/opt/config/unit_test")
     if os.path.exists("/opt/checkpoints/unit_test"):
         shutil.rmtree("/opt/checkpoints/unit_test")
     os.chdir("..")
 
 
 class TestVerticalXgboost:
-    def test_predict_label_trainer(self, get_label_trainer_infer_conf, mocker):
-        mocker.patch.object(
-            DualChannel, "__init__", return_value=None
-        )
-        mocker.patch.object(
-            DualChannel, "recv", return_value={"8D5tWZ2GgmIYrACd": True}
-        )
-        xgb_label_trainer = VerticalXgboostLabelTrainer(get_label_trainer_infer_conf)
-        xgb_label_trainer.predict()
-        df = pd.read_csv("/opt/checkpoints/unit_test/node-1/predicted_probabilities_train.csv")
-        assert (df["pred"] > 0.5).sum() == 30
+    # def test_predict_label_trainer(self, get_label_trainer_infer_conf, mocker):
+    #     mocker.patch.object(
+    #         DualChannel, "__init__", return_value=None
+    #     )
+    #     mocker.patch.object(
+    #         DualChannel, "recv", return_value={"8D5tWZ2GgmIYrACd": np.packbits([True])}
+    #     )
+    #     xgb_label_trainer = VerticalXgboostLabelTrainer(
+    #         get_label_trainer_infer_conf)
+    #     xgb_label_trainer.predict()
+    #     df = pd.read_csv(
+    #         "/opt/checkpoints/unit_test/node-1/predicted_probabilities_train.csv")
+    #     print((df["pred"] > 0.5).sum(), "%%%%%%%%%%%%%%%%%")
+    #     assert (df["pred"] > 0.5).sum() == 30
 
-    def test_predict_trainer(self, get_trainer_infer_conf, mocker):
-        mocker.patch.object(
-            DualChannel, "__init__", return_value=None
-        )
-        mocker.patch.object(
-            DualChannel, "send", return_value=0
-        )
-        xgb_label_trainer = VerticalXgboostTrainer(get_trainer_infer_conf)
-        xgb_label_trainer.predict()
-        assert not os.path.exists("/opt/checkpoints/unit_test/node-2/predicted_probabilities_train.csv")
+    # def test_predict_trainer(self, get_trainer_infer_conf, mocker):
+    #     mocker.patch.object(
+    #         DualChannel, "__init__", return_value=None
+    #     )
+    #     mocker.patch.object(
+    #         DualChannel, "send", return_value=0
+    #     )
+    #     xgb_label_trainer = VerticalXgboostTrainer(get_trainer_infer_conf)
+    #     xgb_label_trainer.predict()
+    #     assert not os.path.exists(
+    #         "/opt/checkpoints/unit_test/node-2/predicted_probabilities_train.csv")
 
     @pytest.mark.filterwarnings('ignore::DeprecationWarning')
     @pytest.mark.parametrize('embed', [(True), (False)])
     def test_label_trainer(self, get_label_trainer_conf, embed, mocker):
 
-        def mock_generate_id():
+        def mock_generate_id(*args, **kwargs):
             return str(mock_tree_generate_id.call_count)
 
         def mock_dualchannel_recv(*args, **kwargs):
             if embed:
                 # recv summed_grad_hess
-                if mock_channel_recv.call_count <= 5 or (
+                if mock_channel_recv.call_count in [1, 2, 4]:
+                    hist_list = [(np.zeros(8), np.array([8] * 10))
+                                 for _ in range(2)]
+                    return [False, hist_list, [2]]
+                elif mock_channel_recv.call_count in [6, 7]:
+                    return {'1': np.packbits(np.array([True, True, True, True, True, True, True, True, True,
+                                                       True, True, True, True, True, True, True, True, True,
+                                                       True, True])),
+                            '2': np.packbits(np.array([True, True, True, True, True, True, True, True, True,
+                                                       True, True, True, True, True, True, True, True, True,
+                                                       True, True])),
+                            '3': np.packbits(np.array([True, True, True, True, True, True, True, True, True,
+                                                       True, True, True, True, True, True, True, True, True,
+                                                       True, True])),
+                            }
+                elif mock_channel_recv.call_count <= 5 or (
                         mock_channel_recv.call_count >= 8 and mock_channel_recv.call_count <= 12):
-                    hist_list = [(np.zeros(8), np.array([8] * 10)) for _ in range(2)]
+                    # features = pd.DataFrame({
+                    #     'x3': np.array([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9]),
+                    #     'x4': np.array([9, 9, 9, 9, 9, 9, 9, 9, 8, 8, 8, 8, 8, 8, 8, 8, 7, 7, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0])
+                    # }
+
+                    # )
+                    # sample_index = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 40, 41, 42, 43, 44, 48, 52, 53, 55, 59, 60, 61, 63, 64, 65, 66, 68, 70, 73, 74, 75, 76, 77, 78, 79]
+                    # grad = [0.8333333, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.5, -0.5]
+                    # hess = [0.41666666, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.41666666, 0.25, 0.25]
+                    # grad_hess = embed([grad, hess], interval=(
+                    #     1 << 128), precision=64)
+                    # enc_grad_hess = Paillier.encrypt(context=private_context,
+                    #                                  data=grad_hess,
+                    #                                  precision=0,  # must be 0
+                    #                                  obfuscation=True,
+                    #                                  num_cores=1)
+                    # enc_grad_hess = Paillier.serialize(enc_grad_hess, compression=False)
+                    # grad_hess = Paillier.ciphertext_from(public_context, enc_grad_hess, compression=False)
+                    # big_feature = Feature.create(values=features.iloc[sample_index,:],sample_index=sample_index, grad_hess=grad_hess)
+                    # res = []
+                    # for col_name in big_feature.feature_columns:
+                    #     res.append(big_feature.data.groupby([col_name])['xfl_grad_hess'].agg({'count', 'sum'}))
+                    # hist_list = [(res_hist['sum'].to_numpy(), res_hist['count'].to_numpy()) for res_hist in res]
+                    hist_list = [(np.zeros(8), np.array([8] * 10))
+                                 for _ in range(2)]
                     return [False, hist_list]
                 elif mock_channel_recv.call_count <= 7:
                     return {'1': np.array([True, True, True, True, True, True, True, True, True,
@@ -370,9 +377,25 @@ class TestVerticalXgboost:
                                            True, True])
                             }
             elif not embed:
-                if mock_channel_recv.call_count <= 5 or (
+                if mock_channel_recv.call_count in [1, 2, 4]:
+                    hist_list = [(np.zeros(8), np.zeros(
+                        8), np.array([8] * 10)) for _ in range(2)]
+                    return [False, hist_list, [2]]
+                elif mock_channel_recv.call_count in [6, 7]:
+                    return {'1': np.packbits(np.array([True, True, True, True, True, True, True, True, True,
+                                                       True, True, True, True, True, True, True, True, True,
+                                                       True, True])),
+                            '2': np.packbits(np.array([True, True, True, True, True, True, True, True, True,
+                                                       True, True, True, True, True, True, True, True, True,
+                                                       True, True])),
+                            '3': np.packbits(np.array([True, True, True, True, True, True, True, True, True,
+                                                       True, True, True, True, True, True, True, True, True,
+                                                       True, True])),
+                            }
+                elif mock_channel_recv.call_count <= 5 or (
                         mock_channel_recv.call_count >= 8 and mock_channel_recv.call_count <= 12):
-                    hist_list = [(np.zeros(8), np.zeros(8), np.array([8] * 10)) for _ in range(2)]
+                    hist_list = [(np.zeros(8), np.zeros(
+                        8), np.array([8] * 10)) for _ in range(2)]
                     return [False, hist_list]
                 elif mock_channel_recv.call_count <= 7:
                     return {'1': np.array([True, True, True, True, True, True, True, True, True,
@@ -424,6 +447,7 @@ class TestVerticalXgboost:
 
         xgb_label_trainer = VerticalXgboostLabelTrainer(
             get_label_trainer_conf)
+
         xgb_label_trainer.fit()
 
         self.check_label_trainer_output()
@@ -432,15 +456,19 @@ class TestVerticalXgboost:
     def test_trainer(self, get_trainer_conf, embed, mocker):
 
         def mock_broadcastchannel_recv(*args, **kwargs):
+            print(broadchannel_recv_mocker.call_count, "++++++")
             if embed:
                 # recv embed grad hess
-                if broadchannel_recv_mocker.call_count == 2:
+                if broadchannel_recv_mocker.call_count in [2, 5]:
                     grad = np.array(
                         [0.8333333, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, -0.5,
-                         -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
+                         -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -
+                         0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
                          -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.8333333, -0.8333333, -
-                         0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333,
-                         -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333,
+                         0.8333333, -0.8333333, -0.8333333, -0.8333333, -
+                         0.8333333, -0.8333333, -0.8333333, -0.8333333,
+                         -0.8333333, -0.8333333, -0.8333333, -0.8333333, -
+                         0.8333333, -0.8333333, -0.8333333, -0.8333333,
                          -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.5, -0.5])
                     hess = np.array(
                         [0.41666666, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
@@ -465,13 +493,16 @@ class TestVerticalXgboost:
                     return Node(id=_generate_id(), depth=0)
             elif not embed:
                 # recv  grad and hess
-                if broadchannel_recv_mocker.call_count == 2:
+                if broadchannel_recv_mocker.call_count in [2, 5]:
                     grad = np.array(
                         [0.8333333, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, -0.5,
-                         -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
+                         -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -
+                         0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
                          -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.8333333, -0.8333333, -
-                         0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333,
-                         -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333,
+                         0.8333333, -0.8333333, -0.8333333, -0.8333333, -
+                         0.8333333, -0.8333333, -0.8333333, -0.8333333,
+                         -0.8333333, -0.8333333, -0.8333333, -0.8333333, -
+                         0.8333333, -0.8333333, -0.8333333, -0.8333333,
                          -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.8333333, -0.5, -0.5])
                     hess = np.array(
                         [0.41666666, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
@@ -497,10 +528,9 @@ class TestVerticalXgboost:
                     return Node(id=_generate_id(), depth=0)
 
         def mock_dualchannel_recv(*args, **kwargs):
-
             # recv min split info
             if dualchannel_recv_mocker.call_count == 1:
-                return 1, 1
+                return -1, 1, 1
 
             # recv early stop
             elif dualchannel_recv_mocker.call_count == 2:
@@ -529,32 +559,38 @@ class TestVerticalXgboost:
 
     @staticmethod
     def check_label_trainer_output():
+        # 检查是否正确输出了预测值文件
         assert os.path.exists(
             "/opt/checkpoints/unit_test/predicted_probabilities_train.csv")
         assert os.path.exists(
             "/opt/checkpoints/unit_test/predicted_probabilities_val.csv")
 
+        # 检查是否正确输出了模型文件
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/vertical_xgboost_guest_1.pkl")
+            "/opt/checkpoints/unit_test/node-2/vertical_xgboost_host.model")
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/vertical_xgboost_guest.pkl")
+            "/opt/checkpoints/unit_test/node-1/vertical_xgboost_guest.model")
 
+        # 检查是否正确输出了model config
         assert os.path.exists("/opt/checkpoints/unit_test/model_config.json")
         with open("/opt/checkpoints/unit_test/model_config.json") as f:
             model_config = json.load(f)
         assert model_config[0]["class_name"] == "VerticalXGBooster"
-        assert model_config[0]["filename"] == "vertical_xgboost_guest.pkl"
+        assert model_config[0]["filename"] == "vertical_xgboost_guest.model"
 
+        # 检查是否正确输出了feature importance文件
         assert os.path.exists(
             "/opt/checkpoints/unit_test/feature_importances.csv")
 
     @staticmethod
     def check_trainer_output():
+        # 检查是否正确输出了模型文件
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/vertical_xgboost_host.pkl")
+            "/opt/checkpoints/unit_test/vertical_xgboost_host.model")
 
+        # 检查是否正确输出了model config
         assert os.path.exists("/opt/checkpoints/unit_test/model_config.json")
         with open("/opt/checkpoints/unit_test/model_config.json") as f:
             model_config = json.load(f)
         assert model_config[2]["class_name"] == "VerticalXGBooster"
-        assert model_config[2]["filename"] == "vertical_xgboost_host.pkl"
+        assert model_config[2]["filename"] == "vertical_xgboost_host.model"

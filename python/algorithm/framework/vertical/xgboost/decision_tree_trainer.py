@@ -39,6 +39,7 @@ class VerticalDecisionTreeTrainer(object):
     def __init__(self, 
                  tree_param: XGBTreeParam,
                  features: pd.DataFrame,
+                 cat_columns: list,
                  split_points: np.ndarray,
                  channels: Dict[str, Union[BroadcastChannel, DualChannel]],
                  encryption_context: Optional[PaillierContext] = None,
@@ -50,8 +51,8 @@ class VerticalDecisionTreeTrainer(object):
         
         self.tree_param = tree_param
         self.features = features
+        self.cat_columns = cat_columns
         self.split_points = split_points
-        # self.party_id = FedNode.node_id
         self.party_id = FedConfig.node_id
         self.max_num_cores = get_core_num(tree_param.max_num_cores)
         self.tree_index = tree_index
@@ -75,7 +76,7 @@ class VerticalDecisionTreeTrainer(object):
                 self.grad_hess = Paillier.ciphertext_from(self.pub_context, self.grad_hess, compression=False)
             else:
                 self.grad, self.hess = self.individual_grad_hess.recv(use_pickle=True)
-                self.grad = Paillier.ciphertext_from(self.pub_context, self.grad, compression=False) # ciphertext
+                self.grad = Paillier.ciphertext_from(self.pub_context, self.grad, compression=False)  # ciphertext
                 self.hess = Paillier.ciphertext_from(self.pub_context, self.hess, compression=False)
         else:
             raise ValueError("Encryption param not supported.")
@@ -88,6 +89,7 @@ class VerticalDecisionTreeTrainer(object):
         
         while True:
             node: Node = self.tree_node_chann.recv(use_pickle=True)
+            
             if node is None:
                 break
             
@@ -116,6 +118,7 @@ class VerticalDecisionTreeTrainer(object):
 
             else:
                 big_feature = self.big_feature.slice_by_sample_index(node.sample_index)
+                
             gc.collect()
                   
             count += 1
@@ -127,12 +130,18 @@ class VerticalDecisionTreeTrainer(object):
                 return res
             
             logger.info(f"Node {node.id} calculating grad hess hist start..")
-            num_send = math.ceil(len(big_feature.feature_columns) / self.tree_param.col_batch)
+            send_times = math.ceil(len(big_feature.feature_columns) / self.tree_param.col_batch)
             res_hist_list = []
             if isinstance(self.encryption_param, PaillierParam):
                 if EMBEDING:
-                    for i in range(num_send):
+                    for i in range(send_times):
+                        # split by features
+                        cat_index = list(
+                            set(self.cat_columns).intersection(set(range(i * self.tree_param.col_batch, (i + 1) * self.tree_param.col_batch)))
+                        )
+                        
                         num = int(math.ceil(big_feature.data.shape[0] / self.tree_param.row_batch))
+                        
                         for j in range(num):
                             data_id = ray.put(big_feature.data.iloc[self.tree_param.row_batch * j: self.tree_param.row_batch * (j + 1), :])
                             
@@ -163,6 +172,7 @@ class VerticalDecisionTreeTrainer(object):
                                     r = pd.Series(b[k].columns).apply(lambda x: r[x+'_x'] + r[x+'_y']).T
                                     r.columns = list(b[k].columns)
                                     return r
+                                
                                 ray_tasks = [merge_embeding.remote(k) for k in range(len(b))]
                                 res = ray.get(ray_tasks)
                                 free(b_id)
@@ -172,15 +182,21 @@ class VerticalDecisionTreeTrainer(object):
                             
                         res_hist_partial_list = res
                         hist_list = [(res_hist['sum'].to_numpy(), res_hist['count'].to_numpy()) for res_hist in res_hist_partial_list]
-                        if (i + 1) == num_send:
-                            self.summed_grad_hess_chann.send([False, hist_list], use_pickle=True)
+
+                        if (i + 1) == send_times:
+                            # 【stop_flag, hist_list, index of category feature(in binary form)]
+                            self.summed_grad_hess_chann.send([False, hist_list, cat_index], use_pickle=True)
                         else:
-                            self.summed_grad_hess_chann.send([True, hist_list], use_pickle=True)
+                            self.summed_grad_hess_chann.send([True, hist_list, cat_index], use_pickle=True)
                         
                         res_hist_list += res_hist_partial_list
                         gc.collect()
                 else:
-                    for i in range(num_send):
+                    for i in range(send_times):
+                        cat_index = list(
+                            set(self.cat_columns).intersection(set(range(i * self.tree_param.col_batch, (i + 1) * self.tree_param.col_batch)))
+                        )
+                        
                         num = int(math.ceil(big_feature.data.shape[0] / self.tree_param.row_batch))
                         for j in range(num):
                             data_id = ray.put(big_feature.data.iloc[self.tree_param.row_batch * j: self.tree_param.row_batch * (j + 1), :])
@@ -212,6 +228,7 @@ class VerticalDecisionTreeTrainer(object):
                                     r = pd.Series(list(b[k].columns)).apply(lambda x: r[(x[0]+'_x', x[1])] + r[(x[0]+'_y', x[1])]).T
                                     r.columns = pd.MultiIndex.from_tuples(b[k].columns)
                                     return r
+                                
                                 ray_tasks = [merge.remote(k) for k in range(len(b))]
                                 res = ray.get(ray_tasks)
                                 free(b_id)
@@ -223,50 +240,76 @@ class VerticalDecisionTreeTrainer(object):
                         hist_list = [(res_hist[('xfl_grad', 'sum')].to_numpy(),
                                       res_hist[('xfl_hess', 'sum')].to_numpy(), 
                                       res_hist[('xfl_grad', 'count')].to_numpy()) for res_hist in res_hist_partial_list]
-                        if (i + 1) == num_send:
-                            self.summed_grad_hess_chann.send([False, hist_list], use_pickle=True)
+                        if (i + 1) == send_times:
+                            self.summed_grad_hess_chann.send([False, hist_list, cat_index], use_pickle=True)
                         else:
-                            self.summed_grad_hess_chann.send([True, hist_list], use_pickle=True)
+                            self.summed_grad_hess_chann.send([True, hist_list, cat_index], use_pickle=True)
                         
                         res_hist_list += res_hist_partial_list
                         gc.collect()
             else:
+                cat_index = list(
+                    set(self.cat_columns).intersection(set(range(i * self.tree_param.col_batch, (i + 1) * self.tree_param.col_batch)))
+                )
                 res_hist_list = pd.Series(big_feature.feature_columns).apply(cal_grad_hess_hist_apart)
                 hist_list = [(res_hist[('xfl_grad', 'sum')].to_numpy(),
-                              res_hist[('xfl_hess', 'sum')].to_numpy(), 
+                              res_hist[('xfl_hess', 'sum')].to_numpy(),
                               res_hist[('xfl_grad', 'count')].to_numpy()) for res_hist in res_hist_list]
-                self.summed_grad_hess_chann.send([False, hist_list], use_pickle=True)
+                self.summed_grad_hess_chann.send([False, hist_list, cat_index], use_pickle=True)
                 gc.collect()
                 
             logger.info(f"Node {node.id} calculating grad hess hist finished")
 
-            feature_idx, max_gain_index = self.min_split_info_chann.recv(use_pickle=True)
+            feature_idx, max_gain_index, left_cat = self.min_split_info_chann.recv(use_pickle=True)
             if feature_idx == -1:
                 continue
             
-            if isinstance(self.encryption_param, PaillierParam) and EMBEDING:
-                max_gain_split_index = int(res_hist_list[feature_idx]['sum'].index[max_gain_index])
-            else:
-                max_gain_split_index = int(res_hist_list[feature_idx][('xfl_grad', 'sum')].index[max_gain_index])
-            
-            # may not be nessary, just in case
-            max_gain_split_index = min(max_gain_split_index, len(self.split_points[feature_idx]) - 1)
-            split_point = self.split_points[feature_idx][max_gain_split_index]
-
-            split_info = SplitInfo(owner_id=self.party_id,
-                                   feature_idx=self.feature_id_mapping[feature_idx],
-                                   split_point=split_point)
-            
-            node.split_info = split_info
-            nodes[node.id] = Node(id=self.party_id, split_info=split_info, is_leaf=False)
-            
-            if isinstance(self.encryption_param, PaillierParam) and EMBEDING:
-                left_sample_index = big_feature.data[big_feature.data.iloc[:, feature_idx + 2] <= max_gain_split_index]['xfl_id'].tolist()
-                right_sample_index = big_feature.data[big_feature.data.iloc[:, feature_idx + 2] > max_gain_split_index]['xfl_id'].tolist()
-            else:
-                left_sample_index = big_feature.data[big_feature.data.iloc[:, feature_idx + 3] <= max_gain_split_index]['xfl_id'].tolist()
-                right_sample_index = big_feature.data[big_feature.data.iloc[:, feature_idx + 3] > max_gain_split_index]['xfl_id'].tolist()
+            if feature_idx in self.cat_columns:
+                if isinstance(self.encryption_param, PaillierParam) and EMBEDING:
+                    left_cat_index = res_hist_list[feature_idx]['sum'].index[left_cat]
+                else:
+                    left_cat_index = res_hist_list[feature_idx][('xfl_grad', 'sum')].index[left_cat]
                 
+                left_cat_values = [self.split_points[feature_idx][index] for index in left_cat_index]
+            
+                split_info = SplitInfo(owner_id=self.party_id,
+                                       feature_idx=self.feature_id_mapping[feature_idx].item(),
+                                       is_category=True,
+                                       split_point=None,
+                                       left_cat=left_cat_values)
+                
+                if isinstance(self.encryption_param, PaillierParam) and EMBEDING:
+                    left_sample_index = big_feature.data[big_feature.data.iloc[:, feature_idx + 2].isin(left_cat)]['xfl_id'].tolist()
+                    right_sample_index = big_feature.data[big_feature.data.iloc[:, feature_idx + 2].isin(left_cat)]['xfl_id'].tolist()
+                else:
+                    left_sample_index = big_feature.data[big_feature.data.iloc[:, feature_idx + 3].isin(left_cat)]['xfl_id'].tolist()
+                    right_sample_index = big_feature.data[big_feature.data.iloc[:, feature_idx + 3].isin(left_cat)]['xfl_id'].tolist()
+            else:
+                if isinstance(self.encryption_param, PaillierParam) and EMBEDING:
+                    # works when goss is true
+                    split_point_index = int(res_hist_list[feature_idx]['sum'].index[max_gain_index])
+                else:
+                    split_point_index = int(res_hist_list[feature_idx][('xfl_grad', 'sum')].index[max_gain_index])
+
+                # may not be necessary, just for safe
+                split_point_index = min(split_point_index, len(self.split_points[feature_idx]) - 1)
+                split_point = self.split_points[feature_idx][split_point_index]
+
+                split_info = SplitInfo(owner_id=self.party_id,
+                                       feature_idx=self.feature_id_mapping[feature_idx].item(),
+                                       is_category=False,
+                                       split_point=split_point,
+                                       left_cat=None)
+            
+                if isinstance(self.encryption_param, PaillierParam) and EMBEDING:
+                    left_sample_index = big_feature.data[big_feature.data.iloc[:, feature_idx + 2] <= split_point_index]['xfl_id'].tolist()
+                    right_sample_index = big_feature.data[big_feature.data.iloc[:, feature_idx + 2] > split_point_index]['xfl_id'].tolist()
+                else:
+                    left_sample_index = big_feature.data[big_feature.data.iloc[:, feature_idx + 3] <= split_point_index]['xfl_id'].tolist()
+                    right_sample_index = big_feature.data[big_feature.data.iloc[:, feature_idx + 3] > split_point_index]['xfl_id'].tolist()
+            
+            nodes[node.id] = Node(id=node.id, split_info=split_info, is_leaf=False)
+            
             self.sample_index_after_split_chann.send([left_sample_index, right_sample_index], use_pickle=True)
             logger.info(f"Node {node.id} training finished.")
         return nodes

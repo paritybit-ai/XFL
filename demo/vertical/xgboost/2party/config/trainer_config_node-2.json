@@ -28,7 +28,7 @@
         "output": {
             "model": {
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "vertical_xgboost_1.pkl"
+                "name": "vertical_xgboost_1.model"
             },
             "metrics": {
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]"
@@ -62,6 +62,15 @@
                 "run_goss": true,
                 "top_rate": 0.4,
                 "other_rate": 0.4,
+                "cat_smooth": 1,
+                "category_feature": {
+                    "col_index": "",
+                    "col_names": [],
+                    "max_num_value": 0,
+                    "col_index_type": "inclusive",
+                    "col_names_type": "inclusive",
+                    "max_num_value_type": "intersection"
+                },
                 "metric_config": {
                     "acc": {},
                     "precision": {},

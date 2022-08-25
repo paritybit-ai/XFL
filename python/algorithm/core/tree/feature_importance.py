@@ -33,22 +33,6 @@ class FeatureImportance(object):
     def add_split(self, val):
         self.importance_split += val
 
-    def __cmp__(self, other):
-        if self.main_type == "split":
-            if self.importance_split > other.importance_split:
-                return 1
-            elif self.importance_split < other.importance_split:
-                return -1
-            else:
-                return 0
-        elif self.main_type == "gain":
-            if self.importance_gain > other.importance_gain:
-                return 1
-            elif self.importance_gain < other.importance_gain:
-                return -1
-            else:
-                return 0
-
     def __eq__(self, other):
         if self.main_type == "split":
             return self.importance_split == other.importance_split

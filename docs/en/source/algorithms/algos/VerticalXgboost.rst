@@ -70,6 +70,14 @@ Parameters List
         - **run_goss**: ``bool`` Whether to use goss sampling.
         - **top_rate**: ``float`` The retain ratio of large gradient data in goss.
         - **other_rate**: ``float`` The retain ratio of small gradient data in goss, `0 < top_rate + other_rate <= 1`.
+        - **cat_smooth**: ``float`` Used for reducing the effect of noises in categorical features. Default to 0.
+        - **category_feature**: ``map`` For defining which columns are categorial feature columns. The formulation is: features that column indexes are in col_index if col_index_type is 'inclusive' or not in col_index if col_index_type is 'exclusive'. `union`` featuresthat column names are in col_names if col_names_type is 'inclusive' or not in col_names if col_names_type is 'exclusive'. `union if max_num_value_type is 'union' or intersect if max_num_value_type is 'intersection'` features that number of different values is less equal than max_num_value.
+            - **col_index** ``str``: Column index of features which are supposed to be (or not to be) a categorial feature. Accept slice or number, for example: `"1, 4:5"`. Defaults to "".
+            - **col_names** ``list<str>``: Column names of features which are supposed to be (or not to be) a categorical feature. Defaults to [].
+            - **max_num_value** ``int``: If n <= max_num_value where n is the number of different values in a feature column, then the feature is supposed to be a category feature. Defalts to 0.
+            - **col_index_type** ``str``: Support 'inclusive' and 'exclusive'. Defaults to 'inclusive'.
+            - **col_names_type** ``str``: Support 'inclusive' and 'exclusive'. Defaults to 'inclusive'.
+            - **max_num_value_type** ``str``: Support 'intersection' and 'union'. Defaults to 'union'.
         - **metric_config**: ``map`` Metrics configuration, support `decision_table` , `ks` , `acc` , `auc` , `precision` , `recall` , `f1_score` , `decision_table`.
         - **early_stopping_params**:
             - **key**: ``str`` Metrics name for early stopping.

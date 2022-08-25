@@ -94,6 +94,9 @@ class XGBMSELoss(XGBLoss):
 
     def cal_hess(self, y: np.ndarray, y_pred: np.ndarray):
         return 2
+    
+    def predict(self, raw_value: np.ndarray):
+        return raw_value
 
     def cal_loss(self, y: np.ndarray, y_pred: np.ndarray):
         loss_func = torch.nn.MSELoss()

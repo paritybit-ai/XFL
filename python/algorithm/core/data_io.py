@@ -63,9 +63,7 @@ class CsvReader(object):
 
 class NpzReader(object):
     def __init__(self,
-                 path: str,
-                 ):
-
+                 path: str):
         self.data = np.load(path, allow_pickle=True)
 
     def features(self):
@@ -74,34 +72,24 @@ class NpzReader(object):
     def label(self):
         return self.data["labels"].astype(float)
 
-
-class ValidationNumpyDataset:
-    """
-    Dataloader with validation.
-    """
-
-    def __init__(self, dataset: np.array, label: np.array, batch_size: int):
-        self.dataset = dataset
-        self.label = label if isinstance(label, np.ndarray) else np.array([])
-        self.batch_size = batch_size
-        self.flag = 0
-        self.len_dataset = len(self.dataset)
-
+    
+class NdarrayIterator():
+    def __init__(self, data: np.ndarray, batch_size: int):
+        self.data = data
+        self.bs = batch_size
+        self.index = 0
+        
+    def __len__(self):
+        return len(self.data)
+        
     def __iter__(self):
         return self
 
     def __next__(self):
-        if self.flag * self.batch_size > self.len_dataset:
-            self.flag = 0
-            raise StopIteration()
-        if (self.flag + 1) * self.batch_size > self.len_dataset:
-            data, label = self.dataset[self.flag *
-                                       self.batch_size:], self.label[self.flag * self.batch_size:]
+        if self.index < len(self.data):
+            data = self.data[self.index: self.index + self.bs]
+            self.index += self.bs
+            return data
         else:
-            data = self.dataset[self.flag *
-                                self.batch_size: (self.flag + 1) * self.batch_size]
-            label = self.label[self.flag *
-                               self.batch_size: (self.flag + 1) * self.batch_size]
-        self.flag += 1
-        return data, label
-
+            self.index = 0
+            raise StopIteration
