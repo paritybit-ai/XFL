@@ -28,7 +28,7 @@
         "model": {
             "type": "csv",
             "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "vertical_xgboost_guest.pkl"
+            "name": "vertical_xgboost_guest.model"
         },
         "metrics": {
             "type": "csv",
@@ -66,6 +66,15 @@
             "run_goss": true,
             "top_rate": 0.5,
             "other_rate": 0.5,
+            "cat_smooth": 1,
+                "category_feature": {
+                    "col_index": ":2",
+                    "col_names": [],
+                    "max_num_value": 0,
+                    "col_index_type": "inclusive",
+                    "col_names_type": "inclusive",
+                    "max_num_value_type": "intersection"
+                },
             "metric_config": {
                 "acc": {},
                 "precision": {},

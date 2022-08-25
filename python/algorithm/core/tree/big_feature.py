@@ -34,16 +34,7 @@ class Feature(object):
                grad: Optional[np.ndarray] = None,
                hess: Optional[np.ndarray] = None,
                grad_hess: Optional[np.ndarray] = None): 
-        """Init
-
-        Args:
-            values: np.ndarray, column data values.
-            weights: np.ndarray, column data weights.
-            missing_value: np.ndarray, column data values.
-            sample_index: np.ndarray, origin column data idx.
-            feature_index: int, origin column idx.
-            name: string, origin column name.
-        """
+        
         values.reset_index(drop=True, inplace=True)
         
         if sample_index is None:
@@ -63,7 +54,7 @@ class Feature(object):
             
     def slice_by_sample_index(self, sample_index: np.ndarray):
         df_sample_index = pd.DataFrame(sample_index)
-        data = pd.merge(self.data, df_sample_index, left_on='xfl_id',right_on=0)
+        data = pd.merge(self.data, df_sample_index, left_on='xfl_id', right_on=0)
         return Feature(data, self.feature_columns)
     
     # def slice_by_row_index(self, row_index: np.ndarray):

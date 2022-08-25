@@ -21,14 +21,16 @@ from algorithm.core.encryption_param import EncryptionParam
 class EarlyStoppingParam(object):
     pass
 
+
 class LossParam(object):
     def __init__(self, name):
         self.name = name
 
+
 class XGBTreeParam(object):
-    def __init__(self, 
-                 task_type: str, # 'classification', 'regression'
-                 loss_param: LossParam, # ["cross_entropy", "lse", "lae", "huber", "fair", "log_cosh", "tweedie"]
+    def __init__(self,
+                 task_type: str,  # 'classification', 'regression'
+                 loss_param: LossParam,  # ["cross_entropy", "lse", "lae", "huber", "fair", "log_cosh", "tweedie"]
                  num_trees: int,
                  learning_rate: float,
                  gamma: float,
@@ -48,14 +50,24 @@ class XGBTreeParam(object):
                  validation_freqs: int,
                  metrics: List[str],
                
-                 early_stopping_param: Optional[EarlyStoppingParam] = None, # 'split',(split time) 'gain'(split gain)
+                 early_stopping_param: Optional[EarlyStoppingParam] = None,  # 'split',(split time) 'gain'(split gain)
                  encryption_param: Optional[EncryptionParam] = None,
                  subsample_feature_rate: float = 1.0,
-                 missing_value: float = float('inf'), 
+                 missing_value: float = float('inf'),
                  max_num_cores: int = 9999,
                  
                  col_batch: int = 128,
-                 row_batch: int = 10000):          
+                 row_batch: int = 10000,
+                 
+                 # category feature params
+                 cat_col_index: str = "",
+                 cat_col_names: List[str] = [],
+                 cat_max_num_value: int = 0,
+                 cat_col_index_type: str = 'inclusive',
+                 cat_col_names_type: str = 'inclusive',
+                 cat_max_num_value_type: str = 'union',
+                 
+                 cat_smooth: float = 0):
 
         self.task_type = task_type
         self.loss_param = loss_param
@@ -89,3 +101,12 @@ class XGBTreeParam(object):
         
         self.col_batch = col_batch
         self.row_batch = row_batch
+        
+        self.cat_col_index = cat_col_index
+        self.cat_col_names = cat_col_names
+        self.cat_max_num_value = cat_max_num_value
+        self.cat_col_index_type = cat_col_index_type
+        self.cat_col_names_type = cat_col_names_type
+        self.cat_max_num_value_type = cat_max_num_value_type
+        
+        self.cat_smooth = cat_smooth
