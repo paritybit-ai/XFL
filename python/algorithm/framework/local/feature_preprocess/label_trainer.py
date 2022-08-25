@@ -18,14 +18,15 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import torch
 from sklearn.preprocessing import OneHotEncoder
+import torch
 
 from algorithm.core.data_io import CsvReader
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
-from common.utils.utils import save_model_config
 from sklearn.impute import SimpleImputer
+
+from common.utils.utils import save_model_config
 
 
 def data_impute(form, strategy, fill=None):
@@ -230,13 +231,13 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
             # deal with more than one missing_values: transform the missing_values to np.NaN
             if isinstance(self.imputer_values_overall, list):
                 self.train = self.train.replace(self.imputer_values_overall, np.NaN)
-                if len(self.val) > 0:
+                if self.val is not None:
                     self.val = self.val.replace(self.imputer_values_overall, np.NaN)
                 imputer_values_overall = np.NaN
             # initialization
             imupter = data_impute(imputer_values_overall, self.imputer_strategy_overall, self.imputer_fillvalue_overall)
             self.train = pd.DataFrame(imupter.fit_transform(self.train), columns=self.columns, index=self.train_ids)
-            if len(self.val) > 0:
+            if self.val is not None:
                 self.val = pd.DataFrame(imupter.transform(self.val), columns=self.columns, index=self.val_ids)
             self.model_file.update({"imputer": imupter})
             logger.info("Overall imputation done")
@@ -244,7 +245,7 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
             # if different features have different missing_values
             imputer_list = {}
             pd.Series(self.impute_dict.keys()).apply(lambda x: imputer_series(self.train, x, "train"))
-            if len(self.val) > 0:
+            if self.val is not None:
                 pd.Series(self.impute_dict.keys()).apply(lambda x: imputer_series(self.val, x, "val"))
             self.model_file.update({"imputer": imputer_list})
             logger.info("Imputation for features done")
@@ -272,7 +273,7 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
         if len(self.onehot_feat_conf) > 0:
             onehot_list = {}
             pd.Series(self.onehot_feat_conf.keys()).apply(lambda x: onehot_series(x, "train"))
-            if len(self.val) > 0:
+            if self.val is not None:
                 pd.Series(self.onehot_feat_conf.keys()).apply(lambda x: onehot_series(x, "val"))
             self.model_file.update({"onehot": onehot_list})
             logger.info("Onehot for features done")
@@ -296,7 +297,7 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
         # recover label column
         if self.label_name is not None:
             self.train = self.train_label.join(self.train)
-            if len(self.val) > 0:
+            if self.val is not None:
                 self.val = self.val_label.join(self.val)
         # save model file (optional)
         if len(self.save_model) > 0:
@@ -312,7 +313,7 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
             save_train_path = self.save_trainset_name["path"] / Path(self.save_trainset_name["name"])
             self.train.to_csv(save_train_path, index=self.save_trainset_name["has_id"])
             logger.info("Preprocessed trainset done")
-        if len(self.val) > 0:
+        if self.val is not None:
             save_val_path = self.save_valset_name["path"] / Path(self.save_valset_name["name"])
             self.val.to_csv(save_val_path, index=self.save_valset_name["has_id"])
             logger.info("Preprocessed valset done")

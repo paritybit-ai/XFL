@@ -1,0 +1,51 @@
+[
+    {
+    "identity": "label_trainer",
+    "model_info":
+    {
+        "name": "local_data_split",
+        "config":
+        {}
+    },
+    "input":
+    {
+        "dataset":
+        [
+            {
+                "type": "csv",
+                "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                "name": "breast_cancer_wisconsin_vertical_labeled_train.csv",
+                "has_label": true,
+                "header": true
+            }
+        ]
+    },
+    "output":
+    {
+        "trainset":
+        {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "breast_cancer_wisconsin_vertical_labeled_train_t.csv"
+        },
+        "valset":
+        {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "breast_cancer_wisconsin_vertical_labeled_train_v.csv"
+        }
+    },
+    "train_info":
+    {
+        "device": "cpu",
+        "params":
+        {
+            "shuffle_params": true,
+            "worker_num": 4,
+            "batch_size": 100000,
+            "train_weight": 8,
+            "val_weight": 2
+        }
+    }
+}
+]
