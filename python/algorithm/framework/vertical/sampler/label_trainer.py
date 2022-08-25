@@ -51,6 +51,12 @@ class VerticalSamplerLabelTrainer(VerticalSamplerBase):
         self.method = self.train_params.get("method", "random")
         self.strategy = self.train_params.get("strategy", "downsample")
         self.fraction = self.train_params.get("fraction", 0.1)
+        # whether for new customers filter
+        self.infer_params = self.train_info.get("infer_params", {})
+        if len(self.infer_params) > 0:
+            self.threshold_method = self.infer_params["threshold_method"]
+            self.threshold = self.infer_params["threshold"]
+
         if isinstance(self.fraction, str):
             self.fraction = eval(self.fraction)
             if not isinstance(self.fraction, list):
@@ -129,19 +135,39 @@ class VerticalSamplerLabelTrainer(VerticalSamplerBase):
             raise NotImplementedError("Strategy type {} is not supported.".format(self.strategy))
 
     def fit(self) -> None:
-        if self.method == "random":
-            self.sample_ids, new_data = self.random_method()
-            logger.info("Random sampler completed.")
-        elif self.method == "stratify":
-            self.label_count = self.data.groupby(self.label_name)[self.label_name].count().to_dict()
-            self.label_idset = self.data.groupby(self.label_name).apply(lambda group: list(group.index)).to_dict()
-            self.sample_ids, new_data = self.stratify_method()
-            logger.info("Stratify sampler completed.")
-        else:
-            raise NotImplementedError("Method type {} is not supported.".format(self.method))
+        new_data = None
+        # for most cases
+        if len(self.infer_params) == 0:
+            if self.method == "random":
+                self.sample_ids, new_data = self.random_method()
+                logger.info("Random sampler completed.")
+            elif self.method == "stratify":
+                self.label_count = self.data.groupby(self.label_name)[self.label_name].count().to_dict()
+                self.label_idset = self.data.groupby(self.label_name).apply(lambda group: list(group.index)).to_dict()
+                self.sample_ids, new_data = self.stratify_method()
+                logger.info("Stratify sampler completed.")
+            else:
+                raise NotImplementedError("Method type {} is not supported.".format(self.method))
+        # for new customers filter
+        elif len(self.infer_params) > 0:
+            key = self.data.columns[0]
+            if self.threshold_method == "percentage":
+                threshold_num = len(self.data) * self.threshold
+                self.sample_ids = self.data.sort_values(by=key, ascending=False).iloc[:int(threshold_num)].index
+            elif self.threshold_method == "number":
+                if self.threshold > len(self.data):
+                    raise OverflowError("Threshold number {} is larger than input data size.".format(self.threshold))
+                else:
+                    self.sample_ids = self.data.sort_values(by=key, ascending=False).iloc[:int(self.threshold)].index
+            elif self.threshold_method == "score":
+                self.sample_ids = self.data[self.data[key] > self.threshold].index
+            else:
+                raise NotImplementedError("Method type {} is not supported.".format(self.threshold_method))
+
         # save
-        new_data.to_csv(self.save_data_path, index=self.output["trainset"]["has_id"])
-        logger.info("Data saved.")
+        if new_data is not None:
+            new_data.to_csv(self.save_data_path, index=self.output["trainset"]["has_id"])
+            logger.info("Data saved.")
         if len(self.save_id) > 0:
             save_id_path = self.output["model"]["path"] / Path(self.output["model"]["name"])
             with open(save_id_path, "w") as wf:

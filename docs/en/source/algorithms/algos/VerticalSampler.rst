@@ -25,7 +25,7 @@ Parameters List
         - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
 **output**:
     - **model**:
-        - **path**: ``str`` Type of output model.
+        - **type**: ``str`` Type of output model.
         - **path**: ``str`` Folder path of output model.
         - **name**: ``str`` File name of output model.
     - **trainset**:
@@ -42,3 +42,6 @@ Parameters List
         - **strategy**: ``str`` Sample strategy, support "downsample" and "upsample".
         - **random_state**: ``int`` Random seed.
         - **fraction**: ``int`` or ``float`` or ``str`` Sample fraction. When method == “stratify”, fraction should be sampling ratios of each category, e.g. "[(0,0.1), (1,0.2)]".
+    - **infer_params**:
+        - **threshold_method**: ``str`` Method of score filter, support "percentage", "number" and "score".
+        - **threshold**: ``str`` Threshold of filter.

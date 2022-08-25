@@ -86,6 +86,7 @@ class TestVerticalSamplerTrainer:
             BroadcastChannel, "broadcast", return_value=0
         )
         conf = copy.deepcopy(get_label_trainer_conf)
+        conf["train_info"]["infer_params"] = {}
         conf["input"]["dataset"][0]["type"] = datatype
         conf["train_info"]["params"]["fraction"] = fraction
         if datatype == "csv":
@@ -121,13 +122,15 @@ class TestVerticalSamplerTrainer:
             exec_msg = e.value.args[0]
             assert exec_msg == "Dataset was not configured."
 
-    @pytest.mark.parametrize('method, strategy, fraction', [
-        ("random", "downsample", 0.1), ("random", "downsample", 10), ("random", "upsample", 1.1),
-        ("random", "downsample", 1.2), ("random", "upsample", -0.1),
-        ("random", "sample", 0.1), ("stratify", "downsample", "[(0,0.1),(1,0.2)]"),
-        ("stratify", "upsample", "[(0,1.1),(1,1.2)]"), ("stratify", "sample", 0.1), ("try", "downsample", 0.1)
+    @pytest.mark.parametrize('method, strategy, fraction, infer_params', [
+        ("random", "downsample", 0.1, {"threshold_method": "percentage", "threshold": 0.1}),
+        ("random", "downsample", 10, {}), ("random", "upsample", 1.1, {}),
+        ("random", "downsample", 1.2, {}), ("random", "upsample", -0.1, {}),
+        ("random", "sample", 0.1, {}), ("stratify", "downsample", "[(0,0.1),(1,0.2)]", {}),
+        ("stratify", "upsample", "[(0,1.1),(1,1.2)]", {}), ("stratify", "sample", 0.1, {}),
+        ("try", "downsample", 0.1, {})
     ])
-    def test_label_trainer_fit(self, get_label_trainer_conf, method, strategy, fraction, mocker):
+    def test_label_trainer_fit(self, get_label_trainer_conf, method, strategy, fraction, mocker, infer_params):
         mocker.patch.object(
             BroadcastChannel, "broadcast", return_value=0
         )
@@ -135,8 +138,9 @@ class TestVerticalSamplerTrainer:
         conf["train_info"]["params"]["method"] = method
         conf["train_info"]["params"]["strategy"] = strategy
         conf["train_info"]["params"]["fraction"] = fraction
+        conf["train_info"]["infer_params"] = infer_params
         ls = VerticalSamplerLabelTrainer(conf)
-        if method == "random":
+        if method == "random" and infer_params == {}:
             if strategy == 'downsample' and fraction == 0.1:
                 ls.fit()
                 assert len(ls.sample_ids) == int(fraction * 1000)
@@ -162,7 +166,33 @@ class TestVerticalSamplerTrainer:
                     ls.fit()
                     exec_msg = e.value.args[0]
                     assert exec_msg == "Strategy type {} is not supported.".format(ls.strategy)
-        elif method == "stratify":
+        elif method == "random" and infer_params != {}:
+            ls.data = ls.data[["y"]]
+            ls.fit()
+            assert len(ls.sample_ids) == int(len(ls.data) * ls.threshold)
+            conf1 = copy.deepcopy(conf)
+            conf1["train_info"]["infer_params"]["threshold_method"] = "number"
+            conf1["train_info"]["infer_params"]["threshold"] = 100
+            ls1 = VerticalSamplerLabelTrainer(conf1)
+            ls1.data = ls1.data[["y"]]
+            ls1.fit()
+            assert len(ls1.sample_ids) == 100
+            conf1_1 = copy.deepcopy(conf1)
+            conf1_1["train_info"]["infer_params"]["threshold"] = 10000
+            ls1_1 = VerticalSamplerLabelTrainer(conf1_1)
+            ls1_1.data = ls1_1.data[["y"]]
+            with pytest.raises(OverflowError) as e:
+                ls1_1.fit()
+                exec_msg = e.value.args[0]
+                assert exec_msg == "Threshold number {} is larger than input data size.".format(ls1_1.threshold)
+            conf2 = copy.deepcopy(conf)
+            conf2["train_info"]["infer_params"]["threshold_method"] = "score"
+            conf2["train_info"]["infer_params"]["threshold"] = 0.5
+            ls2 = VerticalSamplerLabelTrainer(conf2)
+            ls2.data = ls2.data[["y"]]
+            ls2.fit()
+            assert len(ls2.sample_ids) == np.sum(ls2.data)[0]
+        elif method == "stratify" and infer_params == {}:
             if strategy == 'downsample' and fraction == "[(0,0.1),(1,0.2)]":
                 ls.fit()
                 assert len(ls.sample_ids) == int(ls.label_count[0] * 0.1) + int(ls.label_count[1] * 0.2)

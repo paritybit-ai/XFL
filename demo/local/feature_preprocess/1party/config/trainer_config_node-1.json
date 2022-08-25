@@ -1,0 +1,77 @@
+[
+{
+    "identity": "label_trainer",
+    "model_info":
+    {
+        "name": "local_feature_preprocess",
+        "config":
+        {}
+    },
+    "input":
+    {
+        "trainset":
+        [
+            {
+                "type": "csv",
+                "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                "name": "breast_cancer_wisconsin_vertical_labeled_train.csv",
+                "has_label": false,
+                "has_id": true
+            }
+        ],
+        "valset":
+        [
+        ]
+    },
+    "output":
+    {
+        "model":
+        {
+            "type": "file",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "local_preprocess_guest.pt"
+        },
+        "trainset":
+        {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "preprocessed_breast_vertical_guest_train.csv",
+            "header": true,
+            "has_id": true
+        },
+        "valset":
+        {
+            "type": "csv",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "name": "preprocessed_breast_vertical_guest_test.csv",
+            "header": true,
+            "has_id": true
+        }
+    },
+    "train_info":
+    {
+        "device": "cpu",
+        "params":
+        {
+            "missing_params":
+            {
+                "missing_values": null,
+                "strategy": "mean",
+                "fill_value": null
+            },
+            "outlier_params":
+            {
+                "outlier_values": 999
+            },
+            "onehot_params":
+            {
+                "feature_params":
+                    {
+                        "y":
+                        {}
+                    }
+            }
+        }
+    }
+}
+]
