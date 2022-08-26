@@ -80,7 +80,7 @@ class NdarrayIterator():
         self.index = 0
         
     def __len__(self):
-        return self.data
+        return len(self.data)
         
     def __iter__(self):
         return self
