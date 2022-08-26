@@ -166,7 +166,8 @@ class VerticalXgboostBase(VerticalModelBase):
 
         """
         default_config = self.train_info.get("params")
-        cat_params = default_config.get("category_feature", {})
+        cat_params = default_config.get("cat_feature", {})
+
         encryption_methods = list(default_config.get("encryption_params", {}).keys())
         if len(encryption_methods) > 0:
             encryption_method = encryption_methods[0]
