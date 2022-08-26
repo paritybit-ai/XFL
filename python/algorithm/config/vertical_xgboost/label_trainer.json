@@ -67,7 +67,7 @@
             "top_rate": 0.5,
             "other_rate": 0.5,
             "cat_smooth": 1,
-                "category_feature": {
+                "cat_feature": {
                     "col_index": ":2",
                     "col_names": [],
                     "max_num_value": 0,
