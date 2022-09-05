@@ -118,7 +118,9 @@ class ThresholdCutter:
     def __init__(self, output_file=None):
         self.bst_threshold = 0.5
         self.bst_score = 0
-        self.default_percentile = np.arange(95, 0.0, -5)
+        # self.default_threshold = [0.1, 0.2, 0.3, 0.35, 0.4, 0.45, 0.46, 0.47, 0.48, 0.49, 0.5,
+        #                           0.51, 0.52, 0.53, 0.54, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9]
+        self.default_percentile = np.arange(100, -1, -1)
         self.output_file = output_file
         self.metrics = {
             "threshold": [],
@@ -133,16 +135,16 @@ class ThresholdCutter:
 
     def cut_by_value(self, y_true: np.array, y_pred: np.array, values: List = None):
         probs = np.unique(y_pred)
-        logger.info("num of probs: %d" % len(probs))
+        logger.info("num of probs: %d." % len(probs))
         if values is None:
             if len(probs) < len(self.default_percentile):
-                logger.warning(
-                    "ks points %d less than the default num: %d" % (len(probs), len(self.default_percentile)))
+                # logger.warning("ks points %d less than the default num: %d." % (len(probs),
+                #                                                                 len(self.default_percentile)))
                 values = np.array(sorted(probs, reverse=True))
                 self.default_percentile = np.array([sum(y_pred < _) / (len(y_pred) - 1) * 100 for _ in values])
             else:
                 values = np.percentile(y_pred, self.default_percentile)
-        # - Threshold, TP, FN, FP, TN, TPR, FPR, KS
+        # -	Threshold, TP, FN, FP, TN, TPR, FPR, KS
         for threshold in values:
             tn, fp, fn, tp = confusion_matrix(y_true, y_pred >= threshold).ravel()
             if tp + fn > 0:
@@ -153,7 +155,7 @@ class ThresholdCutter:
                 fpr = fp / (tn + fp)
             else:
                 fpr = np.nan
-            ks = tpr - fpr
+            ks = max(np.max(tpr - fpr), 0)
             for metric in self.metrics:
                 self.metrics[metric].append(locals()[metric])
             if ks > self.bst_score:
@@ -179,8 +181,16 @@ class ThresholdCutter:
 class DecisionTable:
     def __init__(self, conf):
         self.method = conf.get("method", "equal_frequency")
-        self.bin_number = conf.get("bin_number", 10)
+        self.bin_number = conf.get("bin_number", 5)
+        self.type = conf.get("type")
+        self._check_params()
         self.stats = pd.DataFrame()
+
+    def _check_params(self):
+        if self.method not in ("equal_frequency", "equal_width"):
+            raise NotImplementedError("decision table: method '{}' is not implemented.".format(self.method))
+        if self.bin_number <= 1:
+            raise ValueError("decision table: bin number ({}) must be greater than 1.".format(self.bin_number))
 
     def fit(self, y_true: np.array, y_pred: np.array):
         df = pd.DataFrame({"label": y_true, "pred": y_pred})
@@ -188,8 +198,8 @@ class DecisionTable:
             groups = pd.qcut(y_pred, self.bin_number, duplicates='drop', precision=3)
         elif self.method == "equal_width":
             groups = pd.cut(y_pred, self.bin_number, right=True, duplicates='drop', precision=3)
-        else:
-            raise NotImplementedError("decision table's method {} is not implemented.".format(self.method))
+        if self.type == "score_card":
+            groups = [pd.Interval(int(_.left), int(_.right), _.closed) for _ in groups]
         df["区间"] = groups
         self.stats["样本数"] = df.groupby("区间").size()
         self.stats["负样本数"] = df.groupby("区间")["label"].agg(lambda x: sum(x == 0))
@@ -220,6 +230,7 @@ class DecisionTable:
         self.stats["区间"] = self.stats["区间"].apply(str)
 
     def save(self, file_name):
+        logger.info("decision table: saved to {}.".format(file_name))
         self.stats.to_csv(file_name, header=True, index=False, float_format='%.2g')
 
 

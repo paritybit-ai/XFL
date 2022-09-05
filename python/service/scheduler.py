@@ -132,3 +132,21 @@ class SchedulerService(object):
                 dc.config[j] = json.dumps(FedConfig.default_config_map[i][j])
             response.defaultConfigMap[i].CopyFrom(dc)
         return response
+
+    def getStage(self, request, context):
+        response = scheduler_pb2.GetStageResponse()
+        try:
+            stage_config = FedConfig.trainer_config[FedJob.current_stage]
+            if len(stage_config) < 1:
+                response.code = 1
+                stage_name = ""
+            else:
+                response.code = 0
+                stage_config = list(stage_config.values())[0]
+                stage_name = stage_config.get("model_info", {}).get("name", "")
+        except IndexError:
+            response.code = 2
+            stage_name = ""
+        response.stageId = FedJob.current_stage
+        response.stageName = stage_name
+        return response

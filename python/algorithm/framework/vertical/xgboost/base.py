@@ -31,9 +31,9 @@ class VerticalXgboostBase(VerticalModelBase):
     def __init__(self, train_conf: dict, is_label_trainer: bool = False, *args, **kwargs):
         super().__init__(train_conf)
         self.train_conf = train_conf
-        self.train_features, self.train_label = None, None
-        self.val_features, self.val_label = None, None
-        self.test_features, self.test_label = None, None
+        self.train_features, self.train_label, self.train_ids = None, None, None
+        self.val_features, self.val_label, self.val_ids = None, None, None
+        self.test_features, self.test_label, self.test_ids = None, None, None
         self.xgb_config = None
         self.is_label_trainer = is_label_trainer
         self.feature_importances_ = {}
@@ -52,21 +52,24 @@ class VerticalXgboostBase(VerticalModelBase):
         if self.input_trainset:
             _ = self.__load_data(self.input_trainset)
             self.train_features, self.train_label, self.train_ids = _
-            # self.train_features_numpy = self.train_features.to_numpy()
             self.train_dataset = NdarrayIterator(self.train_features.to_numpy(), self.bs)
+        else:
+            self.train_dataset = None
 
         if self.input_valset:
             _ = self.__load_data(self.input_valset)
             self.val_features, self.val_label, self.val_ids = _
-            # self.val_features_numpy = self.val_features.to_numpy()
             self.val_dataset = NdarrayIterator(self.val_features.to_numpy(), self.bs)
+        else:
+            self.val_dataset = None
 
         if self.input_testset:
             _ = self.__load_data(self.input_testset)
             self.test_features, self.test_label, self.test_ids = _
-            # self.test_features_numpy = self.test_features.to_numpy()
             self.test_dataset = NdarrayIterator(self.test_features.to_numpy(), self.bs)
-        
+        else:
+            self.test_dataset = None
+
     def __convert_to_binned_data(self):
         ''' Note self.train_features will be converted to binned feature '''
         cat_columns = parse_category_param(self.train_features,
@@ -86,6 +89,7 @@ class VerticalXgboostBase(VerticalModelBase):
         def f(x):
             if self.train_features[x].dtypes == "category":
                 value_counts = self.train_features[x].value_counts()  # descending order
+                
                 if value_counts.shape[0] > self.xgb_config.num_bins:
                     values = value_counts.index.to_list()
                     list_unique = values[:self.xgb_config.num_bins - 1]
@@ -167,7 +171,6 @@ class VerticalXgboostBase(VerticalModelBase):
         """
         default_config = self.train_info.get("params")
         cat_params = default_config.get("cat_feature", {})
-
         encryption_methods = list(default_config.get("encryption_params", {}).keys())
         if len(encryption_methods) > 0:
             encryption_method = encryption_methods[0]

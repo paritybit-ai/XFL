@@ -198,7 +198,7 @@ class VerticalDecisionTreeLabelTrainer(object):
                     best_split_info.split_point = None
                     best_split_info.is_category = True
                     
-                    filter = big_feature.data.iloc[:, feature_idx + 3].isin(best_split_info.left_cat)
+                    filter = big_feature.data.iloc[:, feature_idx + 3].isin(left_cat)
                 else:
                     # Because of sampling
                     max_split_index = int(res_hist_list[feature_idx][('xfl_grad', 'cum_sum')].index[max_gain_index])
@@ -226,6 +226,7 @@ class VerticalDecisionTreeLabelTrainer(object):
                 best_split_info.num_left_bin = len(best_split_info.left_sample_index)
                 best_split_info.num_right_bin = len(best_split_info.right_sample_index)
                 best_split_info.max_gain_index = max_gain_index  # only valid for continuous feature
+                    
         return best_split_info
 
     def _cal_remote_best_split(self) -> Dict[str, BestSplitInfo]:
