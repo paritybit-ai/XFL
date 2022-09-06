@@ -248,9 +248,7 @@ class VerticalDecisionTreeTrainer(object):
                         res_hist_list += res_hist_partial_list
                         gc.collect()
             else:
-                cat_index = list(
-                    set(self.cat_columns).intersection(set(range(i * self.tree_param.col_batch, (i + 1) * self.tree_param.col_batch)))
-                )
+                cat_index = self.cat_columns
                 res_hist_list = pd.Series(big_feature.feature_columns).apply(cal_grad_hess_hist_apart)
                 hist_list = [(res_hist[('xfl_grad', 'sum')].to_numpy(),
                               res_hist[('xfl_hess', 'sum')].to_numpy(),
@@ -270,7 +268,14 @@ class VerticalDecisionTreeTrainer(object):
                 else:
                     left_cat_index = res_hist_list[feature_idx][('xfl_grad', 'sum')].index[left_cat]
                 
-                left_cat_values = [self.split_points[feature_idx][index] for index in left_cat_index]
+                left_cat_values_ori = [self.split_points[feature_idx][index] for index in left_cat_index]
+                
+                left_cat_values = []
+                for cat in left_cat_values_ori:
+                    if isinstance(cat, list):
+                        left_cat_values += cat
+                    else:
+                        left_cat_values.append(cat)
             
                 split_info = SplitInfo(owner_id=self.party_id,
                                        feature_idx=self.feature_id_mapping[feature_idx].item(),

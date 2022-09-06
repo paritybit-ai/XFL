@@ -43,7 +43,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         super().__init__(train_conf, is_label_trainer=True, *args, **kwargs)
         self.party_id = FedConfig.node_id
 
-        self.channels = {}
+        self.channels = dict()
         self.channels["encryption_context"] = BroadcastChannel(
             name="encryption_context")
         self.channels["individual_grad_hess"] = BroadcastChannel(
@@ -110,7 +110,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         self.export_conf = [{
             "class_name": "VerticalXGBooster",
             "identity": self.identity,
-            "filename": self.output.get("model", {"name": "vertical_xgboost_guest.pt"})["name"]
+            "filename": self.output.get("model", {"name": "vertical_xgboost_guest.json"})["name"]
         }]
 
     def fit(self):
@@ -468,7 +468,21 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         boosting_tree = BoostingTree.from_dict(json_dict)
         return boosting_tree
 
+    def check_dataset(self):
+        self.channels["check_dataset_com"] = BroadcastChannel(name="check_dataset_com")
+        data_lens = self.channels["check_dataset_com"].collect()
+        n = data_lens[0]
+        for _ in data_lens:
+            if n != _:
+                raise ValueError("Lengths of the datasets mismatched.")
+        if self.test_dataset:
+            assert len(self.test_dataset), "Lengths of the datasets mismatched."
+        else:
+            self.test_dataset = NdarrayIterator(np.zeros((n, 0)), self.bs)
+            self.test_ids = np.arange(n)
+
     def predict(self):
+        self.check_dataset()
         boosting_tree = self.load_model()
         test_y_pred_primitive = self.predict_on_boosting_tree(boosting_tree=boosting_tree,
                                                               data_iterator=self.test_dataset)
