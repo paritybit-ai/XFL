@@ -13,14 +13,14 @@
 # limitations under the License.
 
 
-from algorithm.core.horizontal.template.torch.fedtype import _get_label_trainer
+from algorithm.core.horizontal.template.torch.fedavg.label_trainer import FedAvgLabelTrainer
 from common.utils.logger import logger
 from .common import Common
 
 
-class HorizontalVggLabelTrainer(Common, _get_label_trainer()):
+class HorizontalVggLabelTrainer(Common, FedAvgLabelTrainer):
     def __init__(self, train_conf: dict):
-        _get_label_trainer().__init__(self, train_conf)
+        FedAvgLabelTrainer.__init__(self, train_conf)
         
     def train_loop(self):
         self.model.train()

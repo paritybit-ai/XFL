@@ -37,7 +37,7 @@ type="horizontal"
 operator="bert"
 party="2party"
 code="${type}.${operator}.${party}"
-config_path="${PROJECT_HOME}/examples/${type}/${operator}/${party}/config"
+config_path="${PROJECT_HOME}/demo/${type}/${operator}/${party}/config"
 
 if [ ! -f "${PROJECT_HOME}/python/xfl.py" ]; then
   EXECUTE_PATH=${PROJECT_HOME}/xfl.py

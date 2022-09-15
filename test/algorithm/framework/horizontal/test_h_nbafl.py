@@ -17,6 +17,7 @@ import json
 import os
 import shutil
 from random import SystemRandom
+import pickle
 
 import numpy as np
 from scipy.stats import normaltest
@@ -181,7 +182,7 @@ class TestNbafl:
         )
         nbafl_t = HorizontalNbaflLabelTrainer(conf)
         nbafl_t.sigma_u = 0.1
-        nbafl_t.fit()
+        nbafl_t.train_loop()
 
     def test_assist_trainer(self, get_assist_trainer_conf, mocker):
         conf = get_assist_trainer_conf
@@ -207,4 +208,4 @@ class TestNbafl:
             AggregationOTPRoot, "aggregate", return_value=model_state_dict
         )
         nbafl_at.min_sample_num = 10
-        nbafl_at.fit()
+        nbafl_at.train_loop()

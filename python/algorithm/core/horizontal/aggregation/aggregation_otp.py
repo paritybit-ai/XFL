@@ -27,9 +27,9 @@ from common.crypto.csprng.drbg_base import DRBGBase
 from common.crypto.key_agreement.diffie_hellman import DiffieHellman
 from common.crypto.one_time_pad.component import OneTimePadContext
 from common.crypto.one_time_pad.one_time_add import OneTimeAdd
+from service.fed_config import FedConfig
 from .aggregation_base import AggregationRootBase, AggregationLeafBase
 
-from common.utils.utils import func_timer
 # {
 #     "method": "otp",
 #     "key_bitlength": 128,
@@ -58,7 +58,10 @@ def split_bytes(x: bytes, out_shape: Tuple[int]):
 
 class AggregationOTPLeaf(AggregationLeafBase):
     def __init__(self, sec_conf: dict, root_id: str = '', leaf_ids: list[str] = []) -> None:
-        super().__init__(sec_conf, root_id, leaf_ids)
+        # super().__init__(sec_conf, root_id, leaf_ids)
+        super().__init__(sec_conf, root_id, FedConfig.node_id)
+        
+        self.leaf_ids = leaf_ids or FedConfig.get_label_trainer() + FedConfig.get_trainer()
         leaf_pairs = combinations(self.leaf_ids, 2)
         # key exchange
         key_exchange_conf = sec_conf["key_exchange"]

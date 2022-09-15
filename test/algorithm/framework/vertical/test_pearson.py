@@ -28,7 +28,7 @@ from algorithm.framework.vertical.pearson.trainer import VerticalPearsonTrainer
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
 from common.crypto.paillier.paillier import Paillier
 from algorithm.core.paillier_acceleration import embed
-
+from common.communication.gRPC.python.commu import Commu
 
 def prepare_data():
 	label_list = [0] * 500 + [1] * 500
@@ -52,6 +52,9 @@ def prepare_data():
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
+	Commu.node_id="node-1"
+	Commu.trainer_ids = ['node-1', 'node-2']
+	Commu.scheduler_id = 'assist_trainer'
 	if not os.path.exists("/opt/dataset/unit_test"):
 		os.makedirs("/opt/dataset/unit_test")
 	if not os.path.exists("/opt/checkpoints/unit_test"):
@@ -246,7 +249,7 @@ class TestVerticalPearsonTrainer:
 		conf = get_label_trainer_conf
 		conf["train_info"]["params"]["column_indexes"] = [2]
 		conf["train_info"]["params"]["column_names"] = "x2"
-
+		
 		mocker.patch.object(
 			DualChannel, "__init__", return_value=None
 		)

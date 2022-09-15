@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+
 import torch
 
 from algorithm.core.optimizer import get_optimizer
@@ -22,6 +23,4 @@ def test_get_optimizer():
     optim = get_optimizer('ASGD')
     assert issubclass(optim, torch.optim.ASGD)
 
-    optim = get_optimizer('torch_optim')
-    assert dir(optim) == ['ASGD', 'Adadelta', 'Adagrad', 'Adam', 'AdamW', 'Adamax', 'LBFGS', 'NAdam', 'Optimizer', 'RAdam', 'RMSprop', 'Rprop', 'SGD', 'SparseAdam', '__builtins__',
-                          '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__path__', '__spec__', '_functional', '_multi_tensor', 'lr_scheduler', 'swa_utils']
+    

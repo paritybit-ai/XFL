@@ -17,6 +17,7 @@ import json
 import os
 import shutil
 from random import SystemRandom
+import pickle
 
 import numpy as np
 import pandas as pd
@@ -25,13 +26,13 @@ import pytest
 import service.fed_config
 from algorithm.core.horizontal.aggregation.aggregation_otp import AggregationOTPRoot, AggregationOTPLeaf
 from algorithm.core.horizontal.aggregation.aggregation_plain import AggregationPlainRoot, AggregationPlainLeaf
-from algorithm.framework.horizontal.logistic_regression.assist_trainer import HorizontalLogisticRegressionAssistTrainer
-from algorithm.framework.horizontal.logistic_regression.label_trainer import HorizontalLogisticRegressionLabelTrainer
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
 from common.communication.gRPC.python.commu import Commu
 from common.crypto.key_agreement.contants import primes_hex
 from gmpy2 import powmod
 
+MOV = b"@" # middle of value
+EOV = b"&" # end of value
 
 def prepare_data():
     case_df = pd.DataFrame({
@@ -89,17 +90,21 @@ def env():
 
 
 class TestLogisticRegression:
-    @pytest.mark.parametrize("encryption_method", ['otp', 'plain'])
+    @pytest.mark.parametrize("encryption_method", ['plain','otp'])
     def test_trainer(self, get_trainer_conf, get_assist_trainer_conf, encryption_method, mocker):
         fed_method = None
         fed_assist_method = None
-        Commu.node_id = "node-1"
+        mocker.patch.object(Commu, "node_id", "assist_trainer")
         Commu.trainer_ids = ['node-1', 'node-2']
         Commu.scheduler_id = 'assist_trainer'
         conf = get_trainer_conf
         assist_conf = get_assist_trainer_conf
         conf["model_info"]["config"]["input_dim"] = 5
         assist_conf["model_info"]["config"]["input_dim"] = 5
+        conf["train_info"]["params"]["aggregation_config"]["type"] = "fedprox"
+        conf["train_info"]["params"]["aggregation_config"]["mu"] = 0.01
+        assist_conf["train_info"]["params"]["aggregation_config"]["type"] = "fedprox"
+        assist_conf["train_info"]["params"]["aggregation_config"]["mu"] = 0.01
         # if encryption_method == "otp":
         #     mocker.patch.object(DualChannel, "__init__", return_value=None)
         #     dc = DualChannel(name="otp_diffie_hellman", ids=['node-1', 'node-2'])
@@ -109,6 +114,9 @@ class TestLogisticRegression:
         )
         mocker.patch.object(
             service.fed_config.FedConfig, "get_assist_trainer", return_value='assist_trainer'
+        )
+        mocker.patch.object(
+            service.fed_config.FedConfig, "node_id", 'node-1'
         )
         if encryption_method == "plain":
             conf["train_info"]["params"]["aggregation_config"]["encryption"] = {"method": "plain"}
@@ -145,32 +153,38 @@ class TestLogisticRegression:
             a = rand_num_generator.randint(lower_bound, upper_bound)
             g_power_a = powmod(2, a, primes[1])
             mocker.patch.object(DualChannel, "swap", return_value=(1, g_power_a))
+            mocker.patch.object(Commu, "node_id", "node-1")
             fed_method = AggregationOTPLeaf(sec_conf)
             fed_assist_method = AggregationOTPRoot(sec_conf)
+
+        service.fed_config.FedConfig.stage_config = conf
+        from algorithm.framework.horizontal.logistic_regression.assist_trainer import HorizontalLogisticRegressionAssistTrainer
+        from algorithm.framework.horizontal.logistic_regression.label_trainer import HorizontalLogisticRegressionLabelTrainer
         lrt = HorizontalLogisticRegressionLabelTrainer(conf)
         lrt_a = HorizontalLogisticRegressionAssistTrainer(assist_conf)
-        params_plain_recv = lrt.model.state_dict()
+        params_plain_recv = pickle.dumps(lrt_a.model.state_dict()) + EOV
         params_send = fed_method._calc_upload_value(lrt.model.state_dict(), len(lrt.train_dataloader.dataset))
-        params_collect = [params_send, params_send]
-        agg_otp = fed_assist_method._calc_aggregated_params(params_collect)
-        mocker.patch.object(
-            BroadcastChannel, "recv", side_effect=mock_recv
+        params_collect = pickle.dumps(params_send)
+        agg_otp = fed_assist_method._calc_aggregated_params(list(map(lambda x: pickle.loads(x), [params_collect,params_collect])))
+        
+        def mock_recv(*args, **kwargs):
+            return params_plain_recv
+
+        recv_mocker = mocker.patch.object(
+            DualChannel, "recv", side_effect=mock_recv
         )
         mocker.patch.object(
-            BroadcastChannel, "__init__", return_value=None
+            DualChannel, "__init__", return_value=None
         )
         mocker.patch.object(
-            BroadcastChannel, "send", return_value=None
-        )
-        mocker.patch.object(
-            BroadcastChannel, "broadcast", return_value=0
-        )
-        mocker.patch.object(
-            BroadcastChannel, "collect", side_effect=mock_collect
+            DualChannel, "send", return_value=None
         )
         mocker.patch.object(
             AggregationOTPRoot, "aggregate", side_effect=mock_agg
         )
-
+        mocker.patch.object(
+            AggregationPlainRoot, "aggregate", side_effect=mock_agg
+        )
+        
         lrt.fit()
         lrt_a.fit()

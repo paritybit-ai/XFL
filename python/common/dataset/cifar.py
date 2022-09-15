@@ -23,6 +23,8 @@ import numpy as np
 import torch
 from common.utils.data_utils import check_integrity, download_and_extract_data
 from PIL import Image
+import torchvision.transforms as transforms
+
 
 
 class CIFAR10(torch.utils.data.Dataset):
@@ -80,13 +82,12 @@ class CIFAR10(torch.utils.data.Dataset):
                     self.labels.extend(entry["labels"])
                 else:
                     self.labels.extend(entry["fine_labels"])
-
-        self.data = np.vstack(self.data).reshape(-1, 3, 32, 32)  # CWH format
+        
+        self.data = np.vstack(self.data).reshape(-1, 3, 32, 32).transpose((0, 2, 3, 1))  # HWC format
         self.labels = np.array(self.labels)
-        self.data_transpose = self.data.transpose((0, 2, 3, 1))
 
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
-        data, label = self.data_transpose[index], self.labels[index]
+        data, label = self.data[index], self.labels[index]
         data = Image.fromarray(data)
         if self.transform is not None:
             data = self.transform(data)
@@ -143,8 +144,6 @@ class CIFAR10(torch.utils.data.Dataset):
                     final_dir_path, f"{self.data_folder_renamed}_{party}.npz")
                 data = self.data[indices[i]]
                 labels = self.labels[indices[i]]
-                if self.transform is not None:
-                    data = self.transform(data)
                 np.savez(npy_path, data=data, labels=labels)
         elif reallocate_dict["sampling"] == "biased":
             np.random.seed(reallocate_dict["seed"])
@@ -165,8 +164,6 @@ class CIFAR10(torch.utils.data.Dataset):
                 if not os.path.exists(final_dir_path):
                     os.makedirs(final_dir_path)
                 data = self.data[indices_group[i]]
-                if self.transform is not None:
-                    data = self.transform(data)
                 labels = self.labels[indices_group[i]]
                 np.savez(npy_path, data=data, labels=labels)
 
@@ -231,6 +228,17 @@ if __name__ == "__main__":
             "seed": 0,
             "party": ["test"]
         }
+
+    transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
+
+    transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
+     
 
     cifar10_train = CIFAR10(train=True)
     cifar10_train.reallocate(train_reallocate_dict)
