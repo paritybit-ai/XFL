@@ -1,0 +1,87 @@
+[
+    {
+        "identity": "label_trainer",
+        "model_info": {
+            "name": "horizontal_bert",
+            "config": {
+                "num_labels": 2,
+                "hidden_dropout_prob": 0.1
+            }
+        },
+        "input": {
+            "trainset": [
+                {
+                    "path": "./dataset/SST-2/3party",
+                    "name": "SST-2_1.tsv"
+                }
+            ]
+        },
+        "output": {
+            "metrics": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "header": true
+            },
+            "evaluation": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "header": true
+            }
+        },
+        "train_info": {
+            "device": "cuda:0",
+            "interaction_params": {
+                "save_frequency": -1,
+                "save_probabilities": true,
+                "save_probabilities_bins_number": 10,
+                "write_training_prediction": true,
+                "write_validation_prediction": false,
+                "echo_training_metrics": true
+            },
+            "params": {
+                "global_epoch": 10,
+                "local_epoch": 1,
+                "batch_size": 16,
+                "aggregation_config": {
+                    "type": "fedavg",
+                    "encryption": {
+                        "method": "otp",
+                        "key_bitlength": 64,
+                        "data_type": "numpy.ndarray",
+                        "key_exchange": {
+                            "key_bitlength": 3072,
+                            "optimized": true
+                        },
+                        "csprng": {
+                            "name": "hmac_drbg",
+                            "method": "sha512"
+                        }
+                    }
+                },
+                "optimizer_config": {
+                    "Adam": {
+                        "learning_rate": 1e-4,
+                        "epsilon": 1e-8,
+                        "clipnorm":1                
+                    }
+                },
+                "lossfunc_config": {
+                    "SparseCategoricalCrossentropy": {}
+                },
+                "metric_config": {
+                    "accuracy": {},
+                    "f1_score": {"average":"micro"},
+                    "precision": {"average":"micro"},
+                    "recall": {"average":"micro"}
+                },
+                "early_stopping": {
+                    "key": "acc",
+                    "patience": -1,
+                    "delta": 0
+                },
+                "extra_config": {
+                }
+            }
+        }
+    }
+]

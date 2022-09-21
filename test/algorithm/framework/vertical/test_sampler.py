@@ -25,11 +25,14 @@ import pytest
 from algorithm.framework.vertical.sampler.label_trainer import VerticalSamplerLabelTrainer
 from algorithm.framework.vertical.sampler.trainer import VerticalSamplerTrainer
 from common.communication.gRPC.python.channel import BroadcastChannel
-
+from common.communication.gRPC.python.commu import Commu
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
     # 准备目录
+    Commu.node_id="node-1"
+    Commu.trainer_ids = ['node-1', 'node-2']
+    Commu.scheduler_id = 'assist_trainer'
     if not os.path.exists("/opt/dataset/unit_test"):
         os.makedirs("/opt/dataset/unit_test")
     if not os.path.exists("/opt/checkpoints/unit_test"):

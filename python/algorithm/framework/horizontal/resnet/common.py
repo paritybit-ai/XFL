@@ -23,12 +23,17 @@ from torch.utils.data import DataLoader, TensorDataset
 from algorithm.core.data_io import CsvReader, NpzReader
 from algorithm.model.resnet import ResNet
 from common.utils.logger import logger
+import torchvision.transforms as transforms
+from PIL import Image
 
 
 class Common():
     def _set_model(self) -> nn.Module:
         model_config = self.model_info.get("config")
         model = ResNet(num_classes=model_config["num_classes"], layers=model_config["layers"])
+        model = model.to(self.device)
+        # model = torch.nn.DataParallel(model)
+        # torch.backends.cudnn.benchmark = True
         return model
     
     def _read_data(self, input_dataset):
@@ -49,31 +54,55 @@ class Common():
             return None
         
     def _set_train_dataloader(self):
+        def img_collate_fn(batch):
+            labels = []
+            imgs = []
+            transform_train = transforms.Compose([
+                transforms.RandomCrop(32, padding=4),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
+            for feature, label in batch:
+                img = Image.fromarray(feature.numpy().astype(np.uint8))
+                imgs.append(transform_train(img))
+                labels.append(label)
+            return torch.stack(imgs,0).to(self.device), torch.stack(labels, 0).long().to(self.device)
+            
         train_data = self._read_data(self.input_trainset)
         trainset = None
         train_dataloader = None
         
         if train_data:
-            trainset = TensorDataset(torch.tensor(train_data.features(), dtype=torch.float32).to(self.device),
-                                     torch.tensor(train_data.label(), dtype=torch.long).to(self.device))
+            trainset = TensorDataset(torch.tensor(train_data.features()), torch.tensor(train_data.label()))
             
         batch_size = self.train_params.get("batch_size", 64)
         if trainset:
-            train_dataloader = DataLoader(trainset, batch_size, shuffle=True)
+            train_dataloader = DataLoader(trainset, batch_size, shuffle=True, collate_fn=img_collate_fn)
         return train_dataloader
     
     def _set_val_dataloader(self):
+        def img_collate_fn(batch):
+            labels = []
+            imgs = []
+            transform_test = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
+            for feature, label in batch:
+                img = Image.fromarray(feature.numpy().astype(np.uint8))
+                imgs.append(transform_test(img))
+                labels.append(label)
+            return torch.stack(imgs,0).to(self.device), torch.stack(labels, 0).long().to(self.device)
+
         val_data = self._read_data(self.input_valset)
         valset = None
         val_dataloader = None
-        
+
         if val_data:
-            valset = TensorDataset(torch.tensor(val_data.features(), dtype=torch.float32).to(self.device),
-                                   torch.tensor(val_data.label(), dtype=torch.long).to(self.device))
+            valset = TensorDataset(torch.tensor(val_data.features()), torch.tensor(val_data.label()))
             
         batch_size = self.train_params.get("batch_size", 64)
         if valset:
-            val_dataloader = DataLoader(valset, batch_size, shuffle=True)
+            val_dataloader = DataLoader(valset, batch_size, shuffle=True, collate_fn=img_collate_fn)
         return val_dataloader
     
     def val_loop(self, dataset_type: str = "validation", context: dict = {}):
@@ -102,7 +131,7 @@ class Common():
             
             labels.append(label.cpu().squeeze(-1).numpy())
             
-        val_loss /= len(dataloader.dataset)
+        val_loss /= len(dataloader)
         metric_output[loss_func_name] = val_loss
             
         val_predicts = np.concatenate(val_predicts, axis=0)

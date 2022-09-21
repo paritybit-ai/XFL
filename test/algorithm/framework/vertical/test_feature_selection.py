@@ -26,7 +26,7 @@ import service.fed_config
 from common.communication.gRPC.python.channel import DualChannel, BroadcastChannel
 from algorithm.framework.vertical.feature_selection.label_trainer import VerticalFeatureSelectionLabelTrainer
 from algorithm.framework.vertical.feature_selection.trainer import VerticalFeatureSelectionTrainer
-
+from common.communication.gRPC.python.commu import Commu
 
 def prepare_data():
 	# iv output
@@ -108,6 +108,9 @@ def prepare_data():
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
+	Commu.node_id = "node-1"
+	Commu.trainer_ids = ['node-1','node-2']
+	Commu.scheduler_id = "assist_trainer"
 	if not os.path.exists("/opt/dataset/unit_test"):
 		os.makedirs("/opt/dataset/unit_test")
 	if not os.path.exists("/opt/checkpoints/unit_test"):
@@ -207,6 +210,7 @@ def get_trainer_conf():
 class TestFeatureSelection:
 	@pytest.mark.parametrize("iv, corr, remain", [(0.001, 0.7, 4), (0.01, 1.0, 5), (0.5, 0.7, 2), (0.99, 0.7, 0)])
 	def test_label_trainer(self, get_label_trainer_conf, mocker, iv, corr, remain):
+		
 		conf = get_label_trainer_conf
 		conf["train_info"]["params"]["filter_params"]["common"]["threshold"] = iv
 		conf["train_info"]["params"]["filter_params"]["correlation"]["correlation_threshold"] = corr
@@ -228,7 +232,6 @@ class TestFeatureSelection:
 		)
 		vfslt = VerticalFeatureSelectionLabelTrainer(conf)
 		vfslt.node_id = "node-1"
-		# mock 通信函数
 		mocker.patch.object(
 			vfslt.channels["feature_id_com"],
 			"collect",
@@ -238,7 +241,6 @@ class TestFeatureSelection:
 			}]
 		)
 		vfslt.fit()
-		# 判断特征挑选结果是否符合预期
 		with open("/opt/checkpoints/unit_test/feature_selection_guest.pkl", 'rb') as f:
 			model = pickle.load(f)
 			assert model["num_of_features"] == remain
