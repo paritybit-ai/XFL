@@ -1,0 +1,93 @@
+[
+    {
+        "identity": "label_trainer",
+        "model_info": {
+            "name": "horizontal_densenet",
+            "config": {
+                "num_classes": 10,
+                "layers": 121
+            }
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "npz",
+                    "path": "./dataset/cifar10/2party",
+                    "name": "cifar10_2.npz"
+                }
+            ]
+        },
+        "output": {
+            "metrics": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "header": true
+            },
+            "evaluation": {
+                "type": "csv",
+                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                "header": true
+            }
+        },
+        "train_info": {
+            "device": "cuda:0",
+            "interaction_params": {
+                "save_frequency": -1,
+                "save_probabilities": true,
+                "save_probabilities_bins_number": 10,
+                "write_training_prediction": true,
+                "write_validation_prediction": false,
+                "echo_training_metrics": true
+            },
+            "params": {
+                "global_epoch": 200,
+                "local_epoch": 1,
+                "batch_size": 64,
+                "aggregation_config": {
+                    "type": "fedavg",
+                    "encryption": {
+                        "method": "otp",
+                        "key_bitlength": 64,
+                        "data_type": "torch.Tensor",
+                        "key_exchange": {
+                            "key_bitlength": 3072,
+                            "optimized": true
+                        },
+                        "csprng": {
+                            "name": "hmac_drbg",
+                            "method": "sha512"
+                        }
+                    }
+                },
+                "optimizer_config": {
+                    "SGD": {
+                        "lr": 0.1,
+                        "momentum": 0.9,
+                        "weight_decay": 5e-4
+                    }
+                },
+                "lossfunc_config": {
+                    "CrossEntropyLoss": {}
+                },
+                "lr_scheduler_config": {
+                    "CosineAnnealingLR": {
+                    "T_max":200
+                    }
+                },
+                "metric_config": {
+                    "accuracy": {},
+                    "f1_score": {"average":"micro"},
+                    "precision": {"average":"micro"},
+                    "recall": {"average":"micro"}
+                },
+                "early_stopping": {
+                    "key": "acc",
+                    "patience": -1,
+                    "delta": 0
+                },
+                "extra_config": {
+                }
+            }
+        }
+    }
+]
