@@ -16,16 +16,21 @@
 from typing import List, OrderedDict, Tuple
 
 import torch
+import numpy as np
 
+from service.fed_config import FedConfig
 from .aggregation_base import AggregationRootBase, AggregationLeafBase
 
 
 class AggregationPlainLeaf(AggregationLeafBase):
     def __init__(self, sec_conf: dict, root_id: str = '', leaf_ids: list[str] = []) -> None:
-        super().__init__(sec_conf, root_id, leaf_ids)
+        # super().__init__(sec_conf, root_id, leaf_ids)
+        super().__init__(sec_conf, root_id, FedConfig.node_id)
+        self.leaf_ids = leaf_ids or FedConfig.get_label_trainer() + FedConfig.get_trainer()
         
     def _calc_upload_value(self, parameters: OrderedDict, parameters_weight: float) -> Tuple[OrderedDict, float]:
         def f(x):
+            y = x[1]
             if isinstance(x[1], torch.Tensor):
                 y = x[1].cpu()
             return (x[0], y * parameters_weight)
@@ -50,7 +55,9 @@ class AggregationPlainRoot(AggregationRootBase):
         for k in parameters.keys():
             for item in received_value[1:]:
                 received_value[0][0][k] += item[0][k]
-            if received_value[0][0][k].dtype not in [torch.float32, torch.float64]:
+            if received_value[0][0][k].dtype in [np.float32, np.float64]:
+                received_value[0][0][k] /= total_weight
+            elif received_value[0][0][k].dtype not in [torch.float32, torch.float64]:
                 ori_dtype = received_value[0][0][k].dtype
                 received_value[0][0][k] = received_value[0][0][k].to(dtype=torch.float32)
                 received_value[0][0][k] /= total_weight

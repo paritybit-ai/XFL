@@ -17,15 +17,18 @@ import json
 import os
 import shutil
 from random import SystemRandom
+import pandas as pd
 import pickle
+from collections import OrderedDict
 
 import numpy as np
-import pandas as pd
 import pytest
 
 import service.fed_config
 from algorithm.core.horizontal.aggregation.aggregation_otp import AggregationOTPRoot, AggregationOTPLeaf
 from algorithm.core.horizontal.aggregation.aggregation_plain import AggregationPlainRoot, AggregationPlainLeaf
+from algorithm.framework.horizontal.bert.assist_trainer import HorizontalBertAssistTrainer
+from algorithm.framework.horizontal.bert.label_trainer import HorizontalBertLabelTrainer
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
 from common.communication.gRPC.python.commu import Commu
 from common.crypto.key_agreement.contants import primes_hex
@@ -36,42 +39,42 @@ EOV = b"&" # end of value
 
 def prepare_data():
     case_df = pd.DataFrame({
-        'x0': np.random.random(1000),
-        'x1': [0] * 1000,
-        'x2': 2 * np.random.random(1000) + 1.0,
-        'x3': 3 * np.random.random(1000) - 1.0,
-        'x4': np.random.random(1000)
+        'sentence': ["the action is stilted","cold movie","smile on face","redundant concept","the greatest musicians",
+                    "sometimes dry","shot on ugly digital video","funny yet","a beautifully","no apparent joy"],
+        'label': [0,1,0,1,1,0,1,1,1,1]
     })
-    case_df['y'] = np.where(case_df['x0'] + case_df['x2'] + case_df['x3'] > 2.5, 1, 0)
-    case_df = case_df[['y', 'x0', 'x1', 'x2', 'x3', 'x4']]
-    case_df.head(800).to_csv(
-        "/opt/dataset/unit_test/train_data.csv", index=True
+    case_df.head(8).to_csv(
+        "/opt/dataset/unit_test/train_data.tsv", sep='\t'
     )
-    case_df.tail(200).to_csv(
-        "/opt/dataset/unit_test/test_data.csv", index=True
+    case_df.tail(2).to_csv(
+        "/opt/dataset/unit_test/test_data.tsv", sep='\t'
     )
 
 
 @pytest.fixture()
 def get_assist_trainer_conf():
-    with open("python/algorithm/config/horizontal_logistic_regression/assist_trainer.json") as f:
+    with open("python/algorithm/config/horizontal_bert/assist_trainer.json") as f:
         conf = json.load(f)
         conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
-        conf["input"]["valset"][0]["name"] = "test_data.csv"
+        conf["input"]["valset"][0]["name"] = "test_data.tsv"
         conf["output"]["model"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
+        conf["train_info"]["params"]["batch_size"] = 2
+        conf["train_info"]["params"]["global_epoch"] = 2
     yield conf
 
 
 @pytest.fixture()
 def get_trainer_conf():
-    with open("python/algorithm/config/horizontal_logistic_regression/trainer.json") as f:
+    with open("python/algorithm/config/horizontal_bert/trainer.json") as f:
         conf = json.load(f)
         conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
-        conf["input"]["trainset"][0]["name"] = "train_data.csv"
+        conf["input"]["trainset"][0]["name"] = "train_data.tsv"
         conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
+        conf["train_info"]["params"]["batch_size"] = 2
+        conf["train_info"]["params"]["global_epoch"] = 2
     yield conf
 
 
@@ -89,8 +92,8 @@ def env():
         shutil.rmtree("/opt/checkpoints/unit_test")
 
 
-class TestLogisticRegression:
-    @pytest.mark.parametrize("encryption_method", ['plain','otp'])
+class TestDensenet:
+    @pytest.mark.parametrize("encryption_method", ['plain']) # ['otp', 'plain'] otp too slow
     def test_trainer(self, get_trainer_conf, get_assist_trainer_conf, encryption_method, mocker):
         fed_method = None
         fed_assist_method = None
@@ -99,16 +102,6 @@ class TestLogisticRegression:
         Commu.scheduler_id = 'assist_trainer'
         conf = get_trainer_conf
         assist_conf = get_assist_trainer_conf
-        conf["model_info"]["config"]["input_dim"] = 5
-        assist_conf["model_info"]["config"]["input_dim"] = 5
-        conf["train_info"]["params"]["aggregation_config"]["type"] = "fedprox"
-        conf["train_info"]["params"]["aggregation_config"]["mu"] = 0.01
-        assist_conf["train_info"]["params"]["aggregation_config"]["type"] = "fedprox"
-        assist_conf["train_info"]["params"]["aggregation_config"]["mu"] = 0.01
-        # if encryption_method == "otp":
-        #     mocker.patch.object(DualChannel, "__init__", return_value=None)
-        #     dc = DualChannel(name="otp_diffie_hellman", ids=['node-1', 'node-2'])
-        #     # dc.remote_id = "node-1"
         mocker.patch.object(
             service.fed_config.FedConfig, "get_label_trainer", return_value=['node-1', 'node-2']
         )
@@ -119,8 +112,10 @@ class TestLogisticRegression:
             service.fed_config.FedConfig, "node_id", 'node-1'
         )
         if encryption_method == "plain":
-            conf["train_info"]["params"]["aggregation_config"]["encryption"] = {"method": "plain"}
-            assist_conf["train_info"]["params"]["aggregation_config"]["encryption"] = {"method": "plain"}
+            conf["train_info"]["params"]["aggregation_config"]["encryption"] = {
+                "method": "plain"}
+            assist_conf["train_info"]["params"]["aggregation_config"]["encryption"] = {
+                "method": "plain"}
 
         sec_conf = conf["train_info"]["params"]["aggregation_config"]["encryption"]
 
@@ -132,14 +127,10 @@ class TestLogisticRegression:
 
         def mock_agg(*args, **kwargs):
             return agg_otp
-
-        # def mock_send(*args, **kwargs):
-        #     return params_send
-
+        
         if encryption_method == "plain":
             fed_method = AggregationPlainLeaf(sec_conf)
             fed_assist_method = AggregationPlainRoot(sec_conf)
-
         elif encryption_method == "otp":
             mocker.patch.object(DualChannel, "__init__", return_value=None)
             # dc = DualChannel(name="otp_diffie_hellman", ids=['node-1', 'node-2'])
@@ -153,22 +144,22 @@ class TestLogisticRegression:
             a = rand_num_generator.randint(lower_bound, upper_bound)
             g_power_a = powmod(2, a, primes[1])
             mocker.patch.object(DualChannel, "swap", return_value=(1, g_power_a))
-            mocker.patch.object(Commu, "node_id", "node-1")
             fed_method = AggregationOTPLeaf(sec_conf)
             fed_assist_method = AggregationOTPRoot(sec_conf)
 
-        service.fed_config.FedConfig.stage_config = conf
-        from algorithm.framework.horizontal.logistic_regression.assist_trainer import HorizontalLogisticRegressionAssistTrainer
-        from algorithm.framework.horizontal.logistic_regression.label_trainer import HorizontalLogisticRegressionLabelTrainer
-        lrt = HorizontalLogisticRegressionLabelTrainer(conf)
-        lrt_a = HorizontalLogisticRegressionAssistTrainer(assist_conf)
-        params_plain_recv = pickle.dumps(lrt_a.model.state_dict()) + EOV
-        params_send = fed_method._calc_upload_value(lrt.model.state_dict(), len(lrt.train_dataloader.dataset))
+        bert = HorizontalBertLabelTrainer(conf)
+        bert_a = HorizontalBertAssistTrainer(assist_conf)
+        params_plain_recv = pickle.dumps(OrderedDict({i:w for i,w in enumerate(bert_a.model.get_weights())})) + EOV
+        params_send = fed_method._calc_upload_value(
+            OrderedDict({i:w for i,w in enumerate(bert.model.get_weights())}), len(bert.train_dataloader._input_dataset))
         params_collect = pickle.dumps(params_send)
         agg_otp = fed_assist_method._calc_aggregated_params(list(map(lambda x: pickle.loads(x), [params_collect,params_collect])))
-        
+
         def mock_recv(*args, **kwargs):
-            return params_plain_recv
+            if recv_mocker.call_count % 4 in [1,2]:
+                return params_plain_recv
+            elif recv_mocker.call_count % 4 in [0,3] :
+                return params_collect
 
         recv_mocker = mocker.patch.object(
             DualChannel, "recv", side_effect=mock_recv
@@ -185,6 +176,5 @@ class TestLogisticRegression:
         mocker.patch.object(
             AggregationPlainRoot, "aggregate", side_effect=mock_agg
         )
-        
-        lrt.fit()
-        lrt_a.fit()
+        bert.fit()
+        bert_a.fit()

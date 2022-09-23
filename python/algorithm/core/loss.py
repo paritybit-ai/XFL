@@ -14,16 +14,20 @@
 
 
 import sys
-
+import tensorflow.keras.losses as tf_loss
 import torch.nn as torch_nn
 from torch.nn import Module
 import torch
 from common.xregister import xregister
 
 
-def get_lossfunc(name: str):
-    if name in dir(torch_nn):
-        loss_func = getattr(torch_nn, name)
+def get_lossfunc(name: str, framework="torch"):
+    if framework == "torch":
+        if name in dir(torch_nn):
+            loss_func = getattr(torch_nn, name)
+    elif framework == "tf":
+        if name in dir(tf_loss):
+            loss_func = getattr(tf_loss, name)
     elif name in dir(sys.modules[__name__]):
         loss_func = getattr(sys.modules[__name__], name)
     elif name in xregister.registered_object:

@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Copyright 2022 The XFL Authors. All rights reserved.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +15,6 @@
 # limitations under the License.
 
 
-
-import torch
-
-from algorithm.core.optimizer import get_optimizer
-
-
-def test_get_optimizer():
-    optim = get_optimizer('ASGD')
-    assert issubclass(optim, torch.optim.ASGD)
-
-    
+pid=$(ps -ef | grep xfl  | grep -v grep | awk '{print $2}')
+echo "XFL Process ${pid} killed"
+ps -ef | grep xfl  | grep -v grep | awk '{print $2}' | xargs kill -9

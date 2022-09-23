@@ -29,7 +29,7 @@ from algorithm.framework.vertical.binning_woe_iv.trainer import \
     VerticalBinningWoeIvTrainer
 from common.communication.gRPC.python.channel import BroadcastChannel
 from common.crypto.paillier.paillier import Paillier
-
+from common.communication.gRPC.python.commu import Commu
 
 def prepare_data():
     case_df = pd.DataFrame({
@@ -66,8 +66,8 @@ def get_label_trainer_conf():
         label_trainer_conf = json.load(f)
         label_trainer_conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
         label_trainer_conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
-        label_trainer_conf["output"]["trainset"]["path"] = "/opt/checkpoints/unit_test"
-        label_trainer_conf["output"]["valset"]["path"] = "/opt/checkpoints/unit_test"
+        label_trainer_conf["output"]["trainset"]["path"] = "/opt/checkpoints/unit_test_1"
+        label_trainer_conf["output"]["valset"]["path"] = "/opt/checkpoints/unit_test_1"
         label_trainer_conf["input"]["trainset"][0]["name"] = "breast_cancer_wisconsin_guest_train.csv"
         label_trainer_conf["input"]["valset"][0]["name"] = "breast_cancer_wisconsin_guest_test.csv"
     yield label_trainer_conf
@@ -79,8 +79,8 @@ def get_trainer_conf():
         trainer_conf = json.load(f)
         trainer_conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
         trainer_conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
-        trainer_conf["output"]["trainset"]["path"] = "/opt/checkpoints/unit_test"
-        trainer_conf["output"]["valset"]["path"] = "/opt/checkpoints/unit_test"
+        trainer_conf["output"]["trainset"]["path"] = "/opt/checkpoints/unit_test_1"
+        trainer_conf["output"]["valset"]["path"] = "/opt/checkpoints/unit_test_1"
         trainer_conf["input"]["trainset"][0]["name"] = "breast_cancer_wisconsin_host_train.csv"
         trainer_conf["input"]["valset"][0]["name"] = "breast_cancer_wisconsin_host_test.csv"
     yield trainer_conf
@@ -88,6 +88,9 @@ def get_trainer_conf():
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
+    Commu.node_id="node-1"
+    Commu.trainer_ids = ['node-1', 'node-2']
+    Commu.scheduler_id = 'assist_trainer'
     if not os.path.exists("/opt/dataset/unit_test"):
         os.makedirs("/opt/dataset/unit_test")
     if not os.path.exists("/opt/checkpoints/unit_test"):
@@ -98,6 +101,8 @@ def env():
         shutil.rmtree("/opt/dataset/unit_test")
     if os.path.exists("/opt/checkpoints/unit_test"):
         shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/opt/checkpoints/unit_test_1"):
+        shutil.rmtree("/opt/checkpoints/unit_test_1")
 
 
 def simu_data():
@@ -111,6 +116,7 @@ class TestBinningWoeIv:
         ("plain", "mean", "equalFrequency")])
     def test_trainer(self, get_trainer_conf, encryption_method, strategy, binning, mocker):
         case_df = simu_data()
+        train_conf = get_trainer_conf
         train_conf = get_trainer_conf
         if binning == "equalFrequency":
             train_conf["train_info"]["params"]['binning_params']['method'] = "equalFrequency"
@@ -234,9 +240,9 @@ class TestBinningWoeIv:
         bwi.fit()
 
         # 检查是否正常留存
-        assert os.path.exists("/opt/checkpoints/unit_test/vertical_binning_woe_iv_train.json")
+        assert os.path.exists("/opt/checkpoints/unit_test_1/vertical_binning_woe_iv_train.json")
 
-        with open("/opt/checkpoints/unit_test/vertical_binning_woe_iv_train.json", "r", encoding='utf-8') as f:
+        with open("/opt/checkpoints/unit_test_1/vertical_binning_woe_iv_train.json", "r", encoding='utf-8') as f:
             conf = json.loads(f.read())
             for k in ["woe", "iv", "count_neg", "count_pos", "ratio_pos", "ratio_neg"]:
                 assert k in conf

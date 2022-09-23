@@ -36,7 +36,7 @@ from algorithm.framework.vertical.kmeans.table_agg_plain import (
 	TableAggregatorPlainAssistTrainer, TableAggregatorPlainTrainer)
 from algorithm.framework.vertical.kmeans.trainer import VerticalKmeansTrainer
 from common.communication.gRPC.python.channel import (BroadcastChannel, DualChannel)
-
+from common.communication.gRPC.python.commu import Commu
 
 def prepare_data():
 	label_list = [0, 1, 2, 3, 4] * 200
@@ -62,6 +62,9 @@ def prepare_data():
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
+	Commu.node_id="node-1"
+	Commu.trainer_ids = ['node-1', 'node-2']
+	Commu.scheduler_id = 'assist_trainer'
 	if not os.path.exists("/opt/dataset/unit_test"):
 		os.makedirs("/opt/dataset/unit_test")
 	if not os.path.exists("/opt/checkpoints/unit_test"):
