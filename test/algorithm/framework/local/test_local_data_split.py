@@ -129,14 +129,14 @@ class TestLocalDataSplit:
                     val = pd.read_csv(output_val, header=None)
                     assert len(train) == 801 and len(val) == 201
                     assert train.iloc[0, 0] == "id" and val.iloc[0, 0] == "id"
-                    assert train.iloc[1, 0] != '0' and val.iloc[1, 0] != '800'
+                    assert list(train.iloc[:, 0]) != list(range(800))
                 else:
                     lds.fit()
                     train = pd.read_csv(output_train, header=None)
                     val = pd.read_csv(output_val, header=None)
                     assert len(train) == 800 and len(val) == 201
                     assert train.iloc[0, 0] != "id" and val.iloc[0, 0] != "id"
-                    assert train.iloc[1, 0] != '0' and val.iloc[0, 0] != '799'
+                    assert list(train.iloc[:, 0]) != list(range(799)) + ["id"]
         else:
             if not shuffle_params:
                 if header:
@@ -160,11 +160,11 @@ class TestLocalDataSplit:
                     val = pd.read_csv(output_val, header=None)
                     assert len(train) == 1601 and len(val) == 401
                     assert train.iloc[0, 0] == "id" and val.iloc[0, 0] == "id"
-                    assert train.iloc[1, 0] != '0' and val.iloc[1, 0] != '600'
+                    assert list(train.iloc[:, 0]) != list(range(1600))
                 else:
                     lds.fit()
                     train = pd.read_csv(output_train, header=None)
                     val = pd.read_csv(output_val, header=None)
                     assert len(train) == 1601 and len(val) == 401
                     assert train.iloc[0, 0] != "id" and val.iloc[0, 0] != "id"
-                    assert train.iloc[1, 0] != '0' and val.iloc[0, 0] != '599'
+                    assert list(train.iloc[:, 0]) != list(range(1599)) + ["id"]

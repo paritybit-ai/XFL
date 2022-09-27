@@ -42,7 +42,8 @@ data_path = os.path.join(dir_path, "breast_cancer_wisconsin_vertical/2party/brea
 tmp = pd.read_csv(data_path,index_col=False)
 col = tmp.columns[2:]
 tmp.iloc[0:4,2:]=pd.DataFrame([[np.NaN]*(len(tmp.columns)-2)]*4,columns=col)
-tmp.to_csv(data_path, index=False)
+data_path_preprocess = os.path.join(dir_path, "breast_cancer_wisconsin_vertical/2party/breast_cancer_wisconsin_vertical_labeled_train_preprocess.csv")
+tmp.to_csv(data_path_preprocess, index=False)
 END
 
 type="local"
