@@ -26,8 +26,8 @@ class Hooker(object):
 
         Args:
             place (str): hook place.
-            rank (int): execute rank with the same hook same.
-            func (object): function to register, accept a dict as input.
+            rank (int): execute rank with the same hook name.
+            func (object): function to register.
             desc (str, optional): description of the function to register. Defaults to ''.
 
         Raises:

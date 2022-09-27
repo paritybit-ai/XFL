@@ -20,10 +20,15 @@ from transformers import TFBertForSequenceClassification, BertConfig
 
 
 class BertForSst2(keras.Model):
-    def __init__(self, num_labels, hidden_dropout_prob):
+    def __init__(self, from_pretrained=True, num_labels=None, **kwargs):
         super().__init__()
-        config = BertConfig.from_pretrained("bert-base-uncased", num_labels=num_labels, hidden_dropout_prob=hidden_dropout_prob)
-        self.bert = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', config=config)
+        if from_pretrained:
+            config = BertConfig.from_pretrained("bert-base-uncased", num_labels=num_labels)
+            self.bert = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', config=config)
+        else:
+            config = BertConfig(num_labels=num_labels, **kwargs)
+            self.bert = TFBertForSequenceClassification(config=config)
+            self.bert(self.bert.dummy_inputs)
         self.softmax = keras.layers.Softmax(axis=-1)
 
     def call(self, input_ids, attention_mask, token_type_ids, labels):
@@ -31,4 +36,3 @@ class BertForSst2(keras.Model):
                               token_type_ids=token_type_ids, labels = labels)[:2]
         prob = self.softmax(logits)
         return loss, logits, prob
-

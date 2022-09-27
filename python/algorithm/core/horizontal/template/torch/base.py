@@ -29,7 +29,7 @@ from algorithm.core.optimizer import get_optimizer
 from algorithm.core.lr_scheduler import get_lr_scheduler
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
-from ..hooker import Hooker
+from algorithm.core.horizontal.template.torch.hooker import Hooker
 
 
 class BaseTrainer(Hooker, TrainConfigParser):
@@ -41,7 +41,6 @@ class BaseTrainer(Hooker, TrainConfigParser):
                             "after_train_loop", "after_local_epoch", "after_global_epoch"])
 
         self.model = self._set_model()
-        self.model = self.model.to(self.device)
         self.train_dataloader = self._set_train_dataloader()
         self.val_dataloader = self._set_val_dataloader()
         self.loss_func = self._set_lossfunc()

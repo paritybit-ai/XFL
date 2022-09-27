@@ -13,14 +13,14 @@
 # limitations under the License.
 
 
-from algorithm.core.horizontal.template.torch.fedavg.assist_trainer import FedAvgAssistTrainer
+from algorithm.core.horizontal.template.torch.fedtype import _get_assist_trainer
 from functools import partial
 from .common import Common
 
 
-class HorizontalLinearRegressionAssistTrainer(Common, FedAvgAssistTrainer):
+class HorizontalLinearRegressionAssistTrainer(Common, _get_assist_trainer()):
     def __init__(self, train_conf: dict):
-        FedAvgAssistTrainer.__init__(self, train_conf)
+        _get_assist_trainer().__init__(self, train_conf)
         
         self.register_hook(place="after_local_epoch", rank=2,
                            func=partial(self.val_loop, "val"), desc="validation on valset")

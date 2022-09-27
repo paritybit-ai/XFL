@@ -60,8 +60,14 @@ def get_assist_trainer_conf():
         conf["output"]["model"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
+        conf["model_info"]["config"]["from_pretrained"] = False
+        conf["model_info"]["config"]["hidden_size"] = 144
+        conf["model_info"]["config"]["num_hidden_layers"] = 12
+        conf["model_info"]["config"]["num_attention_head"] = 12
+        conf["model_info"]["config"]["intermediate_size"] = 144
         conf["train_info"]["params"]["batch_size"] = 2
         conf["train_info"]["params"]["global_epoch"] = 2
+
     yield conf
 
 
@@ -73,6 +79,11 @@ def get_trainer_conf():
         conf["input"]["trainset"][0]["name"] = "train_data.tsv"
         conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
+        conf["model_info"]["config"]["from_pretrained"] = False
+        conf["model_info"]["config"]["hidden_size"] = 144
+        conf["model_info"]["config"]["num_hidden_layers"] = 12
+        conf["model_info"]["config"]["num_attention_head"] = 12
+        conf["model_info"]["config"]["intermediate_size"] = 144
         conf["train_info"]["params"]["batch_size"] = 2
         conf["train_info"]["params"]["global_epoch"] = 2
     yield conf
@@ -92,7 +103,8 @@ def env():
         shutil.rmtree("/opt/checkpoints/unit_test")
 
 
-class TestDensenet:
+class TestBert:
+    #@pytest.mark.skip(reason="no reason")
     @pytest.mark.parametrize("encryption_method", ['plain']) # ['otp', 'plain'] otp too slow
     def test_trainer(self, get_trainer_conf, get_assist_trainer_conf, encryption_method, mocker):
         fed_method = None
@@ -149,11 +161,13 @@ class TestDensenet:
 
         bert = HorizontalBertLabelTrainer(conf)
         bert_a = HorizontalBertAssistTrainer(assist_conf)
+        
         params_plain_recv = pickle.dumps(OrderedDict({i:w for i,w in enumerate(bert_a.model.get_weights())})) + EOV
         params_send = fed_method._calc_upload_value(
             OrderedDict({i:w for i,w in enumerate(bert.model.get_weights())}), len(bert.train_dataloader._input_dataset))
         params_collect = pickle.dumps(params_send)
         agg_otp = fed_assist_method._calc_aggregated_params(list(map(lambda x: pickle.loads(x), [params_collect,params_collect])))
+        del params_send, params_collect
 
         def mock_recv(*args, **kwargs):
             if recv_mocker.call_count % 4 in [1,2]:
@@ -176,5 +190,6 @@ class TestDensenet:
         mocker.patch.object(
             AggregationPlainRoot, "aggregate", side_effect=mock_agg
         )
+
         bert.fit()
         bert_a.fit()
