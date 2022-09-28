@@ -36,14 +36,6 @@ from .base import VerticalLogisticRegressionBase
 
 class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
     def __init__(self, train_conf: dict, *args, **kwargs):
-        """
-        Horizontal Linear Regression Schedule
-        Args:
-            train_conf: training parameters
-            model_conf: Model configuration
-            *args:
-            **kwargs:
-        """
         super().__init__(train_conf, label=True, *args, **kwargs)
         self._init_model(bias=True)
         self.export_conf = [{
