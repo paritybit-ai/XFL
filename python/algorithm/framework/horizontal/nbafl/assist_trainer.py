@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from algorithm.core.horizontal.template.torch.fedavg.assist_trainer import FedAvgAssistTrainer
+from algorithm.core.horizontal.template.torch.fedtype import _get_assist_trainer
 from common.utils.logger import logger
 import numpy as np
 from algorithm.model.logistic_regression import LogisticRegression
@@ -27,9 +27,9 @@ from algorithm.core.data_io import CsvReader
 from .common import Common
 
 
-class HorizontalNbaflAssistTrainer(Common, FedAvgAssistTrainer):
+class HorizontalNbaflAssistTrainer(Common, _get_assist_trainer()):
     def __init__(self, train_conf: dict):
-        super().__init__(train_conf)
+        _get_assist_trainer().__init__(self, train_conf)
         self.load_model()
 
         self.mu = self.train_params['mu']

@@ -25,7 +25,7 @@ from transformers import BertTokenizer
 class Common():
     def _set_model(self) -> tf.keras.Model:
         model_config = self.model_info.get("config")
-        model = BertForSst2(num_labels=model_config["num_labels"], hidden_dropout_prob=model_config["hidden_dropout_prob"])
+        model = BertForSst2(**model_config)
         return model
     
     def _read_data(self, input_dataset):
@@ -94,7 +94,7 @@ class Common():
             metric_output[method] = self.metrics[method](labels, val_predicts, **metrics_conf[method])
         logger.info(f"Metrics on {dataset_type} set: {metric_output}")
 
-    def _encode_examples(self, data, tokenizer, max_length=512):
+    def _encode_examples(self, data, tokenizer, max_length=256):
         input_ids,token_type_ids,attention_masks,labels = [],[],[],[]
         for feature, label in zip(*data):
             bert_input = tokenizer.encode_plus(feature,

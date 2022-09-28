@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from algorithm.core.horizontal.template.torch.fedavg.label_trainer import FedAvgLabelTrainer
+from algorithm.core.horizontal.template.torch.fedtype import _get_label_trainer
 from common.utils.logger import logger
 import torch
 from torch import nn
@@ -26,9 +26,9 @@ from algorithm.core.data_io import CsvReader
 from .common import Common
 
 
-class HorizontalNbaflLabelTrainer(Common, FedAvgLabelTrainer):
+class HorizontalNbaflLabelTrainer(Common, _get_label_trainer()):
     def __init__(self, train_conf: dict):
-        super().__init__(train_conf)
+        _get_label_trainer().__init__(self, train_conf)
         self.sample_size_channel = DualChannel(
             name="sample_size_" + FedConfig.node_id,
             ids=[FedConfig.get_assist_trainer(), FedConfig.node_id]

@@ -17,7 +17,7 @@ from algorithm.core.horizontal.aggregation.aggregation_base import AggregationRo
 from ..base import BaseTrainer
 
 
-class FedAvgAssistTrainer(BaseTrainer):
+class FedProxAssistTrainer(BaseTrainer):
     def __init__(self, train_conf: dict):
         super().__init__(train_conf)
         

@@ -70,6 +70,7 @@ PIR(Private Information Retrieval)            ✅
 
    Algorithms List <algorithms/algorithms_list.rst>
    Cryptographic Algorithm <algorithms/cryptographic_algorithm.rst>
+   ./algorithms/aggregation_algorithm
    ./algorithms/differential_privacy
    ./algorithms/algos/HorizontalLinearRegression
    ./algorithms/algos/HorizontalLogisticRegression
