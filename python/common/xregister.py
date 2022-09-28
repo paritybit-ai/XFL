@@ -40,7 +40,7 @@ class XRegister():
                 raise TypeError(f"Register object {value} is not callable.")
             if hasattr(self, key):
                 logger.warning(f"Repeated register key {key} to {self.get_class_name()}.")
-            setattr(self, target.__name__, target)
+            setattr(self, key, value)
             logger.info(f"Register {key} to {self.get_class_name()} successfully.")
             return target
         
