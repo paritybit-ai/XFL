@@ -22,7 +22,7 @@
         "model": {
             "type": "file",
             "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "horizontal_resnet.pt"
+            "name": "horizontal_densenet.pt"
         },
         "metrics": {
             "type": "csv",
