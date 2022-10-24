@@ -54,6 +54,7 @@ List of Algorithms
    ":doc:`Horizontal Logistic Regression <./algos/HorizontalLogisticRegression>`", "horizontal/logistic_regression", "two-party or multi-party horizontal logistic regression"
    ":doc:`Horizontal ResNet <./algos/HorizontalResNet>`", "horizontal/resnet", "two-party or multi-party horizontal ResNet"
    ":doc:`Horizontal VGG <./algos/HorizontalVGG>`", "horizontal/vgg", "two-party or multi-party horizontal VGG"
+   ":doc:`Horizontal DenseNet <./algos/HorizontalDenseNet>`", "horizontal/densenet", "two-party or multi-party horizontal DenseNet"
    ":doc:`Horizontal Bert <./algos/HorizontalBert>`", "horizontal/bert", "two-party or multi-party horizontal Bert"
    ":doc:`Vertical Feature Binning <./algos/VerticalBinningWoeIV>`", "vertical/binning_woe_iv", "calulate WoE and IV using equal-frequency binning or equal-width binning"
    ":doc:`Vertical Pearson <./algos/VerticalPearson>`", "vertical/pearson", "two-party or multi-party vertical Pearson correlation coefficient"
