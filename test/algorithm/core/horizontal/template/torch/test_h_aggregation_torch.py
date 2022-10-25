@@ -92,7 +92,7 @@ def env():
 
 
 class TestAggregation:
-    @pytest.mark.parametrize("aggregation_method", ["fedavg", "fedprox"])
+    @pytest.mark.parametrize("aggregation_method", ["fedavg", "fedprox", "scaffold"])
     def test_trainer(self, get_trainer_conf, get_assist_trainer_conf, aggregation_method, mocker):
         fed_method = None
         fed_assist_method = None
@@ -106,6 +106,9 @@ class TestAggregation:
         conf["train_info"]["params"]["aggregation_config"]["type"] = aggregation_method
         conf["train_info"]["params"]["aggregation_config"]["mu"] = 0.01
         assist_conf["train_info"]["params"]["aggregation_config"]["type"] = aggregation_method
+        if aggregation_method == "scaffold":
+            conf["train_info"]["params"]["optimizer_config"]["Adam"]["weight_decay"] = 0.1
+            conf["train_info"]["params"]["optimizer_config"]["Adam"]["momentum"] = 0.1
 
         conf["train_info"]["params"]["aggregation_config"]["encryption"] = {"method": "plain"}
         assist_conf["train_info"]["params"]["aggregation_config"]["encryption"] = {"method": "plain"}

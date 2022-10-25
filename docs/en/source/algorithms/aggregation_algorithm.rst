@@ -62,5 +62,12 @@ Therefore, the actual **loss function** becomes :math:`L + \frac{\mu}{2}||m^i-M^
     "mu": 1,
 
 
+scaffold
+--------
+**scaffold** [scaffold]_ is implemented based on **fedavg**, which may improve the training performance when the data is non-IID. 
+**scaffold** calls its own **optimizer**, hence any other input **optimizer** will be ignored.
+
+
 .. [fedavg] McMahan B., Moore E., Ramage D. et al, Communication-Efficient Learning of Deep Networks from Decentralized Data. In Proceedings of AISTATS, pp. 1273-1282, 2017.
 .. [fedprox] Li T., Sahu A. K., Zaheer M. et al. Federated optimization in heterogeneous networks. In MLSys, 2020.
+.. [scaffold] Karimireddy S. P., Kale S., Mohri M. et al. SCAFFOLD: Stochastic controlled averaging for on-device federated learning. In Proceedings of the 37th International Conference on Machine Learning. PMLR, 2020.
