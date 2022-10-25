@@ -87,7 +87,7 @@ class SCAFFOLDLabelTrainer(BaseTrainer):
 class SCAFFOLDOptimizer(Optimizer):
 
     def __init__(self, params, gmodel_grad, lmodel_grad, iter_num, lr=required, weight_decay=0, maximize=False,
-    momentum=0, dampening=0, nesterov=False, amsgrad=False):
+                 momentum=0, dampening=0, nesterov=False, amsgrad=False):
         if lr is not required and lr < 0.0:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if weight_decay < 0.0:
@@ -133,8 +133,8 @@ class SCAFFOLDOptimizer(Optimizer):
         return loss
 
 def sgdfold(params: List[Tensor], d_p_list: List[Tensor], momentum_buffer_list: List[Optional[Tensor]],
-gmodel_grad: List[Tensor], lmodel_grad:List[Tensor], lr_sum: float, lr: float, weight_decay: float, maximize: bool,
-momentum: float, dampening: float, nesterov: bool):
+            gmodel_grad: List[Tensor], lmodel_grad:List[Tensor], lr_sum: float, lr: float, weight_decay: float, maximize: bool,
+            momentum: float, dampening: float, nesterov: bool):
     for i, param in enumerate(params):
         d_p = d_p_list[i]
         if weight_decay != 0:
