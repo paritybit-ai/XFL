@@ -16,9 +16,11 @@ scipy>=1.7.1
 ray>=1.11.0
 pytest>=7.1.1
 pytest-cov>=3.0.0
+pytest-httpserver>=1.0.6
 pyspark>=3.2.1
 pyarrow>=1.0.0
 dill==0.3.4
 tqdm==4.62.3
 tensorflow==2.8.2
+paddlepaddle==2.3.2
 transformers==4.21.1
