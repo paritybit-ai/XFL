@@ -1,10 +1,10 @@
 {
     "identity": "assist_trainer",
     "model_info": {
-        "name": "horizontal_vgg",
+        "name": "horizontal_resnet_paddle",
         "config": {
             "num_classes": 10,
-            "layers": 11
+            "layers": 50
         }
     },
     "input": {
@@ -22,7 +22,7 @@
         "model": {
             "type": "file",
             "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "horizontal_vgg.pt"
+            "name": "horizontal_resnet_paddle.pdparams"
         },
         "metrics": {
             "type": "csv",
@@ -54,7 +54,7 @@
                 "encryption": {
                     "method": "otp",
                     "key_bitlength": 64,
-                    "data_type": "torch.Tensor",
+                    "data_type": "numpy.ndarray",
                     "key_exchange": {
                         "key_bitlength": 3072,
                         "optimized": true

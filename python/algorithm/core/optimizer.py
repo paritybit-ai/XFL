@@ -14,14 +14,19 @@
 
 
 import sys
-
-import torch.optim as torch_optim
-import tensorflow.keras.optimizers as tf_optim
-
 from common.xregister import xregister
 
+module_list = list(sys.modules.keys())
+for k in module_list:
+    if k == "torch":
+        import torch.optim as torch_optim
+    if k == "tensorflow":
+        import tensorflow.keras.optimizers as tf_optim
+    if k == "paddle":
+        import paddle.optimizer as pd_optim
 
-def get_optimizer(name: str, framework="torch"):
+
+def get_optimizer(name: str, framework: str="torch"):
     optim = None
     if framework == "torch":
         if name in dir(torch_optim):
@@ -29,6 +34,9 @@ def get_optimizer(name: str, framework="torch"):
     elif framework == "tf":
         if name in dir(tf_optim):
             optim = getattr(tf_optim, name)
+    elif framework == "paddle":
+        if name in dir(pd_optim):
+            optim = getattr(pd_optim, name)
     elif name in dir(sys.modules[__name__]):
         optim = getattr(sys.modules[__name__], name)
     elif name in xregister.registered_object:

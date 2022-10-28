@@ -1,29 +1,22 @@
 {
-    "identity": "assist_trainer",
+    "identity": "label_trainer",
     "model_info": {
-        "name": "horizontal_vgg",
+        "name": "horizontal_resnet_paddle",
         "config": {
             "num_classes": 10,
-            "layers": 11
+            "layers": 50
         }
     },
     "input": {
-        "valset": [
+        "trainset": [
             {
                 "type": "npz",
                 "path": "../dataset/cifar-10-reallocated-batches-py",
-                "name": "cifar10_batch_test.npz"
+                "name": "cifar10_batch_1.npz"
             }
-        ],
-        "pretrain_model": {
-        }
+        ]
     },
     "output": {
-        "model": {
-            "type": "file",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "horizontal_vgg.pt"
-        },
         "metrics": {
             "type": "csv",
             "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
@@ -42,7 +35,7 @@
             "save_probabilities": true,
             "save_probabilities_bins_number": 10,
             "write_training_prediction": true,
-            "write_validation_prediction": true,
+            "write_validation_prediction": false,
             "echo_training_metrics": true
         },
         "params": {
@@ -54,7 +47,7 @@
                 "encryption": {
                     "method": "otp",
                     "key_bitlength": 64,
-                    "data_type": "torch.Tensor",
+                    "data_type": "numpy.ndarray",
                     "key_exchange": {
                         "key_bitlength": 3072,
                         "optimized": true
@@ -63,6 +56,12 @@
                         "name": "hmac_drbg",
                         "method": "sha512"
                     }
+                }
+            },
+            "optimizer_config": {
+                "SGD": {
+                    "learning_rate": 0.01,
+                    "weight_decay": 5e-4
                 }
             },
             "lossfunc_config": {

@@ -20,7 +20,7 @@ from common.utils.model_preserver import ModelPreserver, os, torch
 
 class TestModelPreserver():
 
-    @pytest.mark.parametrize('final,model_path', [(True, "test_save_dir/test.model.pth"), (False, "test_save_dir/test.model_10.pth")])
+    @pytest.mark.parametrize('final,model_path', [(True, "test_save_dir/test.model.pth"), (False, "test_save_dir/test.model_epoch_10.pth")])
     def  test_save(self, mocker, final, model_path):
         mocker.patch("os.makedirs")
         mocker.patch("torch.save")

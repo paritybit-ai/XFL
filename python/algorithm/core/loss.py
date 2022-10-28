@@ -14,20 +14,31 @@
 
 
 import sys
-import tensorflow.keras.losses as tf_loss
-import torch.nn as torch_nn
-from torch.nn import Module
-import torch
 from common.xregister import xregister
 
+module_list = list(sys.modules.keys())
+for k in module_list:
+    if k == "torch":
+        import torch.nn as torch_nn
+    if k == "tensorflow":
+        import tensorflow.keras.losses as tf_loss
+    if k == "paddle":
+        import paddle.nn as paddle_nn
 
-def get_lossfunc(name: str, framework="torch"):
+from torch.nn import Module
+import torch
+
+
+def get_lossfunc(name: str, framework:str="torch"):
     if framework == "torch":
         if name in dir(torch_nn):
             loss_func = getattr(torch_nn, name)
     elif framework == "tf":
         if name in dir(tf_loss):
             loss_func = getattr(tf_loss, name)
+    elif framework == "paddle":
+        if name in dir(paddle_nn):
+            loss_func = getattr(paddle_nn, name)
     elif name in dir(sys.modules[__name__]):
         loss_func = getattr(sys.modules[__name__], name)
     elif name in xregister.registered_object:
