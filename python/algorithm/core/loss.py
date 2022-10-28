@@ -48,25 +48,6 @@ def get_lossfunc(name: str, framework:str="torch"):
     return loss_func
 
 
-def get_lossfunc(name: str, framework:str="torch"):
-    if framework == "torch":
-        if name in dir(torch_nn):
-            loss_func = getattr(torch_nn, name)
-    elif framework == "tf":
-        if name in dir(tf_loss):
-            loss_func = getattr(tf_loss, name)
-    elif framework == "paddle":
-        if name in dir(paddle_nn):
-            loss_func = getattr(paddle_nn, name)
-    elif name in dir(sys.modules[__name__]):
-        loss_func = getattr(sys.modules[__name__], name)
-    elif name in xregister.registered_object:
-        loss_func = xregister(name)
-    else:
-        raise ValueError(f"Loss function {name} is not defined.")
-    return loss_func
-
-
 class MapeLoss(Module):
     def __init__(self):
         super(MapeLoss, self).__init__()
