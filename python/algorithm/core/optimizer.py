@@ -26,7 +26,7 @@ for k in module_list:
         import paddle.optimizer as pd_optim
 
 
-def get_optimizer(name: str, framework:str="torch"):
+def get_optimizer(name: str, framework: str="torch"):
     optim = None
     if framework == "torch":
         if name in dir(torch_optim):
