@@ -24,7 +24,8 @@ import torch
 
 from common.crypto.one_time_pad.one_time_add import (OneTimeAdd,
                                                      OneTimePadCiphertext,
-                                                     OneTimePadContext)
+                                                     OneTimePadContext,
+                                                     OneTimeKey)
 
 
 def almost_equal(a, b):
@@ -88,6 +89,8 @@ def correctness(data_shape, modulus_exp, data_type, num_keys):
             key = [int(token_hex(modulus_exp//8), 16) for i in range(flatten_shape)]
             key = np.array(key).reshape(*data_shape)
             key1.append(key)
+            
+    key1 = OneTimeKey(key1, modulus_exp)
         
     is_addition = [randint(0, 1) for i in range(len(key1))]
         
@@ -115,7 +118,8 @@ def correctness(data_shape, modulus_exp, data_type, num_keys):
     elif "torch" in data_type:
         data3 = torch.rand(data_shape)
 
-    key3 = list(map(lambda x: np.array(-x), key1))
+    key3 = list(map(lambda x: np.array(-x), key1.value))
+    key3 = OneTimeKey(key3, modulus_exp)
     ciphertext3 = OneTimeAdd.encrypt(context_, data3, key3, is_addition, serialized=False)
     ciphertext4 = OneTimeAdd.encrypt(context_, data3, key1, is_addition, serialized=False)
     
@@ -143,21 +147,25 @@ def correctness(data_shape, modulus_exp, data_type, num_keys):
             key = np.array(key).reshape(*data_shape)
             key2.append(key)
     
+    key2 = OneTimeKey(key2, modulus_exp)
+    
     ciphertext1 = OneTimeAdd.encrypt(context_, data, key1, is_addition, serialized=False)
     ciphertext2 = OneTimeAdd.encrypt(context_, data3, key2, is_addition, serialized=False)
     
     c = ciphertext1 + ciphertext2
     
-    key3 = [key1[i] + key2[i] for i in range(len(key1))]
+    key3 = [key1.value[i] + key2.value[i] for i in range(len(key1))]
+    key3 = OneTimeKey(key3, modulus_exp)
 
     p = OneTimeAdd.decrypt(context_, c, key3, is_addition)
     assert almost_equal(data + data3, p)
     
     ciphertext1 = OneTimeAdd.encrypt(context_, data, key1, is_addition, serialized=False)
-    ciphertext2 = OneTimeAdd.encrypt(context_, data3, [-i for i in key2], is_addition, serialized=False)
+    ciphertext2 = OneTimeAdd.encrypt(context_, data3, OneTimeKey([-i for i in key2.value], modulus_exp), is_addition, serialized=False)
     
     c = ciphertext1 + ciphertext2
-    key3 = [key1[i] - key2[i] for i in range(len(key1))]
+    key3 = [key1.value[i] - key2.value[i] for i in range(len(key1))]
+    key3 = OneTimeKey(key3, modulus_exp)
 
     p = OneTimeAdd.decrypt(context_, c, key3, is_addition)
     assert almost_equal(data + data3, p)
@@ -167,7 +175,7 @@ def test_correctness():
     data_shape_list = [(), (11,), (3, 5), (7, 10, 24)]
     modulus_exp_list = [64, 128]
     data_type_list = ["numpy.ndarray", "numpy", "torch.Tensor", "torch"]
-    numpy_keys_list = [1, 3, 5]
+    numpy_keys_list = [1] # [1, 3, 5]
     
     # for modulus_exp in modulus_exp_list:
     #     for data_type in data_type_list:
@@ -178,7 +186,6 @@ def test_correctness():
         for modulus_exp in modulus_exp_list:
             for data_type in data_type_list:
                 for numpy_keys in numpy_keys_list:
-                    print(data_shape, modulus_exp, data_type, numpy_keys)
                     correctness(data_shape, modulus_exp, data_type, numpy_keys)
                     
                     
@@ -214,6 +221,7 @@ def test_exception():
     flatten_shape = 12
     key = [int(token_hex(modulus_exp//8), 16) for i in range(flatten_shape)]
     key = np.array(key).reshape(*key_shape)
+    key = OneTimeKey(key, modulus_exp)
     
     is_addition = [randint(0, 1) for i in range(len(key))]
     
@@ -229,6 +237,7 @@ def test_exception():
     flatten_shape = 20
     key = [int(token_hex(modulus_exp//8), 16) for i in range(flatten_shape)]
     key = np.array(key).reshape(*key_shape)
+    key = OneTimeKey(key, modulus_exp)
         
     # ------------------------------------------------------------------------------
     
@@ -238,11 +247,13 @@ def test_exception():
     flatten_shape = 12
     key = [int(token_hex(modulus_exp//8), 16) for i in range(flatten_shape)]
     key = np.array(key).reshape(*key_shape)
+    key = OneTimeKey(key, modulus_exp)
     
     key_shape = (4, 5)
     flatten_shape = 20
     key1 = [int(token_hex(modulus_exp//8), 16) for i in range(flatten_shape)]
     key1 = np.array(key1).reshape(*key_shape)
+    key1 = OneTimeKey(key1, modulus_exp)
     
     is_addition = randint(0, 1)
     
@@ -255,7 +266,8 @@ def test_exception():
     with pytest.raises(ValueError):
         OneTimeAdd.decrypt(context_, ciphertext, key, is_addition)
         
-    key = [key, key]
+    key = [key.value, key.value]
+    key = OneTimeKey(key, modulus_exp)
     ciphertext = OneTimeAdd.encrypt(context_, data, key1, is_addition, serialized=False)
     
     with pytest.raises(ValueError):
@@ -265,7 +277,8 @@ def test_exception():
         
     modulus_exp = 64
     context2 = OneTimePadContext(modulus_exp, data_type)
-    ciphertext2 = OneTimeAdd.encrypt(context2, data, key1, is_addition, serialized=False)
+    key2 = OneTimeKey(key1.value, modulus_exp)
+    ciphertext2 = OneTimeAdd.encrypt(context2, data, key2, is_addition, serialized=False)
     with pytest.raises(ValueError):
         ciphertext + ciphertext2
         

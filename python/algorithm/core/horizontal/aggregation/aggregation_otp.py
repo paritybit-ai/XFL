@@ -25,7 +25,7 @@ from common.communication.gRPC.python.commu import Commu
 from common.crypto.csprng.drbg import get_drbg_inst
 from common.crypto.csprng.drbg_base import DRBGBase
 from common.crypto.key_agreement.diffie_hellman import DiffieHellman
-from common.crypto.one_time_pad.component import OneTimePadContext
+from common.crypto.one_time_pad.component import OneTimePadContext, OneTimeKey
 from common.crypto.one_time_pad.one_time_add import OneTimeAdd
 from service.fed_config import FedConfig
 from .aggregation_base import AggregationRootBase, AggregationLeafBase
@@ -115,7 +115,6 @@ class AggregationOTPLeaf(AggregationLeafBase):
         self.otp_context = OneTimePadContext(modulus_exp=sec_conf["key_bitlength"],
                                              data_type=sec_conf["data_type"])
                                              
-    #@func_timer
     def _calc_upload_value(self, parameters: OrderedDict, parameters_weight: float) -> Tuple[OrderedDict, float]:
         # calculate total number of bytes of weights
         def f(t):
@@ -142,6 +141,8 @@ class AggregationOTPLeaf(AggregationLeafBase):
                 x = bytearray(next(g))
                 y = split_bytes(x, v.shape)
                 one_time_key.append(np.array(y))
+            
+            one_time_key = OneTimeKey(one_time_key, self.otp_context.modulus_exp)
 
             encrypted_parameters[k] = OneTimeAdd.encrypt(context_=self.otp_context,
                                                          data=weighted_parameters[k],
@@ -155,7 +156,7 @@ class AggregationOTPRoot(AggregationRootBase):
     def __init__(self, sec_conf: dict, root_id: str = '', leaf_ids: list[str] = []) -> None:
         super().__init__(sec_conf, root_id, leaf_ids)
         
-    def _calc_aggregated_params(self, received_value: List) -> OrderedDict:
+    def _calc_aggregated_params(self, received_value: List, average=True) -> OrderedDict:
         total_weight = sum([item[1] for item in received_value])
         
         if self.initial_parameters is not None:
@@ -167,5 +168,6 @@ class AggregationOTPRoot(AggregationRootBase):
             for item in received_value[1:]:
                 received_value[0][0][k] += item[0][k]
             received_value[0][0][k] = received_value[0][0][k].decode()
-            received_value[0][0][k] /= total_weight
+            if average:
+                received_value[0][0][k] /= total_weight
         return received_value[0][0]

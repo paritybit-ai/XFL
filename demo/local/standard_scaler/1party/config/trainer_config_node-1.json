@@ -2,8 +2,7 @@
     {
         "identity": "label_trainer",
         "model_info": {
-            "name": "local_standard_scaler",
-            "config": {}
+            "name": "local_standard_scaler"
         },
         "input": {
             "trainset": [
@@ -26,25 +25,22 @@
             ]
         },
         "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "model": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "local_standard_scaler_labeled.pt"
+                "name": "local_standard_scaler_[STAGE_ID].pt"
             },
             "trainset": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "standardized_breast_cancer_wisconsin_vertical_labeled_train.csv"
+                "name": "temp/standardized_train_[STAGE_ID].csv"
             },
             "valset": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "standardized_breast_cancer_wisconsin_vertical_labeled_test.csv"
+                "name": "temp/standardized_val_[STAGE_ID].csv"
             }
         },
         "train_info": {
-            "device": "cpu",
-            "params": {
+            "train_params": {
                 "with_mean": true,
                 "with_std": true,
-                "featureStandardizeConfig": {
+                "feature_standard": {
                     "x01": {
                         "with_mean": false,
                         "with_std": false

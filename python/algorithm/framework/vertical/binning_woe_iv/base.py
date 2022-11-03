@@ -42,15 +42,15 @@ def fintech_cut(ser, bins, nan_l, method):
         l_tmp = [float("%.6f" % i) for i in list(cut_v[1])]
         if len(cut_v[1]) > 2:
             cut_bins = [-np.inf] + l_tmp[1:-1] + [np.inf]
-            if method == "equalFrequency":
+            if method == "equal_frequency":
                 cut_ser = pd.DataFrame(LabelEncoder().fit_transform(
                     cut_v[0])).set_index(cut_v[0].index)[0]
                 cut_ser = cut_ser + 1
-            elif method == "equalWidth":
+            elif method == "equal_width":
                 cut_ser = cut_v[0]
                 cut_ser = cut_ser.cat.remove_unused_categories()
         else:
-            # never equalWidth
+            # never equal_width
             cut_bins = [-np.inf] + [float("%.6f" % i)
                                     for i in l_tmp] + [np.inf]
             cut_ser = ser_.apply(lambda x: rebin_freq_2(cut_v[1], x))
@@ -85,10 +85,10 @@ def fintech_cut(ser, bins, nan_l, method):
         # first cut
         cut_value = None
         if len(set(ser_cut)) > 1:
-            if method == "equalWidth":
+            if method == "equal_width":
                 cut_value = pd.cut(ser_cut, bins, retbins=True, labels=[
                                    i + 1 for i in range(bins)])
-            elif method == "equalFrequency":
+            elif method == "equal_frequency":
                 cut_value = pd.qcut(
                     ser_cut, bins, retbins=True, duplicates='drop')
         elif len(set(ser_cut)) == 1:
@@ -137,15 +137,18 @@ class VerticalBinningWoeIvBase(TrainConfigParser):
         self.label = label
         self.woe_map = {}
         self.binning_split = {}
-        self.save_model = self.output.get("save_model", False)
+        if self.interaction_params:
+            self.save_model = self.interaction_params.get("save_model", False)
+        else:
+            self.save_model = False
+        self.save_dir = Path(self.output.get("path"))
         self.transform_switch = False
         if self.save_model:
-            self.save_dir = Path(self.output.get("model").get("path"))
             self.save_model_name = self.output.get("model").get("name")
             self.export_conf = [{
                 "class_name": "VerticalBinningWoeIv",
                 "filename": self.save_model_name,
-                "bins": self.train_params["binning_params"]["bins"]
+                "bins": self.train_params["binning"]["bins"]
             }]
         self._init_data()
         self.feature_binning()
@@ -171,8 +174,8 @@ class VerticalBinningWoeIvBase(TrainConfigParser):
                 Path(self.input_trainset[0]["path"], self.input_trainset[0]["name"]))
             if self.computing_engine == "local":
                 self.df = pd.read_csv(file_path, index_col=index_col)
-            elif self.computing_engine == "spark":
-                self.df = ps.read_csv(file_path, index_col=index_col)
+        #     elif self.computing_engine == "spark":
+        #         self.df = ps.read_csv(file_path, index_col=index_col)
         # else:
         #     raise NotImplementedError(
         #         "Load function {} does not Implemented.".format(self.input_trainset[0]["type"]))
@@ -199,8 +202,8 @@ class VerticalBinningWoeIvBase(TrainConfigParser):
         """
         logger.info("Start binning")
         nan_l = self.input_trainset[0]["nan_list"]
-        method = self.train_params["binning_params"]['method']
-        bin_num = self.train_params["binning_params"]["bins"]
+        method = self.train_params["binning"]['method']
+        bin_num = self.train_params["binning"]["bins"]
         time_start = time.time()
         tmp = pd.Series(self.df.columns).apply(
             lambda x: fintech_cut(self.df[x], bin_num, nan_l, method))
@@ -215,10 +218,9 @@ class VerticalBinningWoeIvBase(TrainConfigParser):
         logger.info("Cost time of binning is: {}s".format(
             time_end - time_start))
 
-        save_dir = self.output["trainset"]["path"]
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-        file_path = f'{save_dir}/{self.output["trainset"]["name"]}_binning_split.json'
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
+        file_path = f'{self.save_dir}/{self.output["split_points"]["name"]}'
         with open(file_path, "w") as wf:
             json.dump(self.binning_split, wf)
         logger.info("Binning split points saved as {}.".format(file_path))

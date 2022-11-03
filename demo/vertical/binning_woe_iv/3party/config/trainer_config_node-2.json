@@ -1,58 +1,30 @@
 [
     {
         "identity": "trainer",
-        "model_info":
-        {
-            "name": "vertical_binning_woe_iv",
-            "config": {}
+        "model_info": {
+            "name": "vertical_binning_woe_iv"
         },
-        "input":
-        {
-            "trainset":
-            [
+        "input": {
+            "trainset": [
                 {
                     "type": "csv",
                     "path": "./dataset/breast_cancer_wisconsin_vertical/3party",
                     "name": "breast_cancer_wisconsin_vertical_1_train.csv",
                     "has_id": true,
                     "has_label": false,
-                    "nan_list": [999]
+                    "nan_list": []
                 }
             ]
         },
-        "output":
-        {
-            "trainset":
-            {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "vertical_binning_woe_iv_train"
+        "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "split_points": {
+                "name": "binning_split_points_[STAGE_ID].json"
             }
         },
-        "train_info":
-        {
-            "device": "cpu",
-            "params":
-            {
-                "encryption_params":
-                {
-                    "method": "paillier",
-                    "key_bit_size": 2048,
-                    "precision": 7,
-                    "djn_on": true,
-                    "parallelize_on": true
-                },
-                "binning_params":
-                {
-                    "method": "equalFrequency",
-                    "bins": 5
-                },
-                "woe_iv_params":
-                {
-                    "cons_price_idx": {},
-                    "cons_conf_idx": {},
-                    "euribor3m": {}
-                },
-                "pool_num": 4
+        "train_info": {
+            "train_params": {
+                "max_num_cores": 2
             }
         }
     }

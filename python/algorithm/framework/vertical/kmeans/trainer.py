@@ -16,13 +16,15 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Dict
 
 import numpy as np
 import pandas as pd
 
+from common.checker.matcher import get_matched_config
+from common.checker.x_types import All
 from common.communication.gRPC.python.channel import DualChannel
 from common.utils.logger import logger
+from common.utils.utils import update_dict
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
 from .api import get_table_agg_trainer_inst
@@ -38,25 +40,17 @@ class VerticalKmeansTrainer(VerticalKmeansBase):
 			*args:
 			**kwargs:
 		"""
-		super().__init__(train_conf, label=False, *args, **kwargs)
 		self.channels = {}
+		self.channels["sync"] = DualChannel(
+			name="sync_" + FedNode.node_id, ids=[FedConfig.get_assist_trainer(), FedNode.node_id]
+		)
+		conf = self._sync_config(train_conf)
+		update_dict(train_conf, conf)
+		super().__init__(train_conf, label=False, *args, **kwargs)
+
 		self.dist_table = None
 		self.cluster_result = None
 		self.local_tol = 0.0
-
-		if self.identity == "label_trainer":
-			# current node is a label trainer
-			init_center_chan: Dict[str, DualChannel] = {}
-			for party_id in FedConfig.get_trainer():
-				init_center_chan[party_id] = DualChannel(
-					name="init_center_" + party_id, ids=[FedNode.node_id, party_id]
-				)
-			self.channels["init_center"] = init_center_chan
-		elif self.identity == "trainer":
-			# current node is a trainer
-			self.channels["init_center"] = DualChannel(
-				name="init_center_" + FedNode.node_id, ids=[FedNode.node_id] + FedConfig.get_label_trainer()
-			)
 
 		self.channels["cluster_result"] = DualChannel(
 			name="cluster_res_" + FedNode.node_id, ids=[FedConfig.get_assist_trainer(), FedNode.node_id]
@@ -67,9 +61,23 @@ class VerticalKmeansTrainer(VerticalKmeansBase):
 		self.channels["converged_flag"] = DualChannel(
 			name="converged_flag_" + FedNode.node_id, ids=[FedConfig.get_assist_trainer(), FedNode.node_id]
 		)
-		self.table_agg_executor = get_table_agg_trainer_inst(
-			sec_conf=self.encryption, trainer_ids=FedConfig.get_label_trainer() + FedConfig.get_trainer()
+		self.channels["check_data_com"] = DualChannel(
+			name="check_data_com_" + FedNode.node_id, ids=[FedConfig.get_assist_trainer(), FedNode.node_id]
 		)
+		self.table_agg_executor = get_table_agg_trainer_inst(
+			sec_conf=self.encryption, trainer_ids=FedConfig.get_label_trainer() +
+													FedConfig.get_trainer()
+		)
+
+	def _sync_config(self, config):
+		sync_rule = {
+			"train_info": All()
+		}
+
+		config_to_sync = get_matched_config(config, sync_rule)
+		self.channels["sync"].send(config_to_sync)
+		conf = self.channels["sync"].recv()
+		return conf
 
 	def init_centers(self):
 		"""
@@ -77,20 +85,33 @@ class VerticalKmeansTrainer(VerticalKmeansBase):
 		Returns:
 
 		"""
-		random_list = list(np.random.choice(len(self.train_features), self.k, replace=False))
-		return random_list
+		self.channels["init_center"] = DualChannel(
+			name="init_center_" + FedNode.node_id, ids=[FedNode.node_id] + FedConfig.get_label_trainer()
+		)
+
+		if self.init == "random":
+			center_ids = self.channels["init_center"].recv()
+			return center_ids
+		elif self.init == "kmeans++":
+			center_ids = []
+			while len(center_ids) < self.k:
+				if len(center_ids) >= 1:
+					dist_table = self.distance_table(self.train_features.iloc[center_ids])
+					self.table_agg_executor.send(dist_table)
+				center_ids = self.channels["init_center"].recv()
+			return center_ids
+
+	def check_data(self):
+		m, n = len(self.train_ids), len(self.train_features.columns)
+		self.channels["check_data_com"].send((m, n))
 
 	def fit(self):
 		logger.info("vertical K-means trainer start.")
+		self.check_data()
 		np.random.seed(self.random_seed)
 
-		center_ids = []
-		if self.identity == "label_trainer":
-			center_ids = self.init_centers()
-			for party_id in FedConfig.get_trainer():
-				self.channels["init_center"][party_id].send(center_ids)
-		elif self.identity == "trainer":
-			center_ids = self.channels["init_center"].recv()
+		center_ids = self.init_centers()
+		logger.info("{}::initialized centers.".format(self.identity))
 		self.cluster_centers = self.train_features.iloc[center_ids]
 
 		iter_ = 0
@@ -101,7 +122,8 @@ class VerticalKmeansTrainer(VerticalKmeansBase):
 				self.table_agg_executor.send(self.dist_table)
 
 			self.cluster_result = self.channels["cluster_result"].recv()
-			centers = self.calc_centers(self.cluster_centers, self.cluster_result)
+			centers = self.calc_centers(
+				self.cluster_centers, self.cluster_result)
 
 			self.local_tol = self.calc_tolerance(self.cluster_centers, centers)
 			self.channels["tolerance"].send(self.local_tol)
@@ -129,17 +151,12 @@ class VerticalKmeansTrainer(VerticalKmeansBase):
 		Returns:
 
 		"""
-		save_dir = str(Path(self.output.get("model")["path"]))
+		save_dir = str(Path(self.output.get("path")))
 		if not os.path.exists(save_dir):
 			os.makedirs(save_dir)
 
-		model_name_list = self.output.get("model")["name"].split(".")
-		name_prefix, name_postfix = ".".join(model_name_list[:-1]), model_name_list[-1]
-		if not final and epoch:
-			model_name = name_prefix + "_{}".format(epoch) + "." + name_postfix
-		else:
-			model_name = name_prefix + "." + name_postfix
-		model_path = os.path.join(save_dir, model_name)
+		model_name = self.output.get("model", {}).get("name", "")
+		model_path = Path(save_dir, model_name)
 
 		kmeans_output = {
 			"k": self.k,
@@ -152,14 +169,21 @@ class VerticalKmeansTrainer(VerticalKmeansBase):
 			pickle.dump(kmeans_output, f)
 		logger.info("model saved as: {}.".format(model_path))
 
-		rdf = pd.DataFrame(
+		result_dataframe = pd.DataFrame(
 			{
 				"id": self.train_ids.to_numpy(),
 				"cluster_result": self.cluster_result
 			}
 		)
-		if final:
-			file_name = os.path.join(save_dir, "cluster_result.csv")
-		else:
-			file_name = os.path.join(save_dir, "cluster_result.epoch_{}".format(epoch))
-		rdf.to_csv(file_name, header=True, index=False)
+		result_name = self.output.get("result", {}).get("name", "")
+		result_path = Path(save_dir, result_name)
+		result_dataframe.to_csv(result_path, header=True, index=False)
+		logger.info("result saved as: {}.".format(result_path))
+
+		summary_df = result_dataframe.groupby(
+			"cluster_result").size().to_frame("count")
+		summary_df = summary_df.reset_index()
+		summary_name = self.output.get("summary", {}).get("name", "")
+		summary_path = Path(save_dir, summary_name)
+		summary_df.to_csv(summary_path, header=True, index=False)
+		logger.info("summary info saved to: {}.".format(summary_path))

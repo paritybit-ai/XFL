@@ -2,8 +2,7 @@
     {
         "identity": "label_trainer",
         "model_info": {
-            "name": "vertical_xgboost",
-            "config": {}
+            "name": "vertical_xgboost"
         },
         "input": {
             "trainset": [
@@ -26,52 +25,84 @@
             ]
         },
         "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "model": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "vertical_xgboost_labeled.model"
+                "name": "vertical_xgboost_[STAGE_ID].model"
             },
-            "metrics": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]"
+            "metric_train": {
+                "name": "xgb_metric_train_[STAGE_ID].csv"
             },
-            "evaluation": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]"
+            "metric_val": {
+                "name": "vertical_xgboost_metric_val_[STAGE_ID].csv"
+            },
+            "prediction_train": {
+                "name": "xgb_prediction_train_[STAGE_ID].csv"
+            },
+            "prediction_val": {
+                "name": "xgb_prediction_val_[STAGE_ID].csv"
+            },
+            "ks_plot_train": {
+                "name": "xgb_ks_plot_train_[STAGE_ID].csv"
+            },
+            "ks_plot_val": {
+                "name": "xgb_ks_plot_val[STAGE_ID].csv"
+            },
+            "decision_table_train": {
+                "name": "xgb_decision_table_train_[STAGE_ID].csv"
+            },
+            "decision_table_val": {
+                "name": "xgb_decision_table_val_[STAGE_ID].csv"
+            },
+            "feature_importance": {
+                "name": "xgb_feature_importance_[STAGE_ID].csv"
             }
         },
         "train_info": {
-            "device": "cpu",
             "interaction_params": {
                 "save_frequency": 1,
-                "echo_training_metrics": false,
+                "echo_training_metrics": true,
                 "write_training_prediction": true,
                 "write_validation_prediction": true
             },
-            "params": {
-                "task_type": "classification",
-                "lossfunc_config": {
-                    "method": "BCEWithLogitsLoss"
+            "train_params": {
+                "lossfunc": {
+                    "BCEWithLogitsLoss": {}
                 },
-                "num_trees": 64,
+                "num_trees": 10,
                 "learning_rate": 0.3,
                 "gamma": 0,
                 "lambda_": 1,
-                "max_depth": 2,
+                "max_depth": 3,
                 "num_bins": 16,
                 "min_split_gain": 0,
                 "min_sample_split": 20,
                 "feature_importance_type": "gain",
-                "run_goss": true,
-                "top_rate": 0.4,
-                "other_rate": 0.4,
-                "cat_smooth": 1,
-                "cat_feature": {
-                    "col_index": "",
-                    "col_names": [],
-                    "max_num_value": 0,
-                    "col_index_type": "inclusive",
-                    "col_names_type": "inclusive",
-                    "max_num_value_type": "intersection"
+                "downsampling": {
+                    "column": {
+                        "rate": 1.0
+                    },
+                    "row": {
+                        "run_goss": true,
+                        "top_rate": 0.4,
+                        "other_rate": 0.4
+                    }
                 },
-                "metric_config": {
+                "category":{
+                    "cat_smooth": 1,
+                    "cat_features": {
+                        "col_index": "",
+                        "col_names": [],
+                        "max_num_value": 0,
+                        "col_index_type": "inclusive",
+                        "col_names_type": "inclusive",
+                        "max_num_value_type": "union"
+                    }
+                },
+                "metric": {
+                    "decision_table": {
+                        "method": "equal_frequency",
+                        "bins": 10
+                    },
                     "acc": {},
                     "precision": {},
                     "recall": {},
@@ -79,12 +110,12 @@
                     "auc": {},
                     "ks": {}
                 },
-                "early_stopping_params": {
+                "early_stopping": {
                     "key": "ks",
-                    "patience": 10,
+                    "patience": -1,
                     "delta": 0.001
                 },
-                "encryption_params": {
+                "encryption": {
                     "paillier": {
                         "key_bit_size": 2048,
                         "precision": 7,
@@ -92,11 +123,13 @@
                         "parallelize_on": true
                     }
                 },
-                "subsample_feature_rate": 1.0,
+                "advanced": {
+                    "col_batch": 64,
+                    "row_batch": 40000
+                },
                 "max_num_cores": 999,
-                "validation_batch_size": 40960,
-                "col_batch": 64,
-                "row_batch": 40000
+                "batch_size_val": 40960
+
             }
         }
     }

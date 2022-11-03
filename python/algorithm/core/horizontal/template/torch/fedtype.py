@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from service.fed_config import FedConfig
+
 
 def _get_assist_trainer():
     aggregation_config = FedConfig.stage_config["train_info"]["params"]["aggregation_config"]
@@ -27,6 +27,7 @@ def _get_assist_trainer():
         
     from python.algorithm.core.horizontal.template.torch.fedavg.assist_trainer import FedAvgAssistTrainer
     return FedAvgAssistTrainer
+
 
 def _get_label_trainer():
     aggregation_config = FedConfig.stage_config["train_info"]["params"]["aggregation_config"]

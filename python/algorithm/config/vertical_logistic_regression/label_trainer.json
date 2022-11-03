@@ -1,17 +1,14 @@
- {
+{
     "identity": "label_trainer",
     "model_info": {
-        "name": "vertical_logistic_regression",
-        "config": {
-            "input_dim": null
-        }
+        "name": "vertical_logistic_regression"
     },
     "input": {
         "trainset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/breast_cancer_wisconsin/2party",
-                "name": "breast_cancer_wisconsin_guest_train.csv",
+                "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                "name": "breast_cancer_wisconsin_vertical_labeled_train.csv",
                 "has_label": true,
                 "has_id": true
             }
@@ -19,48 +16,62 @@
         "valset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/breast_cancer_wisconsin/2party",
-                "name": "breast_cancer_wisconsin_guest_test.csv",
+                "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                "name": "breast_cancer_wisconsin_vertical_labeled_test.csv",
                 "has_label": true,
                 "has_id": true
             }
         ],
-        "pretrain_model": {
+        "pretrained_model": {
+            "path": "",
+            "name": ""
         }
     },
     "output": {
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
         "model": {
-            "type": "file",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "vertical_logistic_regression_guest.pt"
+            "name": "vertical_logitstic_regression_[STAGE_ID].pt"
         },
-        "metrics": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "header": true
+        "metric_train": {
+            "name": "lr_metric_train_[STAGE_ID].csv"
         },
-        "evaluation": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "header": true
+        "metric_val": {
+            "name": "lr_metric_val_[STAGE_ID].csv"
+        },
+        "prediction_train": {
+            "name": "lr_prediction_train_[STAGE_ID].csv"
+        },
+        "prediction_val": {
+            "name": "lr_prediction_val_[STAGE_ID].csv"
+        },
+        "ks_plot_train": {
+            "name": "lr_ks_plot_train_[STAGE_ID].csv"
+        },
+        "ks_plot_val": {
+            "name": "lr_ks_plot_val_[STAGE_ID].csv"
+        },
+        "decision_table_train": {
+            "name": "lr_decision_table_train_[STAGE_ID].csv"
+        },
+        "decision_table_val": {
+            "name": "lr_decision_table_val_[STAGE_ID].csv"
+        },
+        "feature_importance": {
+            "name": "lr_feature_importance_[STAGE_ID].csv"
         }
     },
     "train_info": {
-        "device": "cpu",
         "interaction_params": {
             "save_frequency": -1,
-            "save_probabilities": true,
-            "save_probabilities_bins_number": 10,
             "write_training_prediction": true,
             "write_validation_prediction": true,
             "echo_training_metrics": true
         },
-        "params": {
-            "global_epoch": 3,
+        "train_params": {
+            "global_epoch": 10,
             "batch_size": 2048,
-            "aggregation_config": {
-                "encryption": {
-                    "method": "ckks",
+            "encryption": {
+                "ckks": {
                     "poly_modulus_degree": 8192,
                     "coeff_mod_bit_sizes": [
                         60,
@@ -71,15 +82,16 @@
                     "global_scale_bit_size": 40
                 }
             },
-            "optimizer_config": {
-                "lr": 0.02,
+            "optimizer": {
+                "lr": 0.01,
                 "p": 2,
                 "alpha": 1e-4
             },
-            "lossfunc_config": {
-                "method": "BCEWithLogitsLoss"
-            },
-            "metric_config": {
+            "metric": {
+                "decision_table": {
+                    "method": "equal_frequency",
+                    "bins": 10
+                },
                 "acc": {},
                 "precision": {},
                 "recall": {},
@@ -89,12 +101,10 @@
             },
             "early_stopping": {
                 "key": "acc",
-                "patience": -1,
+                "patience": 10,
                 "delta": 0
             },
-            "extra_config": {
-                "shuffle_seed": 50
-            }
+            "random_seed": null
         }
     }
 }

@@ -28,21 +28,29 @@ from common.communication.gRPC.python.channel import BroadcastChannel, DualChann
 from common.crypto.paillier.paillier import Paillier
 from common.crypto.paillier.utils import get_core_num
 from common.utils.logger import logger
-from common.utils.utils import save_model_config
+from common.utils.utils import save_model_config, update_dict
 from service.fed_config import FedConfig
 from .base import VerticalXgboostBase
 from .decision_tree_trainer import VerticalDecisionTreeTrainer
+from service.fed_job import FedJob
+from service.fed_node import FedNode
 
 
 class VerticalXgboostTrainer(VerticalXgboostBase):
     def __init__(self, train_conf: dict, *args, **kwargs):
-        super().__init__(train_conf, is_label_trainer=False, *args, **kwargs)
         self.channels = dict()
+        self.channels["sync"] = BroadcastChannel(name="sync")
+        conf = self._sync_config()
+        update_dict(train_conf, conf)
+        super().__init__(train_conf, is_label_trainer=False, *args, **kwargs)
+        
         self.channels["encryption_context"] = BroadcastChannel(
             name="encryption_context")
         self.channels["individual_grad_hess"] = BroadcastChannel(
             name="individual_grad_hess")
         self.channels["tree_node"] = BroadcastChannel(name="tree_node")
+        self.channels["check_dataset_com"] = BroadcastChannel(
+            name="check_dataset_com")
 
         self.channels["summed_grad_hess"] = DualChannel(name="summed_grad_hess_" + FedConfig.node_id,
                                                         ids=FedConfig.get_label_trainer() + [FedConfig.node_id])
@@ -74,8 +82,13 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
 
         ray.init(num_cpus=get_core_num(self.xgb_config.max_num_cores),
                  ignore_reinit_error=True)
+        
+    def _sync_config(self):
+        config = self.channels["sync"].recv()
+        return config
 
     def fit(self):
+        self.check_dataset()
         # nodes_dict = {}
         node_dict = NodeDict()
 
@@ -160,10 +173,9 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
 
     def save(self, node_dict: NodeDict, epoch: int = None, final: bool = False):
         if final:
-            save_model_config(stage_model_config=self.export_conf, save_path=Path(
-                self.output.get("model")["path"]))
+            save_model_config(stage_model_config=self.export_conf, save_path=self.output.get("path"))
 
-        save_dir = str(Path(self.output.get("model")["path"]))
+        save_dir = self.output.get("path")
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
@@ -171,7 +183,7 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
         name_prefix, name_postfix = ".".join(
             model_name_list[:-1]), model_name_list[-1]
         if not final and epoch:
-            model_name = name_prefix + "_{}".format(epoch) + "." + name_postfix
+            model_name = name_prefix + "_epoch_{}".format(epoch) + "." + name_postfix
         else:
             model_name = name_prefix + "." + name_postfix
         model_path = os.path.join(save_dir, model_name)
@@ -184,10 +196,14 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
         logger.info("model saved as: {}.".format(model_path))
 
     def load_model(self):
+        pretrain_path = self.input.get("pretrained_model", {}).get("path", '')
+        # pretrain_path = pretrain_path.replace("[JOB_ID]", str(
+        #     FedJob.job_id)).replace("[NODE_ID]", str(FedNode.node_id))
         model_path = Path(
-            self.input.get("pretrain_model", {}).get("path", ''),
-            self.input.get("pretrain_model", {}).get("name", '')
+            pretrain_path,
+            self.input.get("pretrained_model", {}).get("name", '')
         )
+
         with open(model_path, 'rb') as f:
             json_dict = json.load(f)
 
@@ -195,10 +211,14 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
         return node_dict
 
     def check_dataset(self):
-        self.channels["check_dataset_com"] = BroadcastChannel(
-            name="check_dataset_com")
-        n = len(self.test_dataset)
-        self.channels["check_dataset_com"].send(n)
+        d = dict()
+        if self.train_dataset is not None:
+            d["train"] = len(self.train_ids), len(self.train_features.columns)
+        if self.val_dataset is not None:
+            d["valid"] = len(self.val_ids), len(self.val_features.columns)
+        if self.test_dataset is not None:
+            d["test"] = len(self.test_ids), len(self.test_features.columns)
+        self.channels["check_dataset_com"].send(d)
 
     def predict(self):
         self.check_dataset()

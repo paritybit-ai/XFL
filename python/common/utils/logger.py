@@ -40,7 +40,6 @@ class ColorFormatter(logging.Formatter):
 
 logger = logging.getLogger("root")
 logger.setLevel(logging.INFO)
-# logger.setLevel(logging.DEBUG)
 
 # format
 formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s")

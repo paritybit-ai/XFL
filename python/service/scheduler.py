@@ -13,11 +13,13 @@
 # limitations under the License.
 
 
+import copy
 import json
 
 from common.communication.gRPC.python import (commu_pb2, control_pb2,
                                               scheduler_pb2, status_pb2)
 from common.storage.redis.redis_conn import RedisConn
+from common.utils.config_parser import replace_variable
 from common.utils.logger import logger
 from service.fed_config import FedConfig
 from service.fed_control import get_trainer_status, trainer_control
@@ -50,8 +52,9 @@ class SchedulerService(object):
 
     def getConfig(self, request, context):
         response = scheduler_pb2.GetConfigResponse()
-        config_str = json.dumps(FedConfig.trainer_config[FedJob.current_stage][request.nodeId])
-        response.config = config_str
+        config = copy.deepcopy(FedConfig.trainer_config[FedJob.current_stage][request.nodeId])
+        config = replace_variable(config, stage_id=FedJob.current_stage, job_id=FedJob.job_id, node_id=request.nodeId)
+        response.config = json.dumps(config)
         response.jobId = FedJob.job_id
         response.code = 0
         return response
@@ -135,6 +138,7 @@ class SchedulerService(object):
 
     def getStage(self, request, context):
         response = scheduler_pb2.GetStageResponse()
+        total_stage_num = len(FedConfig.trainer_config)
         try:
             stage_config = FedConfig.trainer_config[FedJob.current_stage]
             if len(stage_config) < 1:
@@ -147,6 +151,6 @@ class SchedulerService(object):
         except IndexError:
             response.code = 2
             stage_name = ""
-        response.stageId = FedJob.current_stage
+        response.stageId = "{}-{}".format(FedJob.current_stage, total_stage_num)
         response.stageName = stage_name
         return response

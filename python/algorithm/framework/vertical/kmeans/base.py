@@ -17,6 +17,7 @@ import copy
 import functools
 from itertools import chain
 from pathlib import Path
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -25,6 +26,9 @@ import torch
 
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
+
+
+warnings.filterwarnings("ignore")
 
 
 class VerticalKmeansBase(TrainConfigParser):
@@ -43,6 +47,7 @@ class VerticalKmeansBase(TrainConfigParser):
 		self.max_iter = 0
 		self.tol = 0.0
 		self.is_converged = False
+		self.init = "random"
 		self.encryption = "plain"
 		self.label = label
 		self.cluster_centers = []
@@ -95,14 +100,15 @@ class VerticalKmeansBase(TrainConfigParser):
 		Returns:
 
 		"""
-		params = self.train_info.get("params")
+		params = self.train_info.get("train_params", {})
 		self.k = params.get("k", 5)
+		self.init = params.get("init", "random")
 		self.max_iter = params.get("max_iter", 20)
 		self.tol = params.get("tol", 1e-5)
-		self.random_seed = params.get("extra_config", {}).get("shuffle_seed", 2022)
+		self.random_seed = params.get("extra_config", {}).get("random_seed", 2022)
 		if self.identity != "assist_trainer":
 			self._check()
-		self.encryption = self.train_info["aggregation_config"]["encryption"]
+		self.encryption = params.get("encryption")
 
 	def _check(self):
 		"""
@@ -129,9 +135,10 @@ class VerticalKmeansBase(TrainConfigParser):
 		"""
 
 		Args:
-			centers: slices of the features
+			centers: cluster centroids
 
 		Returns:
+			(n * k) tensor, whose [i, j] element is square of the distance of sample i to the centroid j.
 
 		"""
 		if isinstance(centers, ps.DataFrame):
@@ -145,7 +152,7 @@ class VerticalKmeansBase(TrainConfigParser):
 			return
 		d = functools.partial(self.euclid_distance, center_list=centers)
 		dt = self.train_features.apply(d, axis=1)
-		return torch.Tensor(list(chain.from_iterable(dt.to_numpy()))).reshape(n, self.k)
+		return torch.Tensor(list(chain.from_iterable(dt.to_numpy()))).reshape(n, len(centers))
 
 	@staticmethod
 	def distance_between_centers(center_list):

@@ -58,7 +58,6 @@ def config_combination(config_a, config_b):
 class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
     def __init__(self, train_conf):
         """
-
         Args:
             train_conf:
         """
@@ -75,7 +74,7 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
         self.imputer_fillvalue_overall = None  # default
         self.impute_dict = {}
         self.onehot_feat_conf = {}
-        self.feature_flag = False  # indicating imputer by features whether to do
+        self.feature_flag = False  # whether to impute by features
         self.model_file = {}
         self._init_data()
         self._parse_config()
@@ -86,22 +85,20 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
         missing_values: int, float, str or list, e.g. [-999, 999] or ["none", "null", "na", ""], default=null
         strategy: str, default="mean"
         fill_value: str or numerical value if strategy == "constant", default=None
-        Returns:
         """
+        self.save_dir = self.output.get("path")
         self.save_model = self.output.get("model", {})
         if len(self.save_model) > 0:
             self.save_model_name = self.save_model.get("name")
-            self.save_dir = self.save_model.get("path")
             if not os.path.exists(self.save_dir):
                 os.makedirs(self.save_dir)
-            model_name = self.output.get("model")["name"]
-            self.save_model_path = Path(self.save_dir, model_name)
+            self.save_model_path = Path(self.save_dir, self.save_model_name)
             self.export_conf = [{
                 "class_name": "LocalFeaturePreprocess",
                 "filename": self.save_model_name
             }]
         # missing config
-        self.missing_conf = self.train_params.get("missing_params", {})
+        self.missing_conf = self.train_params.get("missing", {})
         if len(self.missing_conf) > 0:
             self.missing_values_overall = self.missing_conf.get(
                 "missing_values", [np.NaN, '', None, ' ', 'nan', 'none', 'null', 'na', 'None'])
@@ -110,16 +107,16 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
                 self.missing_values_overall = [np.NaN, '', None, ' ', 'nan', 'none', 'null', 'na', 'None']
             self.missing_strategy_overall = self.missing_conf.get("strategy", "mean")
             self.missing_fillvalue_overall = self.missing_conf.get("fill_value", None)
-            self.missing_feat_conf = self.missing_conf.get("missing_feat_params", {})
+            self.missing_feat_conf = self.missing_conf.get("missing_features", {})
             self.imputer_values_overall = self.missing_values_overall
             self.imputer_strategy_overall = self.missing_strategy_overall
             self.imputer_fillvalue_overall = self.missing_fillvalue_overall
             logger.info("Missing values need to be imputed")
         # outlier config
-        self.outlier_conf = self.train_params.get("outlier_params", {})
+        self.outlier_conf = self.train_params.get("outlier", {})
         if len(self.outlier_conf) > 0:
             self.outlier_values_overall = self.outlier_conf.get("outlier_values", [])
-            self.outlier_feat_conf = self.outlier_conf.get("outlier_feat_params", {})
+            self.outlier_feat_conf = self.outlier_conf.get("outlier_features", {})
             self.imputer_values_overall = config_combination(self.imputer_values_overall, self.outlier_values_overall)
             logger.info("Outlier values need to be imputed")
         # initialize impute_dict
@@ -166,9 +163,9 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
                     self.impute_dict[key]["strategy"] = self.imputer_strategy_overall
                     self.impute_dict[key]["fill_value"] = self.imputer_fillvalue_overall
         # onehot config
-        self.onehot_conf = self.train_params.get("onehot_params", {})
+        self.onehot_conf = self.train_params.get("onehot", {})
         if len(self.onehot_conf) > 0:
-            self.onehot_feat_conf = self.onehot_conf.get("feature_params", {})
+            self.onehot_feat_conf = self.onehot_conf.get("onehot_features", {})
         # output config
         self.save_trainset_name = self.output.get("trainset", {})
         self.save_valset_name = self.output.get("valset", {})
@@ -307,13 +304,18 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
             logger.info("Model file saved")
         # save transformed data
         if len(self.save_trainset_name) > 0:
-            path = Path(self.save_trainset_name["path"])
-            if not os.path.exists(path):
-                path.mkdir(parents=True, exist_ok=True)
-            save_train_path = self.save_trainset_name["path"] / Path(self.save_trainset_name["name"])
-            self.train.to_csv(save_train_path, index=self.save_trainset_name["has_id"])
+            save_train_path = self.save_dir / Path(self.save_trainset_name["name"])
+
+            if not os.path.exists(os.path.dirname(save_train_path)):
+                os.makedirs(os.path.dirname(save_train_path))
+
+            self.train.to_csv(save_train_path, index=self.input["trainset"][0]["has_id"])
             logger.info("Preprocessed trainset done")
         if self.val is not None:
-            save_val_path = self.save_valset_name["path"] / Path(self.save_valset_name["name"])
-            self.val.to_csv(save_val_path, index=self.save_valset_name["has_id"])
+            save_val_path = self.save_dir / Path(self.save_valset_name["name"])
+
+            if not os.path.exists(os.path.dirname(save_val_path)):
+                os.makedirs(os.path.dirname(save_val_path))
+
+            self.val.to_csv(save_val_path, index=self.input["trainset"][0]["has_id"])
             logger.info("Preprocessed valset done")

@@ -19,6 +19,7 @@ import pickle
 
 import numpy as np
 
+from common.utils.utils import update_dict
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
 from .base import VerticalPearsonBase
@@ -36,6 +37,9 @@ class VerticalPearsonTrainer(VerticalPearsonBase):
 		Args:
 			train_conf:
 		"""
+		self.sync_channel = BroadcastChannel(name="sync")
+		conf = self._sync_config()
+		update_dict(train_conf, conf)
 		super().__init__(train_conf, label=False)
 		self.channels = {}
 		self.node_id = FedNode.node_id
@@ -75,6 +79,10 @@ class VerticalPearsonTrainer(VerticalPearsonBase):
 		else:
 			raise TypeError(f"Encryption param type {type(self.encryption_param)} not valid.")
 		self.feature_mapping = dict()
+
+	def _sync_config(self):
+		config = self.sync_channel.recv()
+		return config
 
 	def fit(self):
 		logger.info("vertical pearson trainer start.")
@@ -182,7 +190,7 @@ class VerticalPearsonTrainer(VerticalPearsonBase):
 		self.save()
 
 	def save(self):
-		save_dir = str(Path(self.output.get("model")["path"]))
+		save_dir = str(Path(self.output.get("path")))
 		if not os.path.exists(save_dir):
 			os.makedirs(save_dir)
 		model_name = self.output.get("model")["name"]

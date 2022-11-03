@@ -1,8 +1,7 @@
 {
     "identity": "trainer",
     "model_info": {
-        "name": "vertical_sampler",
-        "config": {}
+        "name": "vertical_sampler"
     },
     "input": {
         "dataset": [
@@ -16,25 +15,14 @@
         ]
     },
     "output": {
-        "model": {
-            "type": "file",
-            "path": "../checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "sample_id.json"
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "sample_id": {
+            "name": "temp/sampled_id_[STAGE_ID].json"
         },
-        "trainset": {
-            "type": "csv",
-            "path": "../checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "sampled_data.csv",
-            "header": true,
-            "has_id": true
+        "dataset": {
+            "name": "temp/sampled_data_[STAGE_ID].csv"
         }
     },
     "train_info": {
-        "params": {
-            "method": "random",
-            "strategy": "downsample",
-            "random_state": 42,
-            "fraction": 0.1
-        }
     }
 }

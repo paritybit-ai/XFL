@@ -27,6 +27,8 @@ from algorithm.core.data_io import NdarrayIterator
 from algorithm.core.encryption_param import PaillierParam, PlainParam
 from algorithm.core.tree.tree_structure import BoostingTree, Tree
 from algorithm.core.tree.xgboost_loss import get_xgb_loss_inst
+from common.checker.matcher import get_matched_config
+from common.checker.x_types import All
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
 from common.crypto.paillier.paillier import Paillier
 from common.evaluation.metrics import ThresholdCutter
@@ -36,19 +38,24 @@ from common.utils.utils import save_model_config
 from service.fed_config import FedConfig
 from .base import VerticalXgboostBase
 from .decision_tree_label_trainer import VerticalDecisionTreeLabelTrainer
+from service.fed_job import FedJob
+from service.fed_node import FedNode
 
 
 class VerticalXgboostLabelTrainer(VerticalXgboostBase):
     def __init__(self, train_conf: dict, *args, **kwargs):
+        self.channels = dict()
+        self.channels["sync"] = BroadcastChannel(name="sync")
+        self._sync_config(train_conf)
         super().__init__(train_conf, is_label_trainer=True, *args, **kwargs)
         self.party_id = FedConfig.node_id
 
-        self.channels = dict()
         self.channels["encryption_context"] = BroadcastChannel(
             name="encryption_context")
         self.channels["individual_grad_hess"] = BroadcastChannel(
             name="individual_grad_hess")
         self.channels["tree_node"] = BroadcastChannel(name="tree_node")
+        self.channels["check_dataset_com"] = BroadcastChannel(name="check_dataset_com")
 
         summed_grad_hess_channs: Dict[str, DualChannel] = {}
         min_split_info_channs: Dict[str, DualChannel] = {}
@@ -112,15 +119,38 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
             "identity": self.identity,
             "filename": self.output.get("model", {"name": "vertical_xgboost_guest.json"})["name"]
         }]
+        
+    def _sync_config(self, config):
+        sync_rule = {
+            "train_info": {
+                "interaction_params": All(),
+                "train_params": {
+                    "lossfunc": All(),
+                    "num_trees": All(),
+                    "num_bins": All(),
+                    "batch_size_val": All(),
+                    "downsampling": {
+                        "row": {
+                            "run_goss": All()
+                        }
+                    },
+                    "encryption": All()
+                }
+            }
+        }
+        
+        config_to_sync = get_matched_config(config, sync_rule)
+        self.channels["sync"].broadcast(config_to_sync)
 
     def fit(self):
+        self.check_dataset()
         boosting_tree = BoostingTree()
 
         # train_y_pred_primitive, tree_list = np.zeros_like(self.train_label), []
         train_y_pred_primitive = np.zeros_like(self.train_label)
         val_y_pred_primitive = np.zeros_like(self.val_label)
 
-        loss_inst = get_xgb_loss_inst(self.xgb_config.loss_param['method'])
+        loss_inst = get_xgb_loss_inst(list(self.xgb_config.loss_param.keys())[0])
         train_y_pred, val_y_pred = loss_inst.predict(
             train_y_pred_primitive), loss_inst.predict(val_y_pred_primitive)
 
@@ -189,7 +219,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
             if self.interaction_params.get("echo_training_metrics"):
                 train_loss = loss_inst.cal_loss(
                     self.train_label, train_y_pred_primitive, after_prediction=False)
-                self._calc_metrics(self.train_label, train_y_pred, tree_idx, stage="training", loss={
+                self._calc_metrics(self.train_label, train_y_pred, tree_idx, stage="train", loss={
                                    loss_inst.name: train_loss})
 
             tree.clear_training_info()
@@ -206,7 +236,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
             val_y_pred = loss_inst.predict(val_y_pred_primitive)
             val_loss = loss_inst.cal_loss(
                 self.val_label, val_y_pred_primitive, after_prediction=False)
-            metric = self._calc_metrics(self.val_label, val_y_pred, tree_idx, stage="validation",
+            metric = self._calc_metrics(self.val_label, val_y_pred, tree_idx, stage="val",
                                         loss={loss_inst.name: val_loss})
             logger.info("Validation on tree {} done.".format(tree_idx))
             if self.xgb_config.early_stopping_param["patience"] > 0:
@@ -254,31 +284,29 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
 
     def save(self, boosting_tree: BoostingTree, epoch: Optional[int] = None, final: bool = False):
         if final:
-            save_model_config(stage_model_config=self.export_conf, save_path=Path(
-                self.output.get("model")["path"]))
+            save_model_config(stage_model_config=self.export_conf, save_path=self.output.get("path"))
 
-        save_dir = str(Path(self.output.get("model")["path"]))
+        save_dir = self.output.get("path")
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
         # dump out ks plot
         suggest_threshold = 0.5
         if "ks" in self.xgb_config.metrics or "auc_ks" in self.xgb_config.metrics:
-            tc = ThresholdCutter(os.path.join(save_dir, "ks_plot_valid.csv"))
+            # tc = ThresholdCutter(os.path.join(save_dir, "ks_plot_valid.csv"))
+            tc = ThresholdCutter(os.path.join(save_dir, self.output.get("ks_plot_val")["name"]))
             tc.cut_by_value(self.val_label, self.best_prediction_val)
             suggest_threshold = float(tc.bst_threshold)
             tc.save()
             if self.interaction_params.get("echo_training_metrics"):
-                tc = ThresholdCutter(os.path.join(
-                    save_dir, "ks_plot_train.csv"))
+                tc = ThresholdCutter(os.path.join(save_dir, self.output.get("ks_plot_train")["name"]))
                 tc.cut_by_value(self.train_label, self.best_prediction_train)
                 tc.save()
 
         model_name_list = self.output.get("model")["name"].split(".")
-        name_prefix, name_postfix = ".".join(
-            model_name_list[:-1]), model_name_list[-1]
+        name_prefix, name_postfix = ".".join(model_name_list[:-1]), model_name_list[-1]
         if not final and epoch:
-            model_name = name_prefix + "_{}".format(epoch) + "." + name_postfix
+            model_name = name_prefix + "_epoch_{}".format(epoch) + "." + name_postfix
         else:
             model_name = name_prefix + "." + name_postfix
         model_path = os.path.join(save_dir, model_name)
@@ -291,7 +319,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         logger.info("model saved as: {}.".format(model_path))
 
         self.make_readable_feature_importance(
-            os.path.join(save_dir, "feature_importances.csv"))
+            os.path.join(save_dir, self.output.get("feature_importance")["name"]))
 
     def make_readable_feature_importance(self, file_name):
         with open(file_name, "w") as f:
@@ -458,10 +486,13 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
             self.feature_importances_))
 
     def load_model(self):
+        pretrain_path = self.input.get("pretrained_model", {}).get("path", '')
+        # pretrain_path = pretrain_path.replace("[JOB_ID]", str(FedJob.job_id)).replace("[NODE_ID]", str(FedNode.node_id))
         model_path = Path(
-            self.input.get("pretrain_model", {}).get("path", ''),
-            self.input.get("pretrain_model", {}).get("name", '')
+            pretrain_path,
+            self.input.get("pretrained_model", {}).get("name", '')
         )
+
         with open(model_path, 'rb') as f:
             json_dict = json.load(f)
 
@@ -469,17 +500,49 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         return boosting_tree
 
     def check_dataset(self):
-        self.channels["check_dataset_com"] = BroadcastChannel(name="check_dataset_com")
-        data_lens = self.channels["check_dataset_com"].collect()
-        n = data_lens[0]
-        for _ in data_lens:
-            if n != _:
-                raise ValueError("Lengths of the datasets mismatched.")
-        if self.test_dataset:
-            assert len(self.test_dataset), "Lengths of the datasets mismatched."
+        shapes = self.channels["check_dataset_com"].collect()
+        if self.train_dataset is not None:
+            m = len(self.train_ids)
+            n = len(self.train_features.columns)
+            for d in shapes:
+                if d["train"][0] != m:
+                    raise ValueError("Lengths of the train set mismatched: %d, %d." % (d["train"][0], m))
+                n += d["train"][1]
+            if n <= 0:
+                raise ValueError("Number of the feature is zero. Stop training.")
+
+        if self.val_dataset is not None:
+            m = len(self.val_ids)
+            n = len(self.val_features.columns)
+            for d in shapes:
+                if d["valid"][0] != m:
+                    raise ValueError("Lengths of the valid set mismatched: %d, %d." % (d["valid"][0], m))
+                n += d["valid"][1]
+            if n <= 0:
+                raise ValueError("Number of the feature is zero. Stop training.")
+
+        if self.test_dataset is not None:
+            m = len(self.test_ids)
+            n = len(self.test_features.columns)
+            for d in shapes:
+                if d["test"][0] != m:
+                    raise ValueError("Lengths of the test set mismatched: %d, %d." % (d["test"][0], m))
+                n += d["test"][1]
+                if n <= 0:
+                    raise ValueError("Number of the feature is zero. Stop predicting.")
         else:
-            self.test_dataset = NdarrayIterator(np.zeros((n, 0)), self.bs)
-            self.test_ids = np.arange(n)
+            if len(shapes) > 0 and "test" in shapes[0]:
+                m = shapes[0]["test"][0]
+                n = 0
+                for d in shapes:
+                    if d["test"][0] != m:
+                        raise ValueError("Lengths of the test set mismatched.")
+                    n += d["test"][1]
+                if n <= 0:
+                    raise ValueError("Number of the feature is zero. Stop predicting.")
+                else:
+                    self.test_dataset = NdarrayIterator(np.zeros((m, 0)), self.bs)
+                    self.test_ids = np.arange(m)
 
     def predict(self):
         self.check_dataset()
@@ -488,11 +551,10 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
                                                               data_iterator=self.test_dataset)
         loss_inst = get_xgb_loss_inst(boosting_tree.loss_method)
         test_y_pred = loss_inst.predict(test_y_pred_primitive)
-        save_path = self.output.get("testset", {}).get("path", '')
+        save_path = self.output.get("path", '')
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-        save_path = Path(save_path, self.output.get(
-            "testset", {}).get("name", ''))
+        save_path = Path(save_path, self.output.get("testset", {}).get("name", ''))
         logger.info("predicted results saved at {}".format(save_path))
         pd.DataFrame({"id": self.test_ids, "pred": test_y_pred}).to_csv(
             save_path, float_format="%.6g", index=False, header=True

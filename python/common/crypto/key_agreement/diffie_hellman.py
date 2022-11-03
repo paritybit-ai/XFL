@@ -25,7 +25,7 @@ from .contants import primes_hex
 class DiffieHellman(object):
     """
     Implement Diffie-Hellman key exchange protocol.
-    The security parameters are referenced from RFC 7919, , which are used in TLS 1.3.
+    The security parameters are referenced from RFC 7919, which are used in TLS 1.3.
     Shortest exponents are referenced from appendix A of RFC 7919.
     """
     supported_prime_bitlength = [2048, 3072, 4096, 6144, 8192]

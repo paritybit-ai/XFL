@@ -14,24 +14,16 @@
 
 
 import sys
+
+import torch.optim.lr_scheduler as lr_scheduler
+
 from common.xregister import xregister
 
-module_list = list(sys.modules.keys())
-for k in module_list:
-    if k == "torch":
-        import torch.optim.lr_scheduler as torch_lr_scheduler
-    if k == "paddle":
-        import paddle.optimizer.lr as paddle_lr_scheduler
 
 
-def get_lr_scheduler(name: str, framework:str="torch"):
-    scheduler = None
-    if framework == "torch":
-        if name in dir(torch_lr_scheduler):
-            scheduler = getattr(torch_lr_scheduler, name)
-    elif framework == "paddle":
-        if name in dir(paddle_lr_scheduler):
-            scheduler = getattr(paddle_lr_scheduler, name)
+def get_lr_scheduler(name: str):
+    if name in dir(lr_scheduler):
+        scheduler = getattr(lr_scheduler, name)
     elif name in dir(sys.modules[__name__]):
         scheduler = getattr(sys.modules[__name__], name)
     elif name in xregister.registered_object:

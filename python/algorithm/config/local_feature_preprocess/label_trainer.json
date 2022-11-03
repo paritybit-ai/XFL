@@ -1,15 +1,10 @@
 {
     "identity": "label_trainer",
-    "model_info":
-    {
-        "name": "local_feature_preprocess",
-        "config":
-        {}
+    "model_info": {
+        "name": "local_feature_preprocess"
     },
-    "input":
-    {
-        "trainset":
-        [
+    "input": {
+        "trainset": [
             {
                 "type": "csv",
                 "path": "/opt/dataset/data/vertical_breast_with_validation",
@@ -18,8 +13,7 @@
                 "has_id": true
             }
         ],
-        "valset":
-        [
+        "valset": [
             {
                 "type": "csv",
                 "path": "/opt/dataset/data/vertical_breast_with_validation",
@@ -29,73 +23,44 @@
             }
         ]
     },
-    "output":
-    {
-        "model":
-        {
-            "type": "file",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "local_preprocess_guest.pt"
+    "output": {
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "model": {
+            "name": "local_feature_preprocess_[STAGE_ID].pt"
         },
-        "trainset":
-        {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "preprocessed_breast_vertical_guest_train.csv",
-            "header": true,
-            "has_id": true
+        "trainset": {
+            "name": "temp/preprocessed_train_[STAGE_ID].csv"
         },
-        "valset":
-        {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "preprocessed_breast_vertical_guest_test.csv",
-            "header": true,
-            "has_id": true
+        "valset": {
+            "name": "temp/preprocessed_val_[STAGE_ID].csv"
         }
     },
-    "train_info":
-    {
-        "device": "cpu",
-        "params":
-        {
-            "missing_params":
-            {
+    "train_info": {
+        "train_params": {
+            "missing": {
                 "missing_values": null,
                 "strategy": "mean",
                 "fill_value": null,
-                "missing_feat_params":
-                    {
-                        "x00":
-                        {
-                            "missing_values": null,
-                            "strategy": "median",
-                            "fill_value": null
-                        },
-                        "x01":
-                        {}
+                "missing_features": {
+                    "x00": {
+                        "missing_values": null,
+                        "strategy": "median",
+                        "fill_value": null
                     }
+                }
             },
-            "outlier_params":
-            {
+            "outlier": {
                 "outlier_values": 999,
-                "outlier_feat_params":
-                    {
-                        "x00":
-                        {
-                            "outlier_values": 999
-                        },
-                        "x01":
-                        {}
+                "outlier_features": {
+                    "x00": {
+                        "outlier_values": 999
                     }
+                }
             },
-            "onehot_params":
-            {
-                "feature_params":
-                    {
-                        "x02":
-                        {}
-                    }
+            "onehot": {
+                "onehot_features": {
+                    "x02": {}
+                }
             }
         }
     }

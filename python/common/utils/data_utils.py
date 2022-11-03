@@ -48,6 +48,7 @@ def download_url(url: str, fpath: str, md5: str, chunk_size: int = 1024 * 32) ->
         print("Verified dataset Already exists")
         return
     print("Dataset downloading...")
+        
     with request.urlopen(request.Request(url), context=ssl._create_unverified_context()) as response:
         with open(fpath, "wb") as fh:
             for chunk in iter(lambda: response.read(chunk_size), b""):
@@ -59,10 +60,7 @@ def download_url(url: str, fpath: str, md5: str, chunk_size: int = 1024 * 32) ->
 
 def extract_file_recursively(from_path: str, to_path: str) -> None:
     def extract(from_path, to_path, suffix):
-        if suffix == ".zip":
-            with zipfile.ZipFile(from_path, "r") as zip:
-                zip.extractall(to_path)
-        elif suffix == ".tar":
+        if suffix == ".tar":
             with tarfile.open(from_path,  "r") as tar:
                 tar.extractall(to_path)
         elif suffix == ".gz":
@@ -71,12 +69,15 @@ def extract_file_recursively(from_path: str, to_path: str) -> None:
 
     suffixes = pathlib.Path(from_path).suffixes
     suffix = suffixes[-1]
+
     if len(suffixes) == 1:
+        if suffix not in [".gz",".tar"]:
+            return 
         extract(from_path, to_path, suffix)
         os.remove(from_path)
         return
     else:
-        _to_path = pathlib.Path(from_path).stem
+        _to_path = pathlib.Path(from_path).parent.joinpath(pathlib.Path(from_path).stem)
         extract(from_path, _to_path, suffix)
         os.remove(from_path)
         from_path = _to_path

@@ -1,42 +1,38 @@
 [
-{
-    "identity": "label_trainer",
-    "model_info": {
-        "name": "vertical_sampler",
-        "config": {}
-    },
-    "input": {
-        "dataset": [
-            {
-                "type": "csv",
-                "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
-                "name": "breast_cancer_wisconsin_vertical_labeled_train.csv",
-                "has_label": true,
-                "has_id": true
-            }
-        ]
-    },
-    "output": {
-        "model": {
-            "type": "file",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "sample_id.json"
+    {
+        "identity": "label_trainer",
+        "model_info": {
+            "name": "vertical_sampler"
         },
-        "trainset": {
-            "type": "csv",
+        "input": {
+            "dataset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                    "name": "breast_cancer_wisconsin_vertical_labeled_train.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ]
+        },
+        "output": {
             "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "sampled_data.csv",
-            "header": true,
-            "has_id": true
-        }
-    },
-    "train_info": {
-        "params": {
-            "method": "random",
-            "strategy": "downsample",
-            "random_state": 42,
-            "fraction": 0.1
+            "sample_id": {
+                "name": "temp/sampled_id_[STAGE_ID].json"
+            },
+            "dataset": {
+                "name": "temp/sampled_data_[STAGE_ID].csv"
+            }
+        },
+        "train_info": {
+            "train_params": {
+                "method": "random",
+                "strategy": "downsample",
+                "random_seed": 42,
+                "fraction": {
+                    "percentage": 0.4
+                }
+            }
         }
     }
-}
-    ]
+]

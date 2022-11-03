@@ -79,8 +79,8 @@ class TestLocalStandardScaler:
 	])
 	def test_fit(self, get_conf, with_mean, with_std):
 		conf = copy.deepcopy(get_conf)
-		conf["train_info"]["params"]["with_mean"] = with_mean
-		conf["train_info"]["params"]["with_std"] = with_std
+		conf["train_info"]["train_params"]["with_mean"] = with_mean
+		conf["train_info"]["train_params"]["with_std"] = with_std
 		ln = LocalStandardScaler(conf)
 		ln.fit()
 		if with_mean:
@@ -91,9 +91,9 @@ class TestLocalStandardScaler:
 	@pytest.mark.parametrize('feature_name', ['x0', 'myf'])
 	def test_feature_wise(self, get_conf, feature_name):
 		conf = copy.deepcopy(get_conf)
-		conf["train_info"]["params"]["with_mean"] = False
-		conf["train_info"]["params"]["with_std"] = False
-		conf["train_info"]["params"]["featureStandardizeConfig"] = {
+		conf["train_info"]["train_params"]["with_mean"] = False
+		conf["train_info"]["train_params"]["with_std"] = False
+		conf["train_info"]["train_params"]["feature_standard"] = {
 			feature_name: {"with_mean": True, "with_std": True}
 		}
 		ln = LocalStandardScaler(conf)

@@ -22,13 +22,13 @@ import numpy as np
 
 class OneTimePadContext(object):
     def __init__(self,
-                 modulus_exp: int = 128,
+                 modulus_exp: int = 64,
                  data_type: str = "torch.Tensor"):
         """Context includes modulus, plaintext data type, exponent for encoding and etc..
 
         Args:
             modulus_exp (int, optional): exponent(base 2) of modulus. Ciphertext will consists of integers
-                module 2^modulus_exp. Defaults to 128.
+                module 2^modulus_exp. Defaults to 64.
             data_type (str, optional): plaintext type, supports "torch.Tensor" and "numpy.ndarray",
                 or "torch" and "numpy" for short. Defaults to "torch.Tensor".
 
@@ -104,6 +104,19 @@ class OneTimePadContext(object):
     def deserialize(data) -> any:
         return pickle.loads(data)
     
+
+class OneTimeKey(object):
+    def __init__(self, key: Union[list[np.ndarray], np.ndarray], modulus_exp: int = 64):
+        dtype = np.uint64 if modulus_exp == 64 else object
+        modulus = (1 << modulus_exp)
+        if isinstance(key, list):
+            self.value = [np.array(np.mod(v, modulus)).astype(dtype) for v in key]
+        else:
+            self.value = np.array(np.mod(key, modulus)).astype(dtype)
+            
+    def __len__(self):
+        return len(self.value)
+    
     
 class OneTimePadCiphertext(object):
     def __init__(self,
@@ -119,21 +132,23 @@ class OneTimePadCiphertext(object):
             TypeError: if the type of data is not bytes, list or np.ndarray.
             TypeError: if the type of context_ is not OneTimePadContext or bytes.
         """
-        if isinstance(data, bytes):
-            self.__data = np.array(OneTimePadContext.deserialize(data), dtype=object)
-        elif isinstance(data, list):
-            self.__data = np.array(data, dtype=object)
-        elif isinstance(data, (np.ndarray, np.float64)): # , float, int)):
-            self.__data = data.astype(object)
-        else:
-            raise TypeError(f"Got data type {type(data)}, supported types are 'list', 'np.ndarray', 'bytes'")
-            
         if isinstance(context_, OneTimePadContext):
             self.__context = context_
         elif isinstance(context_, bytes):  
             self.__context = pickle.loads(context_)
         else:
             raise TypeError(f"Got context type {type(context_)}, supported types are 'OneTimePadContext', 'bytes'")
+        
+        dtype = np.uint64 if self.__context.modulus_exp == 64 else object
+        
+        if isinstance(data, bytes):
+            self.__data = np.array(OneTimePadContext.deserialize(data), dtype=dtype)
+        elif isinstance(data, list):
+            self.__data = np.array(data, dtype=dtype)
+        elif isinstance(data, (np.ndarray, np.float64, np.uint64)):  # , float, int)):
+            self.__data = data.astype(dtype)
+        else:
+            raise TypeError(f"Got data type {type(data)}, supported types are 'list', 'np.ndarray', 'bytes'")
 
     def __str__(self):
         out = ', '.join([f"data: {self.__data}", "context: " + str(self.__context)])
@@ -143,7 +158,10 @@ class OneTimePadCiphertext(object):
         if self.__context != other.__context:
             raise ValueError(f"Adding ciphertext with different context, {self.__context} vs {other.__context}")
         
-        out = np.array(np.mod(self.__data + other.__data, self.__context.modulus), dtype=object)
+        if self.__context.modulus_exp == 64:
+            out = self.__data + other.__data
+        else:
+            out = np.array(np.mod(self.__data + other.__data, self.__context.modulus), dtype=object)
         out = OneTimePadCiphertext(out, self.__context)
         return out
             
@@ -151,7 +169,10 @@ class OneTimePadCiphertext(object):
         if self.__context != other.__context:
             raise ValueError(f"Subtracting ciphertext with different context, {self.__context} vs {other.__context}")
         
-        out = np.array(np.mod(self.__data - other.__data, self.__context.modulus), dtype=object)
+        if self.__context.modulus_exp == 64:
+            out = self.__data - other.__data
+        else:
+            out = np.array(np.mod(self.__data - other.__data, self.__context.modulus), dtype=object)
         out = OneTimePadCiphertext(out, self.__context)
         return out
     
@@ -178,21 +199,19 @@ class OneTimePadCiphertext(object):
             zero_shape = False
             data = self.__data.astype(object)
         
-        # idx = np.where(self.__data > self.__context.modulus // 2)
         idx = np.where(data > self.__context.modulus // 2)
-        # self.out = deepcopy(self.__data)
-        self.out = deepcopy(data)
+        out = deepcopy(data)
         
         if len(idx[0]) != 0:
-            self.out[idx] -= self.__context.modulus
+            out[idx] -= self.__context.modulus
 
-        self.out /= self.__context.scalar
+        out /= self.__context.scalar
         
         if self.__context.data_type == np.ndarray:
-            out = self.out.astype(np.float32)
+            out = out.astype(np.float32)
         else:
             import torch
-            out = torch.from_numpy(self.out.astype(np.float32))
+            out = torch.from_numpy(out.astype(np.float32))
         
         if zero_shape:
             return out[0]

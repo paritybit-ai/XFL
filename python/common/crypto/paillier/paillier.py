@@ -262,9 +262,6 @@ class Paillier(object):
         if compression:
             data = zstd.decompress(data)
         unpickled_data = pickle.loads(data)
-        
-        if isinstance(data, RawCiphertext):
-            return unpickled_data
             
         def f(x):
             return PaillierCiphertext(context, x.value, x.exp)
@@ -379,7 +376,7 @@ class Paillier(object):
                 out_origin: bool = False):
         if not context.is_private():
             raise TypeError("Try to decrypt a paillier ciphertext by a public key.")
-        
+
         if isinstance(data, np.ndarray):
             if num_cores == 1:
                 def f1(x):

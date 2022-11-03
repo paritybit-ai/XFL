@@ -36,3 +36,8 @@ def timer_function_scope():
 	yield
 	print('Time cost: {:.3f}s'.format(time.time() - start))
 
+
+@pytest.fixture(scope="session", autouse=True)
+def tmp_factory(tmpdir_factory):
+	p = tmpdir_factory.mktemp("unittest-tmp-dir")
+	return p

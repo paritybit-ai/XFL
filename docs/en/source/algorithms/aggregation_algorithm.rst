@@ -61,7 +61,6 @@ Therefore, the actual **loss function** becomes :math:`L + \frac{\mu}{2}||m^i-M^
     "type": "fedprox", 
     "mu": 1,
 
-
 scaffold
 --------
 **scaffold** [scaffold]_ is implemented based on **fedavg**, which may improve the training performance when the data is non-IID. 

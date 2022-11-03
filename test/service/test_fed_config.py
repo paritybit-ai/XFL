@@ -68,6 +68,7 @@ class Test_FedConfig():
         mocker.patch.object(FedNode, 'trainers', {"node-1": "test"})
         mocker.patch('service.fed_config.load_json_config',
                      return_value={0: {"identity": "trainer"}})
+        mocker.patch("os.path.exists", return_value=True)
 
         trainer_config = FedConfig.load_trainer_config("test")
 
@@ -80,11 +81,11 @@ class Test_FedConfig():
     def test_get_config(self, mocker):        
 
         mocker.patch.object(FedNode, "create_channel", return_value='55001')
-        mocker.patch("service.fed_config.scheduler_pb2_grpc.SchedulerStub.__init__", side_effect=lambda x:None)
+        mocker.patch("service.fed_config.scheduler_pb2_grpc.SchedulerStub.__init__", side_effect=lambda x: None)
         mocker.patch("service.fed_config.scheduler_pb2_grpc.SchedulerStub.getConfig", create=True, return_value=scheduler_pb2.GetConfigResponse(jobId=2, config="test_config"))
             
         mocker.patch.object(FedJob, "global_epoch", 0)
-        mocker.patch("json.loads", return_value={"model_info":{"name":"test"},"train_info":{"params":{"global_epoch":1}}})
+        mocker.patch("json.loads", return_value={"model_info": {"name": "test"}, "train_info": {"train_params": {"global_epoch": 1}}})
         mocker.patch("service.fed_config.add_job_log_handler", return_value="job_log_handler")
         mocker.patch("service.fed_config.add_job_stage_log_handler", return_value="job_stage_log_handler")
 

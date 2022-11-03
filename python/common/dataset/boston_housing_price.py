@@ -16,6 +16,7 @@
 import os
 import shutil
 from typing import Any
+from sklearn.preprocessing import StandardScaler
 
 import numpy as np
 import pandas as pd
@@ -45,10 +46,15 @@ class Boston(torch.utils.data.Dataset):
         self.label = raw_df.values[1::2, 2]
         self.feature_cols = [f'x{i}' for i in range(self.feature.shape[1])]
         self.id = np.arange(len(self.label))
-        self.reconstruct_df = np.hstack([self.id.reshape(-1,1), self.label.reshape(-1,1),self.feature])
+        self.reconstruct_df = np.hstack([self.id.reshape(-1, 1), self.label.reshape(-1, 1), self.feature])
         self.data = pd.DataFrame(data=self.reconstruct_df,
-        columns=["id","y"].extend(self.feature_cols)
-        )
+                                 columns=["id", "y"] + list(self.feature_cols)
+                                 )
+        if reallocate_dict["norm"]:
+            feature = self.data.iloc[:, 2:]
+            scaler = StandardScaler()
+            data_norm = pd.DataFrame(scaler.fit_transform(feature), columns=feature.columns)
+            self.data = self.data.iloc[:, :2].join(data_norm)
 
     def __getitem__(self, index: int) -> Any:
         return self.feature[index], self.label[index]
@@ -70,6 +76,7 @@ class Boston(torch.utils.data.Dataset):
         test_ratio = reallocate_dict['test_ratio']
         random_state = reallocate_dict["random_seed"]
         parties = reallocate_dict["parties"]
+        np.random.seed(random_state)
 
         final_dir_path = os.path.join(
             self.dirpath, self.datadir, reallocate_folder)
@@ -81,10 +88,10 @@ class Boston(torch.utils.data.Dataset):
             for i, span in enumerate(split_cols):
                 if "labeled" in parties[i]:
                     train_data, test_data = pd_train_test_split(
-                        self.data[["id", "y"]+list(span)], test_ratio=test_ratio, random_state=random_state)
+                        self.data[["id", "y"] + list(span)], test_ratio=test_ratio, random_state=random_state)
                 else:
                     train_data, test_data = pd_train_test_split(
-                        self.data[["id"]+list(span)], test_ratio=test_ratio, random_state=random_state)
+                        self.data[["id"] + list(span)], test_ratio=test_ratio, random_state=random_state)
 
                 train_csv_path = os.path.join(
                     final_dir_path, f'{self.datadir}_{parties[i]}_train.csv')
@@ -111,6 +118,7 @@ class Boston(torch.utils.data.Dataset):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", type=str, default="vertical",
                         help="vertical or horizontal task")
@@ -121,6 +129,8 @@ if __name__ == "__main__":
     parser.add_argument("--random_seed", type=int,
                         default=0, help="random seed")
     parser.add_argument("--party", nargs="+", help="involved parties")
+    parser.add_argument("--norm", type=bool,
+                        default=False, help="normalization")
     args = parser.parse_args()
 
     reallocate_dict = {
@@ -128,7 +138,8 @@ if __name__ == "__main__":
         "splits": args.splits,
         "test_ratio": args.test_ratio,
         "random_seed": args.random_seed,
-        "parties": args.party
+        "parties": args.party,
+        "norm": args.norm
     }
 
     boston = Boston()
