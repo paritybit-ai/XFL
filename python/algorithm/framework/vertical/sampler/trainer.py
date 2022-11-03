@@ -11,9 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 import json
+import os
 from pathlib import Path
 
 from algorithm.framework.vertical.sampler.base import VerticalSamplerBase
@@ -29,9 +28,12 @@ class VerticalSamplerTrainer(VerticalSamplerBase):
         sample_ids = self.broadcast_channel.recv()
         new_data = self.data.loc[sample_ids]
         if len(self.save_id) > 0:
-            save_id_path = self.output["model"]["path"] / Path(self.output["model"]["name"])
+            save_id_path = self.output["path"] / Path(self.output["sample_id"]["name"])
+            if not os.path.exists(os.path.dirname(save_id_path)):
+                os.makedirs(os.path.dirname(save_id_path))
             with open(save_id_path, "w") as wf:
                 json.dump(list(sample_ids), wf)
-            logger.info("Sample ids saved.")
+            logger.info("Sample ids saved to {}.".format(save_id_path))
 
-        new_data.to_csv(self.save_data_path, index=self.output["trainset"]["has_id"])
+        new_data.to_csv(self.save_data_path, index=self.input["dataset"][0]["has_id"])
+        logger.info("Data saved to {}.".format(self.save_data_path))

@@ -28,7 +28,8 @@ import pytest
 import service.fed_config
 from algorithm.core.horizontal.aggregation.aggregation_otp import AggregationOTPRoot, AggregationOTPLeaf
 from algorithm.core.horizontal.aggregation.aggregation_plain import AggregationPlainRoot, AggregationPlainLeaf
-
+from algorithm.framework.horizontal.nbafl.assist_trainer import HorizontalNbaflAssistTrainer
+from algorithm.framework.horizontal.nbafl.label_trainer import HorizontalNbaflLabelTrainer
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
 from common.communication.gRPC.python.commu import Commu
 from common.crypto.key_agreement.contants import primes_hex
@@ -99,8 +100,6 @@ class TestNbafl:
     def test_uplink_sigma(self, get_trainer_conf, mocker):
         conf = get_trainer_conf
         conf["model_info"]["config"]["input_dim"] = 5
-        service.fed_config.FedConfig.stage_config = conf
-        from algorithm.framework.horizontal.nbafl.label_trainer import HorizontalNbaflLabelTrainer
         mocker.patch.object(
             DualChannel, "__init__", return_value=None
         )
@@ -118,8 +117,6 @@ class TestNbafl:
     def test_uplink_add_noise(self, get_trainer_conf, mocker):
         conf = get_trainer_conf
         conf["model_info"]["config"]["input_dim"] = 5
-        service.fed_config.FedConfig.stage_config = conf
-        from algorithm.framework.horizontal.nbafl.label_trainer import HorizontalNbaflLabelTrainer
         mocker.patch.object(
             DualChannel, "__init__", return_value=None
         )
@@ -152,8 +149,6 @@ class TestNbafl:
     def test_downlink_sigma(self, get_assist_trainer_conf, mocker):
         conf = get_assist_trainer_conf
         conf["model_info"]["config"]["input_dim"] = 5
-        service.fed_config.FedConfig.stage_config = conf
-        from algorithm.framework.horizontal.nbafl.assist_trainer import HorizontalNbaflAssistTrainer
         mocker.patch.object(
             DualChannel, "__init__", return_value=None
         )
@@ -170,8 +165,6 @@ class TestNbafl:
     def test_label_trainer(self, get_trainer_conf, mocker):
         conf = get_trainer_conf
         conf["model_info"]["config"]["input_dim"] = 5
-        service.fed_config.FedConfig.stage_config = conf
-        from algorithm.framework.horizontal.nbafl.label_trainer import HorizontalNbaflLabelTrainer
         mocker.patch.object(
             DualChannel, "__init__", return_value=None
         )
@@ -189,13 +182,11 @@ class TestNbafl:
         )
         nbafl_t = HorizontalNbaflLabelTrainer(conf)
         nbafl_t.sigma_u = 0.1
-        nbafl_t.train_loop()
+        nbafl_t.fit()
 
     def test_assist_trainer(self, get_assist_trainer_conf, mocker):
         conf = get_assist_trainer_conf
         conf["model_info"]["config"]["input_dim"] = 5
-        service.fed_config.FedConfig.stage_config = conf
-        from algorithm.framework.horizontal.nbafl.assist_trainer import HorizontalNbaflAssistTrainer
         mocker.patch.object(
             DualChannel, "__init__", return_value=None
         )
@@ -217,4 +208,4 @@ class TestNbafl:
             AggregationOTPRoot, "aggregate", return_value=model_state_dict
         )
         nbafl_at.min_sample_num = 10
-        nbafl_at.train_loop()
+        nbafl_at.fit()

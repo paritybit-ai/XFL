@@ -18,7 +18,10 @@ import os
 import shutil
 import pickle
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
+from functools import partial
+from typing import OrderedDict
 from algorithm.core.data_io import CsvReader
 
 import numpy as np
@@ -204,7 +207,7 @@ class TestAggregation:
         params_plain_recv = pickle.dumps(lrt_a.model.state_dict()) + EOV
         params_send = fed_method._calc_upload_value(lrt.model.state_dict(), len(lrt.train_dataloader.dataset))
         params_collect = pickle.dumps(params_send)
-        agg_otp = fed_assist_method._calc_aggregated_params(list(map(lambda x: pickle.loads(x), [params_collect,params_collect])))
+        agg_otp = fed_assist_method._calc_aggregated_params(list(map(lambda x: pickle.loads(x), [params_collect,params_collect])), average=True)
         
         def mock_recv(*args, **kwargs):
             return params_plain_recv

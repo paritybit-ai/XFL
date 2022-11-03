@@ -24,6 +24,7 @@ from pathos.multiprocessing import ProcessPool
 from common.communication.gRPC.python.channel import BroadcastChannel
 from common.crypto.paillier.paillier import Paillier
 from common.utils.logger import logger
+from common.utils.utils import update_dict
 from ..pearson.base import VerticalPearsonBase
 from .base import VerticalBinningWoeIvBase
 
@@ -36,6 +37,10 @@ class VerticalBinningWoeIvTrainer(VerticalBinningWoeIvBase):
             train_conf (dict): [description]
             model_conf (dict, optional): [description]. Defaults to None.
         """
+        self.sync_channel = BroadcastChannel(name="sync")
+        conf = self._sync_config()
+        update_dict(train_conf, conf)
+
         super().__init__(train_conf, label=False, *args, **kwargs)
         self.encrypt_id_label_pair = None
         # self.pool = ProcessPool(self.extra_config["poolNum"])
@@ -48,6 +53,10 @@ class VerticalBinningWoeIvTrainer(VerticalBinningWoeIvBase):
             zip(pd.Series(self.woe_map.keys()).apply(lambda x: self.feature_mapping[x]), self.woe_map.values()))
         logger.info("node-2:successfully binning.")
 
+    def _sync_config(self):
+        config = self.sync_channel.recv()
+        return config
+
     def woe_pre(self, feat):
         feature_df = self.encrypt_id_label_pair.join(self.df[feat])
         tmp = feature_df.groupby([feat])['y'].agg({'count', 'sum'})
@@ -55,8 +64,8 @@ class VerticalBinningWoeIvTrainer(VerticalBinningWoeIvBase):
 
     def fit(self):
 
-        encryption_config = self.train_params["encryption_params"]
-        encryption_method = encryption_config["method"].lower()
+        encryption_config_pre = self.train_params["encryption"]
+        encryption_method = list(encryption_config_pre.keys())[0].lower()
 
         #
         if encryption_method == "paillier":
@@ -113,7 +122,7 @@ class VerticalBinningWoeIvTrainer(VerticalBinningWoeIvBase):
                 data_batch.append(t)
             del self.df
             woe_pre_plus([pd.DataFrame([1, 2, 3])])  # improve coverage
-            with ProcessPool(self.train_params["pool_num"]) as pool:
+            with ProcessPool(self.train_params["max_num_cores"]) as pool:
                 tmp = pool.map(woe_pre_plus, data_batch)
             for i in tmp:
                 self.bins_count.update(i[0])
@@ -147,9 +156,8 @@ class VerticalBinningWoeIvTrainer(VerticalBinningWoeIvBase):
         send_msg = {"woe_feedback_list": self.woe_feedback_list, "bins_count": self.bins_count}
         self.broadcast_channel.send(send_msg)
         # save feature map
-        save_dir = self.output["trainset"]["path"]
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-        host_file_path = f'{save_dir}/{self.output["trainset"]["name"]}_feature_mapping.json'
-        with open(host_file_path, "w") as wf:
-            json.dump({"feature_mapping": self.feature_mapping}, wf)
+        feature_map = self.output.get("result", None)
+        if feature_map is not None:
+            host_file_path = f'{self.save_dir}/{feature_map["name"]}'
+            with open(host_file_path, "w") as wf:
+                json.dump({"feature_mapping": self.feature_mapping}, wf)

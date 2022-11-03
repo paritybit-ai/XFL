@@ -27,10 +27,10 @@ class VerticalSamplerBase(TrainConfigParser):
         super().__init__(train_conf)
         self._init_data()
         self.broadcast_channel = BroadcastChannel(name="vertical_sampler_channel")
-        self.save_id = self.output.get("model", {})
-        self.save_data_path = self.output["trainset"]["path"] / Path(self.output["trainset"]["name"])
-        if not os.path.exists(self.output["trainset"]["path"]):
-            os.makedirs(self.output["trainset"]["path"])
+        self.save_id = self.output.get("sample_id", {})
+        self.save_data_path = self.output["path"] / Path(self.output["dataset"]["name"])
+        if not os.path.exists(os.path.dirname(self.save_data_path)):
+            os.makedirs(os.path.dirname(self.save_data_path))
 
     def __load_data(self, config) -> CsvReader:
         if len(config) > 1:

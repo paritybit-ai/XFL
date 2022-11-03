@@ -4,30 +4,48 @@
         "name": "vertical_feature_selection"
     },
     "input": {
+        "trainset": [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/vertical_breast_with_validation",
+                "name": "breast_vertical_guest_train.csv",
+                "has_label": true,
+                "has_id": true
+            }
+        ],
+        "valset": [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/vertical_breast_with_validation",
+                "name": "breast_vertical_guest_test.csv",
+                "has_label": true,
+                "has_id": true
+            }
+        ],
         "iv_result": {
-            "type": "file",
-            "path": "../checkpoints/[JOB_ID]/[NODE_ID]",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "name": "vertical_binning_woe_iv.json"
         },
         "corr_result": {
-            "type": "file",
-            "path": "../checkpoints/[JOB_ID]/[NODE_ID]",
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "name": "pearson_guest.pkl"
         }
     },
     "output": {
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "trainset": {
+            "name": "temp/selected_train_[STAGE_ID].csv"
+        },
+        "valset": {
+            "name": "temp/selected_val_[STAGE_ID].csv"
+        },
         "model": {
-            "type": "file",
-            "path": "../checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "feature_selection_guest.pkl"
+            "name": "vertical_feature_selection_[STAGE_ID].pkl"
         }
     },
     "train_info": {
-        "device": "cpu",
-        "interaction_params": {
-        },
-        "params": {
-            "filter_params": {
+        "train_params": {
+            "filter": {
                 "common": {
                     "metrics": "iv",
                     "filter_method": "threshold",

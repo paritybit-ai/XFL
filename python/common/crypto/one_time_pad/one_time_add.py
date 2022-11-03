@@ -20,7 +20,7 @@ from typing import List, Union
 import numpy as np
 import torch
 
-from .component import OneTimePadCiphertext, OneTimePadContext
+from .component import OneTimePadCiphertext, OneTimePadContext, OneTimeKey
 
 
 class OneTimeAdd(object):
@@ -57,32 +57,41 @@ class OneTimeAdd(object):
             data = np.array([data])
         else:
             zero_shape = False
+            
+        dtype = np.uint64 if context_.modulus_exp == 64 else object
         
         if not is_decrypt:
-            out = np.mod(np.trunc(data * context_.scalar), context_.modulus).astype(object)
+            out = np.mod(np.trunc(data * context_.scalar), context_.modulus).astype(dtype)
         else:
             out = deepcopy(data)
 
         for i in range(len(one_time_key)):
             if is_addition[i] - is_decrypt:
-                out = np.mod(np.trunc(out + one_time_key[i]), context_.modulus).astype(object)
+                if context_.modulus_exp == 64:
+                    out = out + one_time_key[i]
+                else:
+                    out = np.mod(out + one_time_key[i], context_.modulus).astype(object)
             else:
-                out = np.mod(out - one_time_key[i], context_.modulus).astype(object)
-                    
+                if context_.modulus_exp == 64:
+                    out = out - one_time_key[i]
+                else:
+                    out = np.mod(out - one_time_key[i], context_.modulus).astype(object)
+
         if is_decrypt:
+            out = out.astype(object)
             idx = np.where(out > context_.modulus // 2)
             out[idx] -= context_.modulus
             out /= context_.scalar
             
         if zero_shape:
-            out = np.array(out[0]).astype(object)
+            out = np.array(out[0])
         return out
     
     @classmethod
     def encrypt(cls,
                 context_: OneTimePadContext,
                 data: Union[np.ndarray, torch.Tensor],
-                one_time_key:  Union[List[np.ndarray], np.ndarray],
+                one_time_key:  OneTimeKey,
                 is_addition: Union[List[bool], bool] = True,
                 serialized: bool = False) -> Union[OneTimePadCiphertext, bytes]:
         """Encrypt the data to a ciphertext
@@ -90,7 +99,7 @@ class OneTimeAdd(object):
         Args:
             context_ (OneTimePadContext): see OneTimePadContext.
             data (Union[np.ndarray, torch.Tensor]): plaintext to encrypt.
-            one_time_key (Union[List[np.ndarray], np.ndarray]): a key for addition/subtraction, or a list of keys, 
+            one_time_key (OneTimeKey): a key for addition/subtraction, or a list of keys, 
                                 the ciphertext is plaintext +/- key[0] +/- key[1] +/- key[2] +/- ...
             is_addition (Union[List[bool], bool], optional): same length as one_time_key, means to add or to subtract the key.
                                 Defaults to True.
@@ -108,10 +117,10 @@ class OneTimeAdd(object):
             Union[OneTimePadCiphertext, bytes]: if serialized is False, return OneTimePadCiphertext,
                 else return pickled ciphertext(numpy.ndarray of integers).
         """
-        if isinstance(one_time_key, np.ndarray):
-            one_time_key = [one_time_key.astype(object)]
+        if isinstance(one_time_key.value, np.ndarray):
+            one_time_key = [one_time_key.value]
         else:
-            one_time_key = [np.array(key).astype(object) for key in one_time_key]
+            one_time_key = one_time_key.value
             
         if data.shape != one_time_key[0].shape:
             raise ValueError(f"Input data's shape {data.shape} and one_time_key's shape {one_time_key[0].shape} not match.")
@@ -120,10 +129,9 @@ class OneTimeAdd(object):
             warnings.warn(f"Input data type {type(data)} and context_.data_type {context_.data_type} are different.")
 
         if isinstance(data, torch.Tensor):
-            data = data.numpy().astype(object)
+            data = data.numpy()
             
         out = cls._xcrypt(context_, data, one_time_key, is_addition, False)
-        
         if not serialized:
             out = OneTimePadCiphertext(out, context_)
         else:
@@ -134,14 +142,14 @@ class OneTimeAdd(object):
     def decrypt(cls,
                 context_: OneTimePadContext,
                 ciphertext: Union[OneTimePadCiphertext, bytes],
-                one_time_key: Union[List[np.ndarray], np.ndarray],
+                one_time_key: OneTimeKey,
                 is_addition: Union[List[bool], bool] = True) -> Union[np.ndarray, torch.Tensor]:
         """Decrypt the ciphertext to a plaintext
 
         Args:
             context_ (OneTimePadContext): see OneTimePadContext.
             ciphertext (Union[OneTimePadCiphertext, bytes]): result of cls.encrypt(...) method.
-            one_time_key (Union[List[np.ndarray], np.ndarray]): the same as it is in cls.encrypt(...).
+            one_time_key (OneTimeKey): the same as it is in cls.encrypt(...).
             is_addition (Union[List[bool], bool]): the same as it is in cls.encrypt(...).
             
         Raises:
@@ -150,10 +158,10 @@ class OneTimeAdd(object):
         Returns:
             Union[np.ndarray, torch.Tensor]: numpy.ndarray or torch.Tensor of float32, depend on context_.data_type
         """
-        if isinstance(one_time_key, np.ndarray):
-            one_time_key = [one_time_key.astype(object)]
-        elif isinstance(one_time_key, list):
-            one_time_key = [np.array(key).astype(object) for key in one_time_key]
+        if isinstance(one_time_key.value, np.ndarray):
+            one_time_key = [one_time_key.value]
+        else:
+            one_time_key = one_time_key.value
             
         if isinstance(ciphertext, bytes):
             ciphertext = OneTimePadContext.deserialize(ciphertext)

@@ -42,7 +42,7 @@ class AggregationLeafBase(object):
         else:
             # self.leaf_ids = FedConfig.get_label_trainer() + FedConfig.get_trainer()
             self.leaf_id = FedConfig.node_id
-            
+
         # self.aggregation_chan = BroadcastChannel(name='aggregation', ids=self.leaf_ids + [self.root_id],
         #                                     root_id=self.root_id, auto_offset=True)
         
@@ -119,7 +119,7 @@ class AggregationRootBase(object):
             self.leaf_ids = leaf_ids
         else:
             self.leaf_ids = FedConfig.get_label_trainer() + FedConfig.get_trainer()
-            
+        
         self.aggregation_channs: Dict[str, DualChannel] = {}
         for id in self.leaf_ids:
             self.aggregation_channs[id] = DualChannel(name='aggregation_' + id,
@@ -131,13 +131,13 @@ class AggregationRootBase(object):
         #                                     root_id=self.root_id, auto_offset=True)
         
     @abc.abstractmethod
-    def _calc_aggregated_params(self, received_value: List) -> OrderedDict:
+    def _calc_aggregated_params(self, received_value: List, average) -> OrderedDict:
         pass
     
     def set_initial_params(self, params: OrderedDict) -> None:
         self.initial_parameters = params
 
-    def aggregate(self) -> OrderedDict:
+    def aggregate(self, average=True) -> OrderedDict:
         """ receive local gradient/weights from trainer, then calculate average gradient/weights.
         """
         # received_values = []
@@ -156,24 +156,22 @@ class AggregationRootBase(object):
         
         is_continue_flags = [True for party_id in self.aggregation_channs]
         received_values = [bytes() for party_id in self.aggregation_channs]
-        
+    
         while True:
             # collect_values = self.aggregation_chan.collect(use_pickle=False)
             for i, id in enumerate(self.leaf_ids):
                 if not is_continue_flags[i]:
                     continue
-                
                 data = self.aggregation_channs[id].recv(use_pickle=False, wait=False)
 
                 if data is None:
                     continue
                 
                 received_values[i] += data[:-1]
-                
                 if data[-1] == EOV[0]:
                     received_values[i] = pickle.loads(received_values[i])
                     is_continue_flags[i] = False
-                    
+            
             flag = any(is_continue_flags)
             if not flag:
                 break
@@ -194,7 +192,7 @@ class AggregationRootBase(object):
             #     break
 
         # received_values = list(map(lambda x: pickle.loads(x), received_values))
-        aggregated_params = self._calc_aggregated_params(received_values)
+        aggregated_params = self._calc_aggregated_params(received_values, average)
         return aggregated_params
 
     def broadcast(self, params: OrderedDict) -> int:
@@ -232,6 +230,6 @@ def max_bytes_segementation(value):
     for i in range(n):
         if i == n-1:
             max_segement = value[i*MAX_BLOCK_SIZE: (i+1)*MAX_BLOCK_SIZE] + EOV
-        else:    
+        else:
             max_segement = value[i*MAX_BLOCK_SIZE: (i+1)*MAX_BLOCK_SIZE] + MOV
         yield max_segement

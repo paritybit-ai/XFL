@@ -147,20 +147,12 @@ def get_label_trainer_conf():
 				"has_id": True
 			}
 		]
-		conf["output"]["model"]["path"] = "/opt/checkpoints/unit_test"
+		conf["output"]["path"] = "/opt/checkpoints/unit_test"
 		conf["output"]["trainset"] = {
-			"type": "csv",
-			"path": "/opt/checkpoints/unit_test",
-			"name": "selected_train_guest.csv",
-			"has_label": True,
-			"has_id": True
+			"name": "selected_train_guest_[STAGE_ID].csv"
 		}
 		conf["output"]["valset"] = {
-			"type": "csv",
-			"path": "/opt/checkpoints/unit_test",
-			"name": "selected_train_guest.csv",
-			"has_label": True,
-			"has_id": True
+			"name": "selected_train_guest_[STAGE_ID].csv",
 		}
 	yield conf
 
@@ -189,20 +181,12 @@ def get_trainer_conf():
 				"has_id": True
 			}
 		]
-		conf["output"]["model"]["path"] = "/opt/checkpoints/unit_test"
+		conf["output"]["path"] = "/opt/checkpoints/unit_test"
 		conf["output"]["trainset"] = {
-			"type": "csv",
-			"path": "/opt/checkpoints/unit_test",
-			"name": "selected_train_host.csv",
-			"has_label": False,
-			"has_id": True
+			"name": "selected_train_host_[STAGE_ID].csv"
 		}
 		conf["output"]["valset"] = {
-			"type": "csv",
-			"path": "/opt/checkpoints/unit_test",
-			"name": "selected_train_host.csv",
-			"has_label": False,
-			"has_id": True
+			"name": "selected_train_host_[STAGE_ID].csv"
 		}
 	yield conf
 
@@ -212,8 +196,8 @@ class TestFeatureSelection:
 	def test_label_trainer(self, get_label_trainer_conf, mocker, iv, corr, remain):
 		
 		conf = get_label_trainer_conf
-		conf["train_info"]["params"]["filter_params"]["common"]["threshold"] = iv
-		conf["train_info"]["params"]["filter_params"]["correlation"]["correlation_threshold"] = corr
+		conf["train_info"]["train_params"]["filter"]["common"]["threshold"] = iv
+		conf["train_info"]["train_params"]["filter"]["correlation"]["correlation_threshold"] = corr
 
 		mocker.patch.object(
 			DualChannel, "__init__", return_value=None
@@ -225,7 +209,7 @@ class TestFeatureSelection:
 			BroadcastChannel, "broadcast", return_value=0
 		)
 		mocker.patch.object(
-			service.fed_config.FedConfig, "get_label_trainer", return_value="node-1"
+			service.fed_config.FedConfig, "get_label_trainer", return_value=["node-1"]
 		)
 		mocker.patch.object(
 			service.fed_config.FedConfig, "get_trainer", return_value=["node-2"]
@@ -241,7 +225,7 @@ class TestFeatureSelection:
 			}]
 		)
 		vfslt.fit()
-		with open("/opt/checkpoints/unit_test/feature_selection_guest.pkl", 'rb') as f:
+		with open("/opt/checkpoints/unit_test/vertical_feature_selection_[STAGE_ID].pkl", 'rb') as f:
 			model = pickle.load(f)
 			assert model["num_of_features"] == remain
 
@@ -262,7 +246,7 @@ class TestFeatureSelection:
 			BroadcastChannel, "broadcast", return_value=0
 		)
 		mocker.patch.object(
-			service.fed_config.FedConfig, "get_label_trainer", return_value="node-1"
+			service.fed_config.FedConfig, "get_label_trainer", return_value=["node-1"]
 		)
 		mocker.patch.object(
 			service.fed_config.FedConfig, "get_trainer", return_value=["node-2"]
@@ -278,7 +262,7 @@ class TestFeatureSelection:
 			}]
 		)
 		vfslt.fit()
-		with open("/opt/checkpoints/unit_test/feature_selection_guest.pkl", 'rb') as f:
+		with open("/opt/checkpoints/unit_test/vertical_feature_selection_[STAGE_ID].pkl", 'rb') as f:
 			model = pickle.load(f)
 			assert model["num_of_features"] == 4
 
@@ -287,6 +271,19 @@ class TestFeatureSelection:
 			assert len(model) == 1
 
 	def test_trainer(self, get_trainer_conf, mocker):
+		with open("python/algorithm/config/vertical_feature_selection/label_trainer.json") as f:
+			label_trainer_conf = json.load(f)
+
+		def mock_config_recv(*args, **kwargs):
+			tmp = {"train_info": label_trainer_conf["train_info"]}
+			return tmp
+
+		mocker.patch.object(
+			BroadcastChannel, "__init__", return_value=None
+		)
+		mock_channel_recv = mocker.patch.object(
+			BroadcastChannel, "recv", side_effect=mock_config_recv
+		)
 		mocker.patch.object(
 			DualChannel, "__init__", return_value=None
 		)
@@ -294,7 +291,7 @@ class TestFeatureSelection:
 			DualChannel, "send", return_value=0
 		)
 		mocker.patch.object(
-			service.fed_config.FedConfig, "get_label_trainer", return_value="node-1"
+			service.fed_config.FedConfig, "get_label_trainer", return_value=["node-1"]
 		)
 		mocker.patch.object(
 			service.fed_config.FedConfig, "get_trainer", return_value=["node-2"]
@@ -317,7 +314,7 @@ class TestFeatureSelection:
 			vfst.channels["feature_id_com"], "send", return_value=0
 		)
 		vfst.fit()
-		with open("/opt/checkpoints/unit_test/feature_selection_host.pkl", 'rb') as f:
+		with open("/opt/checkpoints/unit_test/vertical_feature_selection_[STAGE_ID].pkl", 'rb') as f:
 			model = pickle.load(f)
 			assert len(model) == 2
 			assert 'x3' in model

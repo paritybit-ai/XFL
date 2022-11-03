@@ -30,10 +30,20 @@ message GetAlgorithmListResponse {
     map<string, DefaultConfig> defaultConfigMap = 3;
 }
 
+message GetStageRequest {
+}
+
+message GetStageResponse {
+    int32 code = 1;
+    string stageId = 2;
+    string stageName = 3;
+}
+
 service Scheduler {
     rpc getConfig(GetConfigRequest) returns (GetConfigResponse) {}
     rpc post(stream commu.PostRequest) returns (commu.PostResponse) {}
     rpc control(control.ControlRequest) returns (control.ControlResponse) {}
     rpc status(status.StatusRequest) returns (status.StatusResponse) {}
     rpc getAlgorithmList(GetAlgorithmListRequest) returns (GetAlgorithmListResponse) {}
+    rpc getStage(GetStageRequest) returns (GetStageResponse) {}
 }

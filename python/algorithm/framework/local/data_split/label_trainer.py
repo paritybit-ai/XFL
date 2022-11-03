@@ -26,6 +26,9 @@ import glob
 import time
 from tqdm import tqdm
 
+# import multiprocessing
+# multiprocessing.set_start_method('fork')
+
 
 def parallel_apply_generator(func, iterable, workers, max_queue_size, dummy=False, random_seeds=True):
     if dummy:
@@ -95,7 +98,7 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
         Args:
             train_conf:
             shuffle: bool, whether need to shuffle;
-            worker_num: int, parallel worker num;
+            max_num_cores: int, parallel worker num;
             batch_size: int, the size of small file;
         """
         super().__init__(train_conf)
@@ -105,7 +108,7 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
         if self.input_data:
             self.input_data_path = self.input_data[0].get("path", None)
             self.input_data_name = self.input_data[0].get("name", None)
-            self.header = self.input_data[0].get("header", False)
+            self.header = self.input_data[0].get("has_header", False)
         if self.input_data:
             if self.input_data_name is None:
                 # more than one file
@@ -116,25 +119,30 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
         else:
             raise NotImplementedError("Dataset was not configured.")
         # output config
+        self.output_path = self.output.get("path")
         self.save_trainset = self.output.get("trainset", {})
-        save_trainset_path = self.save_trainset.get("path", self.input_data_path)
         save_trainset_name = self.save_trainset.get("name", "{}_train.csv".format(
             self.files[0].split("/")[-1].replace(".csv", '')))
-        if not os.path.exists(Path(save_trainset_path)):
-            Path(save_trainset_path).mkdir(parents=True, exist_ok=True)
-        self.save_trainset_name = Path(save_trainset_path, save_trainset_name)
+        if not os.path.exists(Path(self.output_path)):
+            Path(self.output_path).mkdir(parents=True, exist_ok=True)
+        self.save_trainset_name = Path(self.output_path, save_trainset_name)
+
+        if not os.path.exists(os.path.dirname(self.save_trainset_name)):
+            os.makedirs(os.path.dirname(self.save_trainset_name))
         self.save_valset = self.output.get("valset", {})
-        save_valset_path = self.save_valset.get("path", self.input_data_path)
-        save_valset_name = self.save_valset.get("name", "{}.csv".format(self.files[0].split("/")[-1].
-                                                                        replace(".csv", '')))
-        self.save_valset_name = Path(save_valset_path, save_valset_name)
+        save_valset_name = self.save_valset.get("name", "{}_val.csv".format(self.files[0].split("/")[-1].
+                                                                            replace(".csv", '')))
+        self.save_valset_name = Path(self.output_path, save_valset_name)
+
+        if not os.path.exists(os.path.dirname(self.save_valset_name)):
+            os.makedirs(os.path.dirname(self.save_valset_name))
         # train info
-        self.shuffle = self.train_params.get("shuffle_params", False)
+        self.shuffle = self.train_params.get("shuffle", False)
         if self.shuffle:
             logger.info("Shuffle is needed")
         else:
             logger.info("Shuffle is not needed")
-        self.worker_num = self.train_params.get("worker_num", 4)
+        self.worker_num = self.train_params.get("max_num_cores", 4)
         if self.shuffle:
             self.batch_size = self.train_params.get("batch_size", 100000)
         self.train_weight = self.train_params.get("train_weight", 8)

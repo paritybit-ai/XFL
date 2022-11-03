@@ -24,11 +24,10 @@ where :math:`y_i` , :math:`n_i` denote the number of positive and negative sampl
 Parameters List
 ---------------
 
-**identity**: ``str`` Federated identity of the party, should be one of `label_trainer`, `trainer` or `assist trainer`.
+**identity**: ``str`` Federated identity of the party, should be one of `label_trainer` or `trainer`.
 
 **model_info**:
     - **name**: ``str`` Model name, should be `vertical_binning_woe_iv`.
-    - **config**: ``map`` Model configuration, no need here.
 
 **input**:
     - **trainset**: 
@@ -37,29 +36,24 @@ Parameters List
         - **name**: ``str`` If type is `csv`, file name of train dataset.
         - **has_id**: ``bool`` If type is `csv`, whether dataset has id column.
         - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
-        - **missing_values**:
-            - **has_missing**: ``bool`` Whether having missing values, 
-            - **format**: ``float`` Value to replace, "null" represent "nan".
-            - **strategy**: ``str`` How to replace missing value, support "mean", "median", "most_frequent", "constant".
-            - **fulfill_value**: ``float`` When strategy == "constant", fulfill_value is used to replace missing_values.
         - **nan_list**:  ``list`` List of special values, all and only the values in this list will be assigned to a single bin. 
 
 **output**:
-    - **trainset**:
-        - **path**: ``str`` Folder path of output dataset.
-        - **name**: ``str`` File name of output dataset.
+    - **path**: ``str`` Folder path of output.
+    - **result**:
+        - **name**: ``str`` File name of result.
+    - **split_points**:
+        - **name**: ``str`` File name of split points.
 
 **train_info**:
-    - **device**: ``str`` Device on which the algorithm runs, support `cpu`.
-    - **params**:
-        - **encryption_params**:
-            - **method**: ``str`` Encryption method, recommend "paillier".
-            - **key_bit_size**: ``int`` Bit length of paillier key, recommended to greater than or equal to 2048.
-            - **precision**: ``int`` Precison.
-            - **djn_on**: ``bool`` Whether to use djn method to generate key pair.
-            - **parallelize_on**: ``bool`` Whether to use multicore for computing.
-        - **binning_params**:
-            - **method**: ``str`` Binning method, support "equalWidth" or "equalFrequency".
+    - **train_params**:
+        - **encryption**: support two keys: "paillier" or "plain".
+            - **paillier**:
+                - **key_bit_size**: ``int`` Bit length of paillier key, recommended to greater than or equal to 2048.
+                - **precision**: ``int`` Precison.
+                - **djn_on**: ``bool`` Whether to use djn method to generate key pair.
+                - **parallelize_on**: ``bool`` Whether to use multicore for computing.
+        - **binning**:
+            - **method**: ``str`` Binning method, support "equal_width" or "equal_frequency".
             - **bins**: ``int`` Number of bins.
-        - **woe_iv_params**: ``repeated<map>`` Binning settings for specified columns, of which the format is: {column name: {method: `str`, bins: `int`},..., column name: {method: `str`, bins: `int`}}.
-        - **pool_num**: ``int`` Number of process pools for parallel computing.
+        - **max_num_cores**: ``int`` Number of cores for parallel computing.

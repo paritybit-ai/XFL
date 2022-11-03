@@ -24,6 +24,8 @@ import pytest
 
 from algorithm.framework.local.feature_preprocess.label_trainer import \
     LocalFeaturePreprocessLabelTrainer as LocalPreprocess
+from algorithm.framework.local.feature_preprocess.trainer import \
+    LocalFeaturePreprocessTrainer as LocalPreprocessTrainer
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -53,6 +55,8 @@ def env():
         shutil.rmtree("/opt/dataset/unit_test")
     if os.path.exists("/opt/checkpoints/unit_test"):
         shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/opt/checkpoints/unit_test_1"):
+        shutil.rmtree("/opt/checkpoints/unit_test_1")
 
 
 @pytest.fixture()
@@ -63,10 +67,8 @@ def get_conf():
         conf["input"]["trainset"][0]["name"] = "train.csv"
         conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
         conf["input"]["valset"][0]["name"] = "test.csv"
-        conf["output"]["model"]["path"] = "/opt/checkpoints/unit_test"
-        conf["output"]["trainset"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/opt/checkpoints/unit_test_1"
         conf["output"]["trainset"]["name"] = "preprocessed_train.csv"
-        conf["output"]["valset"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["valset"]["name"] = "preprocessed_test.csv"
     yield conf
 
@@ -102,28 +104,28 @@ class TestLocalNormalization:
             assert exec_msg == "Trainset was not configured."
 
     @pytest.mark.parametrize('missing_params, outlier_params', [
-        ({}, {"outlier_feat_params": {"x03": {"outlier_values": 999}, "x01": {}},
+        ({}, {"outlier_features": {"x03": {"outlier_values": 999}, "x01": {}},
               "outlier_values": ["", " ", "nan", "none", "null", "na", "None"]}),
-        ({}, {"outlier_feat_params": {"x03": {"outlier_values": 999}, "x01": {}}}),
-        ({"fill_value": None, "missing_feat_params":
+        ({}, {"outlier_features": {"x03": {"outlier_values": 999}, "x01": {}}}),
+        ({"fill_value": None, "missing_features":
             {"x01": {"fill_value": None, "missing_values": None, "strategy": "median"}, "x00": {}},
           "missing_values": None, "strategy": "mean"}, {}),
-        ({"fill_value": None, "missing_feat_params": {}, "missing_values": None, "strategy": "mean"},
-         {"outlier_feat_params": {}, "outlier_values": 999}),
-        ({"fill_value": None, "missing_feat_params": {"x01": {"fill_value": 1, "missing_values": 999,
-                                                              "strategy": "constant"}, "x00": {}},
+        ({"fill_value": None, "missing_features": {}, "missing_values": None, "strategy": "mean"},
+         {"outlier_features": {}, "outlier_values": 999}),
+        ({"fill_value": None, "missing_features": {"x01": {"fill_value": 1, "missing_values": 999,
+                                                       "strategy": "constant"}, "x00": {}},
           "missing_values": None, "strategy": "mean"},
-         {"outlier_feat_params": {"x03": {"outlier_values": 999}, "x01": {}}, "outlier_values": 999}),
+         {"outlier_features": {"x03": {"outlier_values": 999}, "x01": {}}, "outlier_values": 999}),
         ({}, {}),
         ({"fill_value": 1, "missing_values": 'nan', "strategy": "constant"},
-         {"outlier_feat_params": {"x03": {"outlier_values": 999}, "x01": {}}, "outlier_values": [999, -999]}),
+         {"outlier_features": {"x03": {"outlier_values": 999}, "x01": {}}, "outlier_values": [999, -999]}),
         ({"fill_value": 1, "missing_values": 'nan', "strategy": "constant"},
-         {"outlier_feat_params": {"x03": {"outlier_values": 999}, "x01": {}}, "outlier_values": 999})
+         {"outlier_features": {"x03": {"outlier_values": 999}, "x01": {}}, "outlier_values": 999})
     ])
     def test_fit(self, get_conf, missing_params, outlier_params):
         conf = copy.deepcopy(get_conf)
-        conf["train_info"]["params"]["missing_params"] = missing_params
-        conf["train_info"]["params"]["outlier_params"] = outlier_params
+        conf["train_info"]["train_params"]["missing"] = missing_params
+        conf["train_info"]["train_params"]["outlier"] = outlier_params
         lp = LocalPreprocess(conf)
         if missing_params == {}:
             if outlier_params == {}:
@@ -158,7 +160,10 @@ class TestLocalNormalization:
         assert len(set(lp.train.columns).difference({'y', 'x00', 'x01', 'x03', 'x02_0', 'x02_1'})) == 0
         # test no onehot
         conf1 = copy.deepcopy(get_conf)
-        conf1["train_info"]["params"]["onehot_params"] = {}
+        conf1["train_info"]["train_params"]["onehot"] = {}
         lp = LocalPreprocess(conf1)
         lp.fit()
         assert len(set(lp.train.columns).difference({'y', 'x00', 'x01', 'x03', 'x02'})) == 0
+
+    def test_trainer(self, get_conf):
+        LocalPreprocessTrainer(get_conf)

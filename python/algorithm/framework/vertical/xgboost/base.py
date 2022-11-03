@@ -47,7 +47,7 @@ class VerticalXgboostBase(VerticalModelBase):
         Returns: None
 
         """
-        self.bs = self.train_params.get("validation_batch_size")
+        self.bs = self.train_params.get("batch_size_val")
 
         if self.input_trainset:
             _ = self.__load_data(self.input_trainset)
@@ -137,10 +137,15 @@ class VerticalXgboostBase(VerticalModelBase):
         if len(config) > 1:
             logger.warning("More than one dataset is not supported.")
             
+        if not config:
+            return None, None, None
+            
         config = config[0]
         if config["type"] == "csv":
-            data_reader = CsvReader(path=os.path.join(config["path"], config["name"]),
-                                    has_id=config["has_id"], has_label=config["has_label"])
+            path = os.path.join(config["path"], config["name"])
+            if not path:
+                return None, None, None
+            data_reader = CsvReader(path, has_id=config["has_id"], has_label=config["has_label"])
             features = data_reader.features(type="pandas.dataframe")
             features.replace({np.nan: 0, self.xgb_config.missing_value: 0}, inplace=True)
             ids = data_reader.ids
@@ -169,17 +174,17 @@ class VerticalXgboostBase(VerticalModelBase):
         Returns: None
 
         """
-        default_config = self.train_info.get("params")
-        cat_params = default_config.get("cat_feature", {})
-        encryption_methods = list(default_config.get("encryption_params", {}).keys())
+        default_config = self.train_info.get("train_params")
+        cat_params = default_config.get("category", {}).get("cat_features", {})
+        encryption_methods = list(default_config.get("encryption", {}).keys())
         if len(encryption_methods) > 0:
             encryption_method = encryption_methods[0]
         else:
             encryption_method = "plain"
-        encryption_param = default_config.get("encryption_params", {"plain": {}})[encryption_method]
+        encryption_params = default_config.get("encryption", {"plain": {}})[encryption_method]
+        downsampling_params = default_config.get("downsampling", {})
 
-        self.xgb_config = XGBTreeParam(task_type=default_config.get("task_type"),
-                                       loss_param=default_config.get("lossfunc_config"),  # ("BCEWithLogitsLoss"),
+        self.xgb_config = XGBTreeParam(loss_param=default_config.get("lossfunc"),  # ("BCEWithLogitsLoss"),
                                        num_trees=default_config.get("num_trees"),
                                        learning_rate=default_config.get("learning_rate"),
                                        gamma=default_config.get("gamma"),
@@ -190,26 +195,25 @@ class VerticalXgboostBase(VerticalModelBase):
                                        min_sample_split=default_config.get("min_sample_split"),
                                        min_leaf_node=default_config.get("min_leaf_node"),
                                        feature_importance_type=default_config.get("feature_importance_type"),
-                                       run_goss=default_config.get("run_goss", False),
-                                       top_rate=default_config.get("top_rate"),
-                                       other_rate=default_config.get("other_rate"),
-                                       validation_freqs=1,
-                                       metrics=default_config.get("metric_config"),
-                                       early_stopping_param=default_config.get("early_stopping_params",
+                                       run_goss=downsampling_params.get("row", {}).get("run_goss", False),
+                                       top_rate=downsampling_params.get("row", {}).get("top_rate"),
+                                       other_rate=downsampling_params.get("row", {}).get("other_rate"),
+                                       metrics=default_config.get("metric"),
+                                       early_stopping_param=default_config.get("early_stopping",
                                                                                {"patience": -1,
                                                                                 "key": "ks",
                                                                                 "delta": 0.001}),
-                                       encryption_param=get_encryption_param(encryption_method, encryption_param),
-                                       subsample_feature_rate=default_config.get("subsample_feature_rate"),
-                                       missing_value=float('inf'),  # TODO: check
+                                       encryption_param=get_encryption_param(encryption_method, encryption_params),
+                                       subsample_feature_rate=downsampling_params.get("column", {}).get("rate", 1.0),
+                                       missing_value=float('inf'),
                                        max_num_cores=default_config.get("max_num_cores", 999),
-                                       col_batch=default_config.get("col_batch", 64),
-                                       row_batch=default_config.get("row_batch", 40000),
+                                       col_batch=default_config.get("advanced", {}).get("col_batch", 64),
+                                       row_batch=default_config.get("advanced", {}).get("row_batch", 40000),
                                        cat_col_index=cat_params.get("col_index", ""),
                                        cat_col_names=cat_params.get("col_names", []),
                                        cat_max_num_value=cat_params.get("max_num_value", 0),
                                        cat_col_index_type=cat_params.get("col_index_type", "inclusive"),
                                        cat_col_names_type=cat_params.get("col_names_type", "inclusive"),
                                        cat_max_num_value_type=cat_params.get("max_num_value_type", "union"),
-                                       cat_smooth=default_config.get("cat_smooth", 0))
+                                       cat_smooth=default_config.get("category", {}).get("cat_smooth", 1.0))
 

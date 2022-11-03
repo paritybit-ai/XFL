@@ -16,8 +16,10 @@
 import json
 import os
 from pathlib import Path
+from typing import Callable, Any
 
 import grpc
+from grpc_interceptor import ClientCallDetails, ClientInterceptor
 
 from common.utils.config import get_str_config, parse_config
 from common.utils.fed_conf_parser import FedConfParser
@@ -29,12 +31,11 @@ class FedNode(object):
     node_id = ""
     scheduler_host = ""
     scheduler_port = ""
+    redis_host = ""
+    redis_port = ""
     trainers = {}
     channels = {}
     listening_port = None
-
-    def __init__(self):
-        pass
 
     @classmethod
     def init_fednode(cls, identity: str = "scheduler", debug_node_id: str = "scheduler", conf_dir: str = ''):
@@ -110,12 +111,34 @@ class FedNode(object):
                 port = cls.trainers[node_id]["port"]
                 use_tls = cls.trainers[node_id]["use_tls"]
 
+            addr_list = port.split("/")
+            port = addr_list[0]
+            sub_addr = '/'.join(addr_list[1:])
+
             if use_tls:
                 root_certificates = cls.load_root_certificates()
                 credentials = grpc.ssl_channel_credentials(root_certificates=root_certificates)
                 channel = grpc.secure_channel(f"{host}:{port}", credentials, options=secure_options)
             else:
                 channel = grpc.insecure_channel(f"{host}:{port}", options=insecure_options)
+            
+            class ClientPathInterceptor(ClientInterceptor):
+                def intercept(
+                        self,
+                        method: Callable,
+                        request_or_iterator: Any,
+                        call_details: grpc.ClientCallDetails):
+                    path_list = call_details.method.split("/")
+                    path_list.insert(1, sub_addr)
+                    new_method = '/' + os.path.join(*path_list)
+
+                    new_call_details = ClientCallDetails(
+                        new_method,
+                        call_details.timeout, call_details.metadata,
+                        call_details.credentials, call_details.wait_for_ready,
+                        call_details.compression)
+                    return method(request_or_iterator, new_call_details)
+            channel = grpc.intercept_channel(channel, ClientPathInterceptor())
             cls.channels[node_id] = channel
 
         return cls.channels[node_id]
@@ -151,3 +174,4 @@ class FedNode(object):
         with open(cls.config["cert"]["ca.crt"], "rb") as f:
             root_certificates = f.read()
         return private_key, certificate_chain, root_certificates
+

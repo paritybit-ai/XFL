@@ -2,8 +2,7 @@
     {
         "identity": "label_trainer",
         "model_info": {
-            "name": "vertical_binning_woe_iv",
-            "config": {}
+            "name": "vertical_binning_woe_iv"
         },
         "input": {
             "trainset": [
@@ -13,12 +12,6 @@
                     "name": "breast_cancer_wisconsin_vertical_labeled_train.csv",
                     "has_id": true,
                     "has_label": true,
-                    "missing_values": {
-                        "has_missing": false,
-                        "format": null,
-                        "strategy": "mean",
-                        "fulfill_value": 0
-                    },
                     "nan_list": [
                         999,
                         -999
@@ -29,41 +22,44 @@
             ]
         },
         "output": {
-            "trainset": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "vertical_binning_woe_iv_train"
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "model": {
+                "name": "vertical_binning_woe_iv_[STAGE_ID].json"
             },
-            "valset": {
+            "result": {
+                "name": "woe_iv_result_[STAGE_ID].json"
+            },
+            "split_points": {
+                "name": "binning_split_points_[STAGE_ID].json"
+            },
+            "trainset": {
+                "name": "fintech_woe_map_train_[STAGE_ID].csv"
             }
         },
         "train_info": {
-            "device": "cpu",
-            "params": {
-                "encryption_params": {
-                    "method": "paillier",
-                    "key_bit_size": 2048,
-                    "precision": 7,
-                    "djn_on": true,
-                    "parallelize_on": true
+            "train_params": {
+                "interaction_params": {
+                    "save_model": true
                 },
-                "binning_params": {
-                    "method": "equalWidth",
+                "encryption": {
+                    "paillier": {
+                        "key_bit_size": 2048,
+                        "precision": 7,
+                        "djn_on": true,
+                        "parallelize_on": true
+                    }
+                },
+                "binning": {
+                    "method": "equal_width",
                     "bins": 5
-                },
-                "woe_iv_params": {
-                    "cons_price_idx": {},
-                    "cons_conf_idx": {},
-                    "euribor3m": {}
-                },
-                "pool_num": 4
+                }
             }
         }
     },
     {
         "identity": "label_trainer",
         "model_info": {
-            "name": "vertical_pearson",
-            "config": {}
+            "name": "vertical_pearson"
         },
         "input": {
             "trainset": [
@@ -79,19 +75,16 @@
             }
         },
         "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "model": {
-                "type": "file",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "pearson_labeled.pkl"
+                "name": "vertical_pearson_[STAGE_ID].pkl"
             }
         },
         "train_info": {
-            "device": "cpu",
-            "interaction_params": {
-            },
-            "params": {
-                "column_indexes": -1,
-                "encryption_params": {
+            "train_params": {
+                "col_index": -1,
+                "col_names": "",
+                "encryption": {
                     "paillier": {
                         "key_bit_size": 2048,
                         "precision": 6,
@@ -121,29 +114,25 @@
             ],
             "iv_result": {
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "vertical_binning_woe_iv_train.json"
+                "name": "woe_iv_result_0.json"
             },
             "corr_result": {
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "pearson_labeled.pkl"
+                "name": "vertical_pearson_1.pkl"
             }
         },
         "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "trainset": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "selected_breast_cancer_wisconsin_vertical_labeled_train.csv"
+                "name": "temp/selected_train_[STAGE_ID].csv"
             },
             "model": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "feature_selection_labeled.pkl"
+                "name": "vertical_feature_selection_[STAGE_ID].pkl"
             }
         },
         "train_info": {
-            "device": "cpu",
-            "interaction_params": {
-            },
-            "params": {
-                "filter_params": {
+            "train_params": {
+                "filter": {
                     "common": {
                         "metrics": "iv",
                         "filter_method": "threshold",
@@ -151,7 +140,7 @@
                     },
                     "correlation": {
                         "sort_metric": "iv",
-                        "correlation_threshold": 0.9
+                        "correlation_threshold": 0.7
                     }
                 }
             }

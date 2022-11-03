@@ -54,6 +54,12 @@ def test_algo(mocker):
     client.algo()
     client.scheduler_pb2_grpc.SchedulerStub.getAlgorithmList.assert_called_once_with(scheduler_pb2.GetAlgorithmListRequest())
 
+def test_stage(mocker):
+    mocker.patch.object(FedNode, "create_channel", return_value='55001')
+    mocker.patch("client.scheduler_pb2_grpc.SchedulerStub.__init__", side_effect=lambda x:None)
+    mocker.patch("client.scheduler_pb2_grpc.SchedulerStub.getStage", create=True, return_value=scheduler_pb2.GetStageResponse(code=0,stageId="0-1",stageName="0"))
+    client.stage()
+    client.scheduler_pb2_grpc.SchedulerStub.getStage.assert_called_once_with(scheduler_pb2.GetStageRequest())
 
 @pytest.mark.parametrize('cmd',
                              [

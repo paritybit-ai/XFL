@@ -44,7 +44,7 @@ class AggregationPlainRoot(AggregationRootBase):
     def __init__(self, sec_conf: dict, root_id: str = '', leaf_ids: list[str] = []) -> None:
         super().__init__(sec_conf, root_id, leaf_ids)
     
-    def _calc_aggregated_params(self, received_value: List) -> OrderedDict:
+    def _calc_aggregated_params(self, received_value: List, average=True) -> OrderedDict:
         total_weight = sum([item[1] for item in received_value])
         
         if self.initial_parameters is not None:
@@ -56,14 +56,17 @@ class AggregationPlainRoot(AggregationRootBase):
             for item in received_value[1:]:
                 received_value[0][0][k] += item[0][k]
             if received_value[0][0][k].dtype in [np.float32, np.float64]:
-                received_value[0][0][k] /= total_weight
+                if average:
+                    received_value[0][0][k] /= total_weight
             elif received_value[0][0][k].dtype not in [torch.float32, torch.float64]:
                 ori_dtype = received_value[0][0][k].dtype
                 received_value[0][0][k] = received_value[0][0][k].to(dtype=torch.float32)
-                received_value[0][0][k] /= total_weight
+                if average:
+                    received_value[0][0][k] /= total_weight
                 received_value[0][0][k] = received_value[0][0][k].to(dtype=ori_dtype)
             else:
-                received_value[0][0][k] /= total_weight
+                if average:
+                    received_value[0][0][k] /= total_weight
 
         return received_value[0][0]
         

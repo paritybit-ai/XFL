@@ -1,17 +1,14 @@
 {
     "identity": "trainer",
     "model_info": {
-        "name": "vertical_logistic_regression",
-        "config": {
-            "input_dim": null
-        }
+        "name": "vertical_logistic_regression"
     },
     "input": {
         "trainset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/breast_cancer_wisconsin/2party",
-                "name": "breast_cancer_wisconsin_host_train.csv",
+                "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                "name": "breast_cancer_wisconsin_vertical_1_train.csv",
                 "has_label": false,
                 "has_id": true
             }
@@ -19,53 +16,23 @@
         "valset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/breast_cancer_wisconsin/2party",
-                "name": "breast_cancer_wisconsin_host_test.csv",
+                "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                "name": "breast_cancer_wisconsin_vertical_1_test.csv",
                 "has_label": false,
                 "has_id": true
             }
         ],
-        "pretrain_model": {
+        "pretrained_model": {
+            "path": "",
+            "name": ""
         }
     },
     "output": {
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
         "model": {
-            "type": "file",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "vertical_logistic_regression_host.pt"
+            "name": "vertical_logitstic_regression_[STAGE_ID].pt"
         }
     },
     "train_info": {
-        "device": "cpu",
-        "interaction_params": {
-            "save_frequency": -1,
-            "save_probabilities": true,
-            "save_probabilities_bins_number": 10
-        },
-        "params": {
-            "global_epoch": 3,
-            "batch_size": 2048,
-            "aggregation_config": {
-                "encryption": {
-                    "method": "ckks",
-                    "poly_modulus_degree": 8192,
-                    "coeff_mod_bit_sizes": [
-                        60,
-                        40,
-                        40,
-                        60
-                    ],
-                    "global_scale_bit_size": 40
-                }
-            },
-            "optimizer_config": {
-                "lr": 0.02,
-                "p": 2,
-                "alpha": 1e-4
-            },
-            "extra_config": {
-                "shuffle_seed": 50
-            }
-        }
     }
 }

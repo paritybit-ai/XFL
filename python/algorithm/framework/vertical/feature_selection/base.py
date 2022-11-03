@@ -85,8 +85,8 @@ class VerticalFeatureSelectionBase(TrainConfigParser):
 		return ids, label, features
 
 	def _init_config(self):
-		params = self.train_info.get("params")
-		self.filter_params = params.get("filter_params", {})
+		params = self.train_info.get("train_params")
+		self.filter = params.get("filter", {})
 
 	def _parse_from_iv(self, params):
 		path = params["path"].replace("[JOB_ID]", str(FedJob.job_id)).replace("[NODE_ID]", str(FedNode.node_id))

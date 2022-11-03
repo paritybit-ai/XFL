@@ -65,7 +65,7 @@ class VerticalDecisionTreeLabelTrainer(object):
         self.max_num_cores = get_core_num(tree_param.max_num_cores)
         self.tree_index = tree_index
 
-        loss_inst = get_xgb_loss_inst(self.tree_param.loss_param['method'])
+        loss_inst = get_xgb_loss_inst(list(self.tree_param.loss_param.keys())[0])
         self.grad = loss_inst.cal_grad(
             self.y, self.y_pred, after_prediction=True)
 

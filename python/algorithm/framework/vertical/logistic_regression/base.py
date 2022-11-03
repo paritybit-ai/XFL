@@ -38,6 +38,12 @@ class VerticalLogisticRegression(nn.Module):
 
 class VerticalLogisticRegressionBase(VerticalModelBase):
     def __init__(self, train_conf: dict, label: bool = False, *args, **kwargs):
+        """_summary_
+
+        Args:
+            train_conf (dict): _description_
+            label (bool, optional): _description_. Defaults to False.
+        """
         super().__init__(train_conf)
         self._parse_config()
         self.train_conf = train_conf
@@ -55,23 +61,20 @@ class VerticalLogisticRegressionBase(VerticalModelBase):
         self.model_name = self.model_info.get("name")
         self.save_model_name = self.output.get("model").get("name")
 
-        if self.output.get("evaluation"):
-            self.evaluation_path = Path(self.output["evaluation"].get("path"))
-        else:
-            self.evaluation_path = self.save_dir
+        self.evaluation_path = self.save_dir
 
         self.global_epoch = self.train_params.get("global_epoch")
         self.batch_size = self.train_params.get("batch_size")
-        self.aggregation_config = self.train_params.get("aggregation_config")
-        self.optimizer_config = self.train_params.get("optimizer_config")
 
-        self.pretrain_model_path = self.input.get("pretrain_model").get("path")
-        self.extra_config = self.train_params.get("extra_config")
+        self.encryption_config = self.train_params.get("encryption")
+        self.optimizer_config = self.train_params.get("optimizer")
+
+        self.pretrain_model_path = self.input.get("pretrained_model").get("path")
+        self.random_seed = self.train_params.get("random_seed")
         self.early_stopping_config = self.train_params.get("early_stopping")
 
         self.save_frequency = self.interaction_params.get("save_frequency")
         self.save_probabilities = self.interaction_params.get("save_probabilities")
-        self.save_probabilities_bins_number = self.interaction_params.get("save_probabilities_bins_number")
 
     @staticmethod
     def set_seed(seed):
@@ -87,9 +90,8 @@ class VerticalLogisticRegressionBase(VerticalModelBase):
         self.model = VerticalLogisticRegression(input_dim=self.data_dim, bias=bias)
         # Load pretrained model if needed.
         if self.pretrain_model_path is not None and self.pretrain_model_path != "":
-            checkpoint = ModelPreserver.load(self.pretrain_model_path)
-            self.model = torch.load(checkpoint["state_dict"])
-            # self.model.load_state_dict(checkpoint["state_dict"])
+            checkpoint = ModelPreserver.load(os.path.join(self.pretrain_model_path, self.input.get("pretrained_model").get("name")))
+            self.model.load_state_dict(checkpoint["state_dict"])
         logger.info("Init model completed.")
 
     def _init_dataloader(self) -> None:
@@ -185,3 +187,4 @@ class VerticalLogisticRegressionBase(VerticalModelBase):
             logger.info("Data shape: {}.".format(list(torch.tensor(node_train_data).shape)))
 
         logger.info("Init dataloader completed.")
+

@@ -1,46 +1,32 @@
 {
     "identity": "label_trainer",
-    "model_info":
-    {
-        "name": "local_data_split",
-        "config":
-        {}
+    "model_info": {
+        "name": "local_data_split"
     },
-    "input":
-    {
-        "dataset":
-        [
+    "input": {
+        "dataset": [
             {
                 "type": "csv",
                 "path": "/opt/dataset/2party",
                 "name": "epsilon_2party_guest_with_id.csv",
                 "has_label": true,
-                "header": true
+                "has_header": true
             }
         ]
     },
-    "output":
-    {
-        "trainset":
-        {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "epsilon_2party_guest_with_id_train.csv"
+    "output": {
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "trainset": {
+            "name": "temp/splitted_train_[STAGE_ID].csv"
         },
-        "valset":
-        {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "epsilon_2party_guest_with_id_val.csv"
+        "valset": {
+            "name": "temp/splitted_val_[STAGE_ID].csv"
         }
     },
-    "train_info":
-    {
-        "device": "cpu",
-        "params":
-        {
-            "shuffle_params": true,
-            "worker_num": 4,
+    "train_info": {
+        "train_params": {
+            "shuffle": true,
+            "max_num_cores": 1,
             "batch_size": 100000,
             "train_weight": 8,
             "val_weight": 2

@@ -78,13 +78,19 @@ def start_server():
 def train(status):
     try:
         FedConfig.get_config()
+
+        if len(FedConfig.stage_config.keys()) == 1:
+            logger.info("Train Model passed")
+            status.value = status_pb2.SUCCESSFUL
+            return
         identity = FedConfig.stage_config["identity"]
         inference = FedConfig.stage_config.get("inference", False)
-        logger.info(f"{identity} Start Training...")
         model = FedJob.get_model(identity, FedConfig.stage_config)
         if inference:
+            logger.info(f"{identity} Start Predicting...")
             model.predict()
         else:
+            logger.info(f"{identity} Start Training...")
             model.fit()
         status.value = status_pb2.SUCCESSFUL
         logger.info("Train Model Successful.")

@@ -11,9 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -31,9 +30,8 @@ class VerticalSamplerLabelTrainer(VerticalSamplerBase):
 
     strategy: str, "downsample" or "upsample", default: "downsample";
 
-    fraction: int, float or str (sampling ratios of each category),
-    e.g. "[(0,0.1), (1,0.2)]",
-    default: 0.1;
+    fraction: int, float or list (sampling ratios of each category),
+    e.g. [[0,0.1], [1,0.2]], default: {"percentage": 0.1};
 
     random_state: int, RandomState instance or None, default=None
     """
@@ -50,17 +48,12 @@ class VerticalSamplerLabelTrainer(VerticalSamplerBase):
         self.random_state = self.train_params.get("random_state", None)
         self.method = self.train_params.get("method", "random")
         self.strategy = self.train_params.get("strategy", "downsample")
-        self.fraction = self.train_params.get("fraction", 0.1)
+        self.fraction = self.train_params.get("fraction", {"number": 0.1})
         # whether for new customers filter
-        self.infer_params = self.train_info.get("infer_params", {})
+        self.infer_params = self.train_params.get("marketing_specified", {})
         if len(self.infer_params) > 0:
             self.threshold_method = self.infer_params["threshold_method"]
             self.threshold = self.infer_params["threshold"]
-
-        if isinstance(self.fraction, str):
-            self.fraction = eval(self.fraction)
-            if not isinstance(self.fraction, list):
-                raise NotImplementedError("Fraction type {} is not supported.".format(self.fraction))
 
     def fraction_transform(self) -> Any:
 
@@ -75,14 +68,17 @@ class VerticalSamplerLabelTrainer(VerticalSamplerBase):
                     raise ValueError("Fraction should be a numeric number larger than 0")
                 return frac_num
 
-        if isinstance(self.fraction, float) or (isinstance(self.fraction, int) and self.strategy == "upsample"):
-            tmp = fraction_num(self.fraction, len(self.data))
+        fraction_key = list(self.fraction.keys())[0]
+        if fraction_key == "percentage":
+            tmp = fraction_num(self.fraction[fraction_key], len(self.data))
             return tmp
-        elif isinstance(self.fraction, list):
-            tmp = [(tup[0], fraction_num(tup[1], self.label_count[tup[0]])) for tup in self.fraction]
+        elif fraction_key == "labeled_percentage":
+            tmp = [(tup[0], fraction_num(tup[1], self.label_count[tup[0]])) for tup in self.fraction[fraction_key]]
             return tmp
-        elif isinstance(self.fraction, int) and self.strategy == "downsample":
-            return self.fraction
+        elif fraction_key == "number":
+            return self.fraction[fraction_key]
+        else:
+            raise NotImplementedError("Fraction key {} is not supported.".format(fraction_key))
 
     def random_method(self) -> Any:
         sample_num = self.fraction_transform()
@@ -166,12 +162,14 @@ class VerticalSamplerLabelTrainer(VerticalSamplerBase):
 
         # save
         if new_data is not None:
-            new_data.to_csv(self.save_data_path, index=self.output["trainset"]["has_id"])
-            logger.info("Data saved.")
+            new_data.to_csv(self.save_data_path, index=self.input["dataset"][0]["has_id"])
+            logger.info("Data saved to {}.".format(self.save_data_path))
         if len(self.save_id) > 0:
-            save_id_path = self.output["model"]["path"] / Path(self.output["model"]["name"])
+            save_id_path = self.output["path"] / Path(self.output["sample_id"]["name"])
+            if not os.path.exists(os.path.dirname(save_id_path)):
+                os.makedirs(os.path.dirname(save_id_path))
             with open(save_id_path, "w") as wf:
                 json.dump(list(self.sample_ids), wf)
-            logger.info("Sample ids saved.")
+            logger.info("Sample ids saved to {}.".format(save_id_path))
         # send ids to trainer
         self.broadcast_channel.broadcast(self.sample_ids)

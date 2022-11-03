@@ -38,7 +38,6 @@ class VerticalPearsonBase(TrainConfigParser):
 		self._init_data()
 		self._local_summary = {}
 		self._summary = {}
-		self.batch_size = 2048
 		self.num_embed = 10
 
 	def _init_data(self):
@@ -60,8 +59,6 @@ class VerticalPearsonBase(TrainConfigParser):
 		if type_ == "csv":
 			if self.computing_engine == "local":
 				df = pd.read_csv(file_path, index_col=self.index_col)
-			# elif self.computing_engine == "spark":
-			# 	df = ps.read_csv(file_path, index_col=self.index_col)
 			else:
 				raise NotImplementedError("Computing engine {} is not supported.".format(self.computing_engine))
 		else:
@@ -78,40 +75,39 @@ class VerticalPearsonBase(TrainConfigParser):
 		self.train_ids = df.index
 
 	def _init_config(self):
-		params = self.train_info.get("params")
-		self.column_indexes = params.get("column_indexes", -1)
-		self.column_names = params.get("column_names", '')
-		encryption_params = params.get("encryption_params", {"plain": {}})
-		self.batch_size = params.get("batch_size", 2048)
+		params = self.train_info.get("train_params")
+		self.col_index = params.get("col_index", -1)
+		self.col_names = params.get("col_names", '')
+		encryption_params = params.get("encryption", {"plain": {}})
 		self.encryption = list(encryption_params.keys())[0]
 		encryption_param = encryption_params[self.encryption]
 		self.encryption_param = get_encryption_param(self.encryption, encryption_param)
 		self.sample_size = params.get("sample_size", None)
 		if self.encryption == "paillier" and self.encryption_param.parallelize_on:
-			self.max_num_cores = get_core_num(params.get("max_cores", 999))
+			self.max_num_cores = get_core_num(params.get("max_num_cores", 999))
 		else:
 			self.max_num_cores = 1
 
 	def _select_columns(self):
-		if self.column_indexes == -1:
+		if self.col_index == -1:
 			return self.train_features
-		elif isinstance(self.column_indexes, list):
+		elif isinstance(self.col_index, list):
 			feature_start_index = 0
 			if self.index_col is not None:
 				feature_start_index += 1
 			if self.label:
 				feature_start_index += 1
 			feature_names = self.train_features.columns.to_list()
-			select_feature_cols = [feature_names[_ - feature_start_index] for _ in self.column_indexes]
-			if self.column_names:
-				for f in self.column_names.split(','):
+			select_feature_cols = [feature_names[_ - feature_start_index] for _ in self.col_index]
+			if self.col_names:
+				for f in self.col_names.split(','):
 					if f not in select_feature_cols:
 						select_feature_cols.append(f)
 
 			select_feature_cols.sort(key=lambda d: feature_names.index(d))
 			return self.train_features[select_feature_cols]
 		else:
-			raise ValueError("column_indexes must be -1 or a list of int.")
+			raise ValueError("col_index must be -1 or a list of int.")
 
 	@staticmethod
 	def standardize(x):

@@ -182,7 +182,6 @@ class VerticalDecisionTreeTrainer(object):
                             
                         res_hist_partial_list = res
                         hist_list = [(res_hist['sum'].to_numpy(), res_hist['count'].to_numpy()) for res_hist in res_hist_partial_list]
-
                         if (i + 1) == send_times:
                             # 【stop_flag, hist_list, index of category feature(in binary form)]
                             self.summed_grad_hess_chann.send([False, hist_list, cat_index], use_pickle=True)
@@ -267,7 +266,7 @@ class VerticalDecisionTreeTrainer(object):
                     left_cat_index = res_hist_list[feature_idx]['sum'].index[left_cat]
                 else:
                     left_cat_index = res_hist_list[feature_idx][('xfl_grad', 'sum')].index[left_cat]
-                
+
                 left_cat_values_ori = [self.split_points[feature_idx][index] for index in left_cat_index]
                 
                 left_cat_values = []

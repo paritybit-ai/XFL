@@ -167,6 +167,33 @@ class CIFAR10(torch.utils.data.Dataset):
                 labels = self.labels[indices_group[i]]
                 np.savez(npy_path, data=data, labels=labels)
 
+        elif reallocate_dict["sampling"] == "dirichlet":
+            np.random.seed(reallocate_dict["seed"])
+            party_size = 0
+            min_size = len(self.data) / reallocate_dict["splits"] * 0.95
+            while party_size < min_size:
+                indices_group = [[] for _ in range(reallocate_dict["splits"])]
+                for group_label in range(len(set(self.labels))):
+                    group_index = np.where(self.labels == group_label)[0]
+                    group_index = np.random.permutation(group_index)
+                    fractions = np.random.dirichlet(np.repeat(reallocate_dict["beta"], reallocate_dict["splits"]))
+                    sections = (np.cumsum(fractions) * len(group_index)).astype(int)[:-1]
+                    indices = np.split(group_index, sections)
+                    for i, indice in enumerate(indices):
+                        indices_group[i].extend(indice)
+                party_size = min([len(ind) for ind in indices_group])
+
+            final_dir_path = os.path.join(
+                self.dirpath, self.data_folder_renamed, reallocate_folder)
+            if not os.path.exists(final_dir_path):
+                os.makedirs(final_dir_path)
+            for i, party in enumerate(reallocate_dict["party"]):
+                npy_path = os.path.join(
+                    final_dir_path, f"{self.data_folder_renamed}_{party}.npz")
+                data = self.data[indices_group[i]]
+                labels = self.labels[indices_group[i]]
+                np.savez(npy_path, data=data, labels=labels)
+
 
 class CIFAR100(CIFAR10):
     url = "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
@@ -194,7 +221,8 @@ if __name__ == "__main__":
     parser.add_argument("--splits", type=int, default=2,
                         help="number of parties")
     parser.add_argument("--sampling", type=str, default="random",
-                        help="mode to split the dataset, random or biased")
+                        help="mode to split the dataset, random, biased or dirichlet")
+    parser.add_argument("--beta", type=float, default=1, help="dirichlet parameter, smaller means more non-iid")
     parser.add_argument("--party", nargs="+", help="involved parties")
     parser.add_argument("--keep_raw_data",
                         action='store_true', help="keep raw data file")
@@ -219,6 +247,21 @@ if __name__ == "__main__":
             "splits": args.splits,
             "seed": 0,
             "group_fractions": {1: [0.8, 0.2], 2: [0.8, 0.2], 3: [0.8, 0.2], 4: [0.8, 0.2], 5: [0.8, 0.2], 6: [0.2, 0.8], 7: [0.2, 0.8], 8: [0.2, 0.8], 9: [0.2, 0.8], 0: [0.2, 0.8]},
+            "party": args.party
+        }
+
+        test_reallocate_dict = {
+            "sampling": "random",
+            "splits": args.splits,
+            "seed": 0,
+            "party": ["test"]
+        }
+    elif args.sampling == "dirichlet":
+        train_reallocate_dict = {
+            "sampling": "dirichlet",
+            "splits": args.splits,
+            "seed": 0,
+            "beta": args.beta,
             "party": args.party
         }
 
