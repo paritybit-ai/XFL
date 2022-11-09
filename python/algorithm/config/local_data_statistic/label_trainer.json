@@ -1,0 +1,32 @@
+{
+    "identity": "label_trainer",
+    "model_info": {
+        "name": "local_data_statistic"
+    },
+    "input": {
+        "dataset": [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/2party",
+                "name": "epsilon_2party_guest_with_id.csv",
+                "has_label": true,
+                "has_id": true
+            }
+        ]
+    },
+    "output": {
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "summary": {
+            "name": "data_summary_[STAGE_ID].json"
+        }
+    },
+    "train_info": {
+        "train_params": {
+            "quantile": [
+                0.5,
+                0.8,
+                0.9
+            ]
+        }
+    }
+}

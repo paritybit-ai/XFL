@@ -1,0 +1,34 @@
+[
+    {
+        "identity": "label_trainer",
+        "model_info": {
+            "name": "local_data_statistic"
+        },
+        "input": {
+            "dataset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_vertical/2party",
+                    "name": "breast_cancer_wisconsin_vertical_labeled_train.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ]
+        },
+        "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "summary": {
+                "name": "data_summary_[STAGE_ID].json"
+            }
+        },
+        "train_info": {
+            "train_params": {
+                "quantile": [
+                    0.5,
+                    0.8,
+                    0.9
+                ]
+            }
+        }
+    }
+]

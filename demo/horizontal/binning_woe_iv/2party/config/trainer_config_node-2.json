@@ -1,0 +1,43 @@
+[
+    {
+        "identity": "label_trainer",
+        "model_info": {
+            "name": "horizontal_binning_woe_iv"
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_horizontal/2party",
+                    "name": "breast_cancer_wisconsin_horizontal_2.csv",
+                    "has_id": true,
+                    "has_label": true
+                }
+            ]
+        },
+        "train_info": {
+            "train_params": {
+                "aggregation": {
+                    "encryption": {
+                        "method": "otp",
+                        "key_bitlength": 64,
+                        "data_type": "torch.Tensor",
+                        "key_exchange": {
+                            "key_bitlength": 3072,
+                            "optimized": true
+                        },
+                        "csprng": {
+                            "name": "hmac_drbg",
+                            "method": "sha512"
+                        }
+                    },
+                    "weight": 1
+                },
+                "binning": {
+                    "method": "equal_width",
+                    "bins": 5
+                }
+            }
+        }
+    }
+]
