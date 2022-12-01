@@ -61,7 +61,7 @@ class OneTimeAdd(object):
         dtype = np.uint64 if context_.modulus_exp == 64 else object
         
         if not is_decrypt:
-            out = np.mod(np.trunc(data * context_.scalar), context_.modulus).astype(dtype)
+            out = np.mod(np.trunc(data * context_.scalar).astype('int'), context_.modulus).astype(dtype)
         else:
             out = deepcopy(data)
 
