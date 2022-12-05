@@ -22,5 +22,5 @@ pyarrow>=1.0.0
 dill==0.3.4
 tqdm==4.62.3
 tensorflow==2.9.3
-paddlepaddle==2.3.2
+paddlepaddle==2.4.0
 transformers==4.21.1
