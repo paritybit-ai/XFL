@@ -18,9 +18,9 @@ and applies secure communication protocols to ensure communication security.
 
   - Flexible deployment
 
-    - parties: support two-party/multi-party federated learning.
-    - schedulering: any participant can act as a task scheduler.
-    - hardware: support CPU/GPU/hybrid deployment.
+    - Parties: support two-party/multi-party federated learning.
+    - Schedulering: any participant can act as a task scheduler.
+    - Hardware: support CPU/GPU/hybrid deployment.
 
   - Lightweight, open and easy to use:
 
