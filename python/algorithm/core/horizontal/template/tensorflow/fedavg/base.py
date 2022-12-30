@@ -21,12 +21,12 @@ from typing import OrderedDict
 
 from algorithm.core.horizontal.aggregation.api import get_aggregation_root_inst
 from algorithm.core.horizontal.aggregation.api import get_aggregation_leaf_inst
-from algorithm.core.loss import get_lossfunc
+from algorithm.core.loss.tf_loss import get_lossfunc
 from algorithm.core.metrics import get_metric
-from algorithm.core.optimizer import get_optimizer
+from algorithm.core.optimizer.tf_optimizer import get_optimizer
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
-from ..hooker import Hooker
+from algorithm.core.horizontal.template.hooker import Hooker
 import tensorflow.keras as keras
 
 
@@ -96,7 +96,7 @@ class BaseTrainer(Hooker, TrainConfigParser):
         optimizer = OrderedDict()
 
         for k, v in optimizer_conf.items():
-            optimizer[k] = get_optimizer(k, framework="tf")(**v)
+            optimizer[k] = get_optimizer(k)(**v)
 
         return optimizer
 
@@ -107,7 +107,7 @@ class BaseTrainer(Hooker, TrainConfigParser):
         loss_func = OrderedDict()
 
         for k, v in loss_func_conf.items():
-            loss_func[k] = get_lossfunc(k, framework="tf")(**v)
+            loss_func[k] = get_lossfunc(k)(**v)
 
         return loss_func
 

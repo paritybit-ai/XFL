@@ -14,7 +14,7 @@
 
 import torch
 from typing import OrderedDict
-from algorithm.core.loss import get_lossfunc
+from algorithm.core.loss.torch_loss import get_lossfunc
 from ..base import BaseTrainer
 from algorithm.core.horizontal.aggregation.aggregation_base import AggregationLeafBase
 

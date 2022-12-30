@@ -13,20 +13,21 @@
 # limitations under the License.
 
 
-import copy
 import os
 from functools import partial
 from typing import OrderedDict
 
-import torch
-import torch.nn as nn
+import flax.linen as nn
+import optax
+from flax.training import train_state, checkpoints
+from typing import Any
 
 from algorithm.core.horizontal.aggregation.api import get_aggregation_root_inst
 from algorithm.core.horizontal.aggregation.api import get_aggregation_leaf_inst
-from algorithm.core.loss.torch_loss import get_lossfunc
+from algorithm.core.loss.jax_loss import get_lossfunc
+from algorithm.core.lr_scheduler.jax_lr_scheduler import get_lr_scheduler
+from algorithm.core.optimizer.jax_optimizer import get_optimizer
 from algorithm.core.metrics import get_metric
-from algorithm.core.optimizer.torch_optimizer import get_optimizer
-from algorithm.core.lr_scheduler.torch_lr_scheduler import get_lr_scheduler
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
 from algorithm.core.horizontal.template.hooker import Hooker
@@ -40,12 +41,12 @@ class BaseTrainer(Hooker, TrainConfigParser):
         self.declare_hooks(["before_global_epoch", "before_local_epoch", "before_train_loop",
                             "after_train_loop", "after_local_epoch", "after_global_epoch"])
 
+        self.train_dataloader, self.exmp_label = self._set_train_dataloader()
+        self.val_dataloader, self.exmp_assist = self._set_val_dataloader()
         self.model = self._set_model()
-        self.train_dataloader = self._set_train_dataloader()
-        self.val_dataloader = self._set_val_dataloader()
         self.loss_func = self._set_lossfunc()
-        self.optimizer = self._set_optimizer()
-        self.lr_scheduler = self._set_lr_scheduler(self.optimizer)
+        self.lr_scheduler = self._set_lr_scheduler()
+        self.state = self._set_optimizer()
         self.metrics = self._set_metrics()
         self.aggregator = self._set_aggregator(self.identity)
 
@@ -79,58 +80,56 @@ class BaseTrainer(Hooker, TrainConfigParser):
         if not os.path.exists(path):
             os.makedirs(path)
 
-        path = os.path.join(path, name)
         if type == "file":
-            torch.save(self.model.state_dict(), path)
+            checkpoints.save_checkpoint(
+                ckpt_dir=path,
+                target={'params': self.state.params, 'batch_stats': self.state.batch_stats},
+                step=0,
+                overwrite=True,
+            )
         else:
             raise NotImplementedError(f"Type {type} not supported.")
 
-    def _load_model(self, context: dict):
-        pretrain_model_conf = self.input["pretrain_model"]
-        if pretrain_model_conf != {}:
-            path = os.path.join(
-                pretrain_model_conf["path"], pretrain_model_conf["name"])
-            device = self.train_info.get("device", "cpu")
-            if device == "cpu":
-                state_dict = torch.load(
-                    path, map_location=lambda storage, loc: storage)
-            elif "cuda" in device:
-                state_dict = torch.load(
-                    path, map_location=lambda storage, loc: storage.cuda(0))
-            else:
-                raise ValueError(f"Device {device} not support.")
-            self.model.load_state_dict(state_dict)
-
-    def _set_optimizer(self):
-        """ Define self.optimizer """
-        optimizer_conf = OrderedDict(
-            self.train_params.get("optimizer_config", {}))
-        optimizer = OrderedDict()
-
-        for k, v in optimizer_conf.items():
-            optimizer[k] = get_optimizer(k)(self.model.parameters(), **v)
-
-        return optimizer
-
     def _set_lossfunc(self):
         """ Define self.loss_func """
-        loss_func_conf = OrderedDict(
-            self.train_params.get("lossfunc_config", {}))
-        loss_func = OrderedDict()
-
-        for k, v in loss_func_conf.items():
-            loss_func[k] = get_lossfunc(k)(**v)
+        loss_func = None
+        loss_func_conf = OrderedDict(self.train_params.get("lossfunc_config", {}))
+        for k in loss_func_conf.keys():
+            self.loss_func_name = k
+            loss_func = get_lossfunc(k)
 
         return loss_func
 
-    def _set_lr_scheduler(self, optimizer):
-        lr_scheduler_conf = OrderedDict(
-            self.train_params.get("lr_scheduler_config", {}))
-        lr_scheduler = OrderedDict()
-        for (k, v), o in zip(lr_scheduler_conf.items(), optimizer.values()):
-            lr_scheduler[k] = get_lr_scheduler(k)(o, **v)
+    def _set_lr_scheduler(self):
+        """ Define self.lr_scheduler """
+        lr_scheduler = None
+        lr_scheduler_conf = OrderedDict(self.train_params.get("lr_scheduler_config", {}))
+        for k, v in lr_scheduler_conf.items():
+            lr_scheduler = get_lr_scheduler(k)(**v)
 
         return lr_scheduler
+
+    def _set_optimizer(self):
+        """ Define self.optimizer """
+        optimizer_conf = OrderedDict(self.train_params.get("optimizer_config", {}))
+        optimizer = None
+
+        for k, v in optimizer_conf.items():
+            opt_class = get_optimizer(k)
+            if self.lr_scheduler:
+                optimizer = optax.chain(optax.clip(1.0), opt_class(self.lr_scheduler, **v))
+            else:
+                optimizer = optax.chain(optax.clip(1.0), opt_class(**v))
+
+        state = None
+        if optimizer:
+            state = TrainState.create(
+                apply_fn=self.model.apply,
+                params=self.init_params,
+                batch_stats=self.init_batch_stats,
+                tx=optimizer
+            )
+        return state
 
     def _set_metrics(self):
         """ Define metric """
@@ -141,14 +140,6 @@ class BaseTrainer(Hooker, TrainConfigParser):
             metric = get_metric(k)
             metrics[k] = partial(metric, **v)
         return metrics
-
-    def _state_dict_to_device(self, params: OrderedDict, device: str, inline: bool = True) -> OrderedDict:
-        if not inline:
-            params = copy.deepcopy(params)
-
-        for k, v in params.items():
-            params[k] = v.to(device)
-        return params
 
     def train_loop(self):
         raise NotImplementedError("The train_loop method is not implemented.")
@@ -187,3 +178,7 @@ class BaseTrainer(Hooker, TrainConfigParser):
             logger.info(f"global epoch {g_epoch}/{global_epoch_num} finished.")
 
         self.execute_hook_at("after_global_epoch")
+
+class TrainState(train_state.TrainState):
+    # A simple extension of TrainState to also include batch statistics
+    batch_stats: Any
