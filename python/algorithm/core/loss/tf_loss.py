@@ -14,20 +14,17 @@
 
 
 import sys
-
-import torch.optim.lr_scheduler as lr_scheduler
-
+import tensorflow.keras.losses as tf_loss
 from common.xregister import xregister
 
 
-
-def get_lr_scheduler(name: str):
-    if name in dir(lr_scheduler):
-        scheduler = getattr(lr_scheduler, name)
+def get_lossfunc(name: str):
+    if name in dir(tf_loss):
+        loss_func = getattr(tf_loss, name)
     elif name in dir(sys.modules[__name__]):
-        scheduler = getattr(sys.modules[__name__], name)
+        loss_func = getattr(sys.modules[__name__], name)
     elif name in xregister.registered_object:
-        scheduler = xregister(name)
+        loss_func = xregister(name)
     else:
-        raise ValueError(f"Scheduler {name} not support.")
-    return scheduler
+        raise ValueError(f"Loss function {name} is not supported in tensorflow.")
+    return loss_func

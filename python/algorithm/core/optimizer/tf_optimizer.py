@@ -14,26 +14,18 @@
 
 
 import sys
-
-import torch.optim as torch_optim
 import tensorflow.keras.optimizers as tf_optim
-
 from common.xregister import xregister
 
 
-def get_optimizer(name: str, framework="torch"):
+def get_optimizer(name: str):
     optim = None
-    if framework == "torch":
-        if name in dir(torch_optim):
-            optim = getattr(torch_optim, name)
-    elif framework == "tf":
-        if name in dir(tf_optim):
-            optim = getattr(tf_optim, name)
+    if name in dir(tf_optim):
+        optim = getattr(tf_optim, name)
     elif name in dir(sys.modules[__name__]):
         optim = getattr(sys.modules[__name__], name)
     elif name in xregister.registered_object:
         optim = xregister(name)
     else:
-        raise ValueError(f"Optimizer {name} not support.")
+        raise ValueError(f"Optimizer {name} is not supported in tensorflow.")
     return optim
-

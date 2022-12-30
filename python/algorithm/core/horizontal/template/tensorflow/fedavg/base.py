@@ -1,11 +1,11 @@
 # Copyright 2022 The XFL Authors. All rights reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,13 +21,14 @@ from typing import OrderedDict
 
 from algorithm.core.horizontal.aggregation.api import get_aggregation_root_inst
 from algorithm.core.horizontal.aggregation.api import get_aggregation_leaf_inst
-from algorithm.core.loss import get_lossfunc
+from algorithm.core.loss.tf_loss import get_lossfunc
 from algorithm.core.metrics import get_metric
-from algorithm.core.optimizer import get_optimizer
+from algorithm.core.optimizer.tf_optimizer import get_optimizer
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
-from ..hooker import Hooker
+from algorithm.core.horizontal.template.hooker import Hooker
 import tensorflow.keras as keras
+
 
 class BaseTrainer(Hooker, TrainConfigParser):
     def __init__(self, train_conf: dict):
@@ -49,7 +50,7 @@ class BaseTrainer(Hooker, TrainConfigParser):
         aggregation_config = self.train_params.get("aggregation_config", {})
         encryption_params = aggregation_config.get("encryption")
 
-        #logger.info(encryption_params)
+        # logger.info(encryption_params)
 
         if party_type == "assist_trainer":
             aggregator = get_aggregation_root_inst(encryption_params)
@@ -87,7 +88,6 @@ class BaseTrainer(Hooker, TrainConfigParser):
             path = os.path.join(
                 pretrain_model_conf["path"], pretrain_model_conf["name"])
             self.model.load_weights(path)
-            
 
     def _set_optimizer(self):
         """ Define self.optimizer """
@@ -96,7 +96,7 @@ class BaseTrainer(Hooker, TrainConfigParser):
         optimizer = OrderedDict()
 
         for k, v in optimizer_conf.items():
-            optimizer[k] = get_optimizer(k, framework="tf")(**v)
+            optimizer[k] = get_optimizer(k)(**v)
 
         return optimizer
 
@@ -107,10 +107,9 @@ class BaseTrainer(Hooker, TrainConfigParser):
         loss_func = OrderedDict()
 
         for k, v in loss_func_conf.items():
-            loss_func[k] = get_lossfunc(k, framework="tf")(**v)
+            loss_func[k] = get_lossfunc(k)(**v)
 
         return loss_func
-
 
     def _set_metrics(self):
         """ Define metric """
@@ -121,7 +120,6 @@ class BaseTrainer(Hooker, TrainConfigParser):
             metric = get_metric(k)
             metrics[k] = partial(metric, **v)
         return metrics
-
 
     def train_loop(self):
         raise NotImplementedError("The train_loop method is not implemented.")

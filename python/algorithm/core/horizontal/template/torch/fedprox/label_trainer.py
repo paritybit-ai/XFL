@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import torch
 from typing import OrderedDict
-from algorithm.core.loss import get_lossfunc
+from algorithm.core.loss.torch_loss import get_lossfunc
 from ..base import BaseTrainer
 from algorithm.core.horizontal.aggregation.aggregation_base import AggregationLeafBase
 
