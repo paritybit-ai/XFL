@@ -64,10 +64,8 @@ def get_conf():
 		conf["input"]["trainset"][0]["name"] = "train.csv"
 		conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
 		conf["input"]["valset"][0]["name"] = "test.csv"
-		conf["output"]["model"]["path"] = "/opt/checkpoints/unit_test"
-		conf["output"]["trainset"]["path"] = "/opt/checkpoints/unit_test"
+		conf["output"]["path"] = "/opt/checkpoints/unit_test"
 		conf["output"]["trainset"]["name"] = "normalized_train.csv"
-		conf["output"]["valset"]["path"] = "/opt/checkpoints/unit_test"
 		conf["output"]["valset"]["name"] = "normalized_test.csv"
 	yield conf
 
@@ -88,8 +86,8 @@ class TestLocalNormalization:
 	])
 	def test_fit(self, get_conf, axis, norm_):
 		conf = copy.deepcopy(get_conf)
-		conf["train_info"]["params"]["axis"] = axis
-		conf["train_info"]["params"]["norm"] = norm_
+		conf["train_info"]["train_params"]["axis"] = axis
+		conf["train_info"]["train_params"]["norm"] = norm_
 		ln = LocalNormalization(conf)
 		check_output = True
 		if axis == 0:
@@ -138,7 +136,7 @@ class TestLocalNormalization:
 				assert exec_msg == "axis {} is invalid.".format(axis)
 			check_output = False
 		if check_output:
-			m = torch.load(conf["output"]["model"]["path"] + '/' + conf["output"]["model"]["name"])
+			m = torch.load(conf["output"]["path"] + '/' + conf["output"]["model"]["name"])
 			assert m.get("axis") == axis
 			if axis == 0:
 				assert len(m.get("normalizer")) == 3
@@ -148,8 +146,8 @@ class TestLocalNormalization:
 	@pytest.mark.parametrize('feature_name', ['x0', 'myf'])
 	def test_feature_wise(self, get_conf, feature_name):
 		conf = copy.deepcopy(get_conf)
-		conf["train_info"]["params"]["norm"] = 'l2'
-		conf["train_info"]["params"]["featureNormalizeConfig"] = {feature_name: {"norm": 'l1'}}
+		conf["train_info"]["train_params"]["norm"] = 'l2'
+		conf["train_info"]["train_params"]["feature_norm"] = {feature_name: {"norm": 'l1'}}
 		ln = LocalNormalization(conf)
 
 		if feature_name in ln.train_data.columns:

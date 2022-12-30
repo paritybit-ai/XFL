@@ -41,7 +41,7 @@ class ModelPreserver(object):
         name_prefix, name_postfix = ".".join(model_name_list[:-1]), model_name_list[-1]
 
         if not final and epoch:
-            model_name = name_prefix + "_{}".format(epoch) + "." + name_postfix
+            model_name = name_prefix + "_epoch_{}".format(epoch) + "." + name_postfix
         else:
             model_name = name_prefix + "." + name_postfix
 

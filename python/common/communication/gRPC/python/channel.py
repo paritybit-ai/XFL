@@ -95,7 +95,6 @@ class FullConnectedChannel(object):
     
     def _broadcast(self, remote_ids: List[str], value: Any, tag: str = '@', use_pickle: bool = True) -> int:
         br_status = 0
-        
         if PARALLEL:
             thread_list = []
             result_list = [None for id in remote_ids]
@@ -163,7 +162,6 @@ class FullConnectedChannel(object):
     
     def _collect(self, remote_ids: List[str], tag: str = '@', use_pickle: bool = True) -> List[Any]:
         data = [None for i in range(len(remote_ids))]
-        
         if PARALLEL:
             thread_list = []
             
@@ -219,13 +217,11 @@ class DualChannel(FullConnectedChannel):
 
 class BroadcastChannel(FullConnectedChannel):
     def __init__(self, name: str, ids: List[str] = [], root_id: str = '', job_id: Union[str, int] = "", auto_offset: bool = True):
-        # if len(ids) == 0:
         if not ids:
-            # ids = [Commu.scheduler_id] + Commu.trainer_ids
-            ids = Commu.trainer_ids
-        # if root_id == '':
+            # ids = Commu.trainer_ids
+            ids = FedConfig.get_label_trainer() + FedConfig.get_trainer()
+
         if not root_id:
-            # root_id = Commu.scheduler_id
             label_trainer_list = FedConfig.get_label_trainer()
             root_id = label_trainer_list[0] if label_trainer_list else None
         if job_id == "":

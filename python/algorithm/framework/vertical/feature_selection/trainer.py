@@ -21,6 +21,7 @@ import pandas as pd
 
 from common.communication.gRPC.python.channel import BroadcastChannel
 from common.utils.logger import logger
+from common.utils.utils import update_dict
 from .base import VerticalFeatureSelectionBase
 
 
@@ -32,10 +33,17 @@ class VerticalFeatureSelectionTrainer(VerticalFeatureSelectionBase):
 			train_conf:
 
 		"""
+		self.sync_channel = BroadcastChannel(name="sync")
+		conf = self._sync_config()
+		update_dict(train_conf, conf)
 		super().__init__(train_conf, label=False)
 		self.channels = dict()
 		self.channels["feature_id_com"] = BroadcastChannel(name="feature_id_com")
 		self.feature_mapping = dict()
+
+	def _sync_config(self):
+		config = self.sync_channel.recv()
+		return config
 
 	def _common_filter(self, params):
 		metrics = params.get("metrics", 'iv')
@@ -69,7 +77,7 @@ class VerticalFeatureSelectionTrainer(VerticalFeatureSelectionBase):
 
 	def fit(self):
 		logger.info("feature selection trainer start.")
-		for k, v in self.filter_params.items():
+		for k, v in self.filter.items():
 			if k == "common":
 				self._common_filter(v)
 			elif k == "correlation":
@@ -95,23 +103,23 @@ class VerticalFeatureSelectionTrainer(VerticalFeatureSelectionBase):
 				df = pd.concat([self.train_label, self.train_features], axis=1).set_index(self.train_id)
 			else:
 				df = self.train_features.set_index(self.train_id)
-			df.to_csv(
-				Path(self.output["trainset"].get("path"), self.output["trainset"].get("name")),
-				header=True, index=True, index_label="id", float_format="%.6g"
-			)
+			output_train_path = Path(self.output.get("path"), self.output["trainset"].get("name"))
+			if not os.path.exists(os.path.dirname(output_train_path)):
+				os.makedirs(os.path.dirname(output_train_path))
+			df.to_csv(output_train_path, header=True, index=True, index_label="id", float_format="%.6g")
 		if "valid" in self.transform_stages:
 			self.val_features = self.val_features[selected_features]
 			if self.val_label is not None:
 				df = pd.concat([self.val_label, self.val_features], axis=1).set_index(self.val_id)
 			else:
 				df = self.val_features.set_index(self.val_id)
-			df.to_csv(
-				Path(self.output["valset"].get("path"), self.output["valset"].get("name")),
-				header=True, index=True, index_label="id", float_format="%.6g"
-			)
+			output_val_path = Path(self.output.get("path"), self.output["valset"].get("name"))
+			if not os.path.exists(os.path.dirname(output_val_path)):
+				os.makedirs(os.path.dirname(output_val_path))
+			df.to_csv(output_val_path, header=True, index=True, index_label="id", float_format="%.6g")
 
 	def save(self):
-		save_dir = str(Path(self.output.get("model")["path"]))
+		save_dir = str(Path(self.output.get("path")))
 		if not os.path.exists(save_dir):
 			os.makedirs(save_dir)
 

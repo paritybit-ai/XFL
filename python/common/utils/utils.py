@@ -31,20 +31,20 @@ def save_model_config(stage_model_config: List[dict], save_path: Path) -> None:
     Returns: None
 
     """
-    total_path = os.path.join(save_path, "model_config.json")
+    full_path = os.path.join(save_path, "model_config.json")
     if len(stage_model_config) == 0:
         raise TypeError("Length of stage_model_config should larger than 0.")
     if not os.path.exists(save_path):
-        save_path.mkdir(parents=True, exist_ok=True)
+        Path(save_path).mkdir(parents=True, exist_ok=True)
     # if file not exists, create one then init first stage in it.
-    if not os.path.exists(total_path):
-        with open(total_path, "w") as wf1:
+    if not os.path.exists(full_path):
+        with open(full_path, "w") as wf1:
             json.dump(stage_model_config, fp=wf1)
     else:
-        with open(total_path, "r") as f:
+        with open(full_path, "r") as f:
             org_data = json.load(f)
         org_data += stage_model_config
-        with open(total_path, "w") as wf:
+        with open(full_path, "w") as wf:
             json.dump(org_data, fp=wf)
 
 
@@ -57,3 +57,16 @@ def func_timer(func):
         print(f"{func.__name__} cost {time.time()-local_time}s")
         return f
     return with_time
+
+
+def update_dict(a: dict, b: dict):
+    if isinstance(a, dict) and isinstance(b, dict):
+        for k, v in b.items():
+            if k not in a.keys():
+                a[k] = v
+            else:
+                if isinstance(a[k], dict) and isinstance(b[k], dict):
+                    update_dict(a[k], b[k])
+                else:
+                    a[k] = b[k]
+                    

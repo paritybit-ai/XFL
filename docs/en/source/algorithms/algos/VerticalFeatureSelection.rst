@@ -19,51 +19,47 @@ Parameters List
 
 The parameters given below is only for feature selection.
 
-**identity**: ``str`` Federated identity of the party, should be one of `label_trainer`, `trainer` or `assist trainer`.
+**identity**: ``str`` The role of each participant in federated learning, should be `label_trainer` or `trainer`.
 
 **model_info**:
     - **name**: ``str`` Model name, should be `vertical_feature_selection`.
 
 **input**:
     - **trainset**:
-        - **type**: ``str`` Train dataset type, support `csv`.
-        - **path**: ``str`` If type is `csv`, folder path of train dataset.
-        - **name**: ``str`` If type is `csv`, file name of train dataset.
-        - **has_id**: ``bool`` If type is `csv`, whether dataset has id column.
-        - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
+        - **type**: ``str`` Train dataset type, currently supported is `csv`.
+        - **path**: ``str`` The folder path of train dataset.
+        - **name**: ``str`` The file name of train dataset.
+        - **has_id**: ``bool`` Whether the dataset has id column.
+        - **has_label**: ``bool`` Whether the dataset has label column.
     - **valset**:
-        - **type**: ``str`` Validation dataset type, support `csv`.
-        - **path**: ``str`` If type is `csv`, folder path of validation dataset.
-        - **name**: ``str`` If type is `csv`, file name of validation dataset.
-        - **has_id**: ``bool`` If type is `csv`, whether dataset has id column.
-        - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
+        - **type**: ``str`` Train dataset type, currently supported is `csv`.
+        - **path**: ``str`` The folder path of train dataset.
+        - **name**: ``str`` The file name of train dataset.
+        - **has_id**: ``bool`` Whether the dataset has id column.
+        - **has_label**: ``bool`` Whether the dataset has label column.
     - **iv_result**:
         - **path**: ``str`` Folder path of the iv_result from `VerticalBinningWoeIV`.
-        - **name**: ``str`` File name.
+        - **name**: ``str`` Model file name.
     - **corr_result**:
         - **path**: ``str`` Folder path of the result from `VerticalPearson`.
-        - **name**: ``str`` File namel.
+        - **name**: ``str`` Model file name.
 
 **output**:
+    - **path**: ``str`` Output folder path.
     - **model**:
-        - **path**: ``str`` Folder path of output model.
         - **name**: ``str`` File name of output model.
-        - **type**: ``str`` File type, support "csv".
     - **trainset**:
-        - **path**: ``str`` Folder path of train dataset after feature selection.
         - **name**: ``str`` File name of train dataset after feature selection.
     - **valset**:
-        - **path**: ``str`` Folder path of validation dataset after feature selection.
         - **name**: ``str`` File name of validation dataset after feature selection.
 
 **train_info**:
-    - **device**: ``str`` Device on which the algorithm runs, support `cpu`.
-    - **params**:
-        - **filter_params**:
+    - **train_params**:
+        - **filter**:
             - **common**:
-                - **metrics**: ``str`` Metric type, support `iv`.
-                - **filter_method**: ``str`` Feature filtering method, support `threshold`.
-                - **threshold**: ``float`` Feature filtering threshold if filter_method is `threshold`.
+                - **metrics**: ``str`` Metric type, currently supported is `iv`.
+                - **filter_method**: ``str`` Feature filtering method, currently supported is `threshold`.
+                - **threshold**: ``float`` Threshold for filtering if the filter_method is `threshold`.
             - **correlation**:
-                - **sort_metric**: ``str`` Metric type for sorting, support `iv`.
-                - **correlation_threshold**: ``float`` Correlation threshold.
+                - **sort_metric**: ``str`` Sorting (descending) metric before the correlated filtering, currently supported is `iv`.
+                - **correlation_threshold**: ``float`` Threshold for correlated filtering.

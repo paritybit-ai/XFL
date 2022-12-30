@@ -1,0 +1,46 @@
+{
+    "identity": "label_trainer",
+    "model_info": {
+        "name": "local_normalization"
+    },
+    "input": {
+        "trainset": [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/vertical_breast_with_validation",
+                "name": "breast_vertical_host_train.csv",
+                "has_label": false,
+                "has_id": true
+            }
+        ],
+        "valset": [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/vertical_breast_with_validation",
+                "name": "breast_vertical_host_test.csv",
+                "has_label": false,
+                "has_id": true
+            }
+        ]
+    },
+    "output": {
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "model": {
+            "name": "local_normalization_[STAGE_ID].pt"
+        },
+        "trainset": {
+            "name": "temp/normalized_train_[STAGE_ID].csv"
+        },
+        "valset": {
+            "name": "temp/normalized_val_[STAGE_ID].csv"
+        }
+    },
+    "train_info": {
+        "train_params": {
+            "norm": "max",
+            "axis": 0,
+            "feature_norm": {
+            }
+        }
+    }
+}

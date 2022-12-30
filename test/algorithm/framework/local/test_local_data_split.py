@@ -25,6 +25,8 @@ import pytest
 
 from algorithm.framework.local.data_split.label_trainer import \
     LocalDataSplitLabelTrainer as LocalDataSplit
+from algorithm.framework.local.data_split.trainer import \
+    LocalDataSplitTrainer as LocalDataSplitTrainer
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -53,6 +55,8 @@ def env():
         shutil.rmtree("/opt/dataset/unit_test")
     if os.path.exists("/opt/checkpoints/unit_test"):
         shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/opt/checkpoints/unit_test_1"):
+        shutil.rmtree("/opt/checkpoints/unit_test_1")
 
 
 @pytest.fixture()
@@ -61,9 +65,8 @@ def get_conf():
         conf = json.load(f)
         conf["input"]["dataset"][0]["path"] = "/opt/dataset/unit_test"
         conf["input"]["dataset"][0]["name"] = "dataset.csv"
-        conf["output"]["trainset"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/opt/checkpoints/unit_test_1"
         conf["output"]["trainset"]["name"] = "data_train.csv"
-        conf["output"]["valset"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["valset"]["name"] = "data_test.csv"
     yield conf
 
@@ -99,12 +102,12 @@ class TestLocalDataSplit:
                               (None, False, True, 1000)])
     def test_fit(self, get_conf, shuffle_params, dataset_name, header, batchSize):
         conf = copy.deepcopy(get_conf)
-        conf["train_info"]["params"]["shuffle_params"] = shuffle_params
+        conf["train_info"]["train_params"]["shuffle"] = shuffle_params
         conf["input"]["dataset"][0]["name"] = dataset_name
-        conf["input"]["dataset"][0]["header"] = header
-        conf["train_info"]["params"]["batch_size"] = batchSize
-        output_train = Path(conf["output"]["trainset"]["path"], conf["output"]["trainset"]["name"])
-        output_val = Path(conf["output"]["valset"]["path"], conf["output"]["valset"]["name"])
+        conf["input"]["dataset"][0]["has_header"] = header
+        conf["train_info"]["train_params"]["batch_size"] = batchSize
+        output_train = Path(conf["output"]["path"], conf["output"]["trainset"]["name"])
+        output_val = Path(conf["output"]["path"], conf["output"]["valset"]["name"])
         lds = LocalDataSplit(conf)
         if dataset_name == "dataset.csv":
             if not shuffle_params:
@@ -168,3 +171,6 @@ class TestLocalDataSplit:
                     assert len(train) == 1601 and len(val) == 401
                     assert train.iloc[0, 0] != "id" and val.iloc[0, 0] != "id"
                     assert list(train.iloc[:, 0]) != list(range(1599)) + ["id"]
+
+    def test_trainer(self, get_conf):
+        LocalDataSplitTrainer(get_conf)

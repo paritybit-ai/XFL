@@ -59,7 +59,7 @@ Parameter List
                     - **method**: ``str`` Corresponding hash method.
         - **optimizer_config**: Support optimizers and their parameters defined in pytorch or registered by user. For example:
             - **Adam**:
-                - **lr**: ``float`` Optimizer learning rate.
+                - **lr**: ``float`` Optimizer earning rate.
                 - **amsgrad**: ``bool`` Whether to use the AMSGrad variant.
         - **lr_scheduler_config**: Support lr_scheduler and their parameters defined in pytorch or registered by user. For example:
             - **StepLR**:

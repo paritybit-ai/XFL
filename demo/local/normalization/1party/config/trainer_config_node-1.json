@@ -2,8 +2,7 @@
     {
         "identity": "label_trainer",
         "model_info": {
-            "name": "local_normalization",
-            "config": {}
+            "name": "local_normalization"
         },
         "input": {
             "trainset": [
@@ -26,25 +25,22 @@
             ]
         },
         "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "model": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "local_normalizer_labeled.pt"
+                "name": "local_normalization_[STAGE_ID].pt"
             },
             "trainset": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "normalized_breast_cancer_wisconsin_vertical_labeled_train.csv"
+                "name": "temp/normalized_train_[STAGE_ID].csv"
             },
             "valset": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "normalized_breast_cancer_wisconsin_vertical_labeled_test.csv"
+                "name": "temp/normalized_val_[STAGE_ID].csv"
             }
         },
         "train_info": {
-            "device": "cpu",
-            "params": {
+            "train_params": {
                 "norm": "l2",
                 "axis": 0,
-                "featureNormalizeConfig": {
+                "feature_norm": {
                     "x01": {
                         "norm": "l1"
                     },

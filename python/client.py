@@ -68,8 +68,19 @@ def algo():
     print("---------- Algorithm List ----------")
     for i in response.algorithmList:
         print(i)
-    print("---------- Config ----------")
+    print(f"---------- Config ----------")
     print({i: response.defaultConfigMap[i].config for i in response.algorithmList})
+
+
+def stage():
+    channel = FedNode.create_channel("scheduler")
+    stub = scheduler_pb2_grpc.SchedulerStub(channel)
+    request = scheduler_pb2.GetStageRequest()
+    response = stub.getStage(request)
+    print("---------- Stage ----------")
+    print("code:", response.code)
+    print("stage_id:", response.stageId)
+    print("stage_name:", response.stageName)
 
 
 def main(cmd, config_path=''):
@@ -83,5 +94,7 @@ def main(cmd, config_path=''):
         status()
     elif cmd == "algo":
         algo()
+    elif cmd == "stage":
+        stage()
     else:
         print("Client command is not exists.")

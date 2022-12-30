@@ -25,6 +25,7 @@ import torch
 from common.communication.gRPC.python.channel import BroadcastChannel
 from common.crypto.paillier.paillier import Paillier
 from common.utils.logger import logger
+from common.utils.utils import update_dict
 from service.fed_node import FedNode
 from common.utils.model_preserver import ModelPreserver
 from common.utils.utils import save_model_config
@@ -33,6 +34,9 @@ from .base import VerticalLogisticRegressionBase
 
 class VerticalLogisticRegressionTrainer(VerticalLogisticRegressionBase):
     def __init__(self, train_conf: dict, *args, **kwargs):
+        self.sync_channel = BroadcastChannel(name="sync")
+        conf = self._sync_config()
+        update_dict(train_conf, conf)
         super().__init__(train_conf, label=False, *args, **kwargs)
         self._init_model()
         self.export_conf = [{
@@ -42,20 +46,24 @@ class VerticalLogisticRegressionTrainer(VerticalLogisticRegressionBase):
             "input_dim": self.data_dim,
             "bias": False
         }]
-        self.set_seed(self.extra_config["shuffle_seed"])
+        if self.random_seed is None:
+            self.random_seed = self.sync_channel.recv()
+        self.set_seed(self.random_seed)
         self.best_model = None
 
-    # @staticmethod
-    # def decrypt(values):
-    #     return values
+    def _sync_config(self):
+        config = self.sync_channel.recv()
+        return config
 
     def fit(self):
         """ train model
         Model parameters need to be updated before fitting.
         """
+        self.check_data()
         patient = -1
-        encryption_config = self.aggregation_config["encryption"]
-        encryption_method = encryption_config["method"].lower()
+        # encryption_config = self.encryption_config
+        # encryption_method = encryption_config["method"].lower()
+        encryption_method = list(self.encryption_config.keys())[0].lower()
 
         logger.info("Vertical logistic regression training start")
 
@@ -170,11 +178,12 @@ class VerticalLogisticRegressionTrainer(VerticalLogisticRegressionBase):
                 self.best_model = copy.deepcopy(self.model)
 
             if early_stop_flag:
-                ModelPreserver.save(save_dir=self.save_dir, model_name=self.save_model_name,
-                                    state_dict=self.best_model.state_dict(), final=True)
-                if self.save_probabilities:
-                    self._save_prob(best_model=self.best_model, channel=broadcast_channel)
-                return None
+                break
+                # ModelPreserver.save(save_dir=self.save_dir, model_name=self.save_model_name,
+                #                     state_dict=self.best_model.state_dict(), final=True)
+                # # if self.save_probabilities:
+                # self._save_prob(best_model=self.best_model, channel=broadcast_channel)
+                # return None
 
             if self.save_frequency > 0 and epoch % self.save_frequency == 0:
                 ModelPreserver.save(save_dir=self.save_dir,
@@ -187,21 +196,28 @@ class VerticalLogisticRegressionTrainer(VerticalLogisticRegressionBase):
         save_model_config(stage_model_config=self.export_conf, save_path=Path(self.save_dir))
         ModelPreserver.save(save_dir=self.save_dir, model_name=self.save_model_name,
                             state_dict=self.best_model.state_dict(), final=True)
-        if self.save_probabilities:
-            self._save_prob(best_model=self.best_model, channel=broadcast_channel)
+
+        # if self.save_probabilities:
+        self._save_prob(best_model=self.best_model, channel=broadcast_channel)
 
         self._save_feature_importance(broadcast_channel)
 
     def _save_prob(self, best_model, channel):
-        for batch_idx, (x_batch) in enumerate(self.train_dataloader):
-            x_batch = x_batch[0].to(self.device)
-            pred_trainer = best_model(x_batch)
-            channel.send(pred_trainer)
+        if self.interaction_params.get("write_training_prediction"):
+            for batch_idx, (x_batch) in enumerate(self.train_dataloader):
+                x_batch = x_batch[0].to(self.device)
+                pred_trainer = best_model(x_batch)
+                channel.send(pred_trainer)
 
-        for batch_idx, (x_batch) in enumerate(self.val_dataloader):
-            x_batch = x_batch[0].to(self.device)
-            pred_trainer = best_model(x_batch)
-            channel.send(pred_trainer)
+        if self.interaction_params.get("write_validation_prediction"):
+            for batch_idx, (x_batch) in enumerate(self.val_dataloader):
+                x_batch = x_batch[0].to(self.device)
+                pred_trainer = best_model(x_batch)
+                channel.send(pred_trainer)
 
     def _save_feature_importance(self, channel):
         channel.send((FedNode.node_id, self.best_model.state_dict()["linear.weight"][0]))
+
+    def check_data(self):
+        dim_channel = BroadcastChannel(name="check_data_com")
+        dim_channel.send(self.data_dim)

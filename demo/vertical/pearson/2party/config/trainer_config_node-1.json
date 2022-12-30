@@ -2,8 +2,7 @@
     {
         "identity": "label_trainer",
         "model_info": {
-            "name": "vertical_pearson",
-            "config": {}
+            "name": "vertical_pearson"
         },
         "input": {
             "trainset": [
@@ -14,23 +13,19 @@
                     "has_label": true,
                     "has_id": true
                 }
-            ],
-            "pretrain_model": {
-            }
+            ]
         },
         "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "model": {
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "pearson_labeled.pkl"
+                "name": "vertical_pearson_[STAGE_ID].pkl"
             }
         },
         "train_info": {
-            "device": "cpu",
-            "interaction_params": {
-            },
-            "params": {
-                "column_indexes": -1,
-                "encryption_params": {
+            "train_params": {
+                "col_index": -1,
+                "col_names": "",
+                "encryption": {
                     "paillier": {
                         "key_bit_size": 2048,
                         "precision": 6,

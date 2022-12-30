@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This model contains a PyTorch implementation of the paper "Deep Residual Learning for Image Recognition."[1]
+# [1]He, K., Zhang, X., Ren, S., & Sun, J. (2016). Deep residual learning for image recognition. In Proceedings of the IEEE conference on computer vision and pattern recognition (pp. 770-778).
 
 from collections import OrderedDict
-
 import torch.nn as nn
 
 
@@ -24,11 +25,13 @@ class ConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, downsample=None, stride=1):
         super().__init__()
         self.stem = nn.Sequential(OrderedDict([
-            ("conv1", nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0)),
-            ("batch_norm1", nn.BatchNorm2d(out_channels, track_running_stats=True)),  # setting track_running_stats as False 
+            ("conv1", nn.Conv2d(in_channels, out_channels,
+             kernel_size=1, stride=1, padding=0)),
+            ("batch_norm1", nn.BatchNorm2d(out_channels, track_running_stats=True)), # setting track_running_stats as False 
             ("relu1", nn.ReLU()),
-            ("conv2", nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1)),
-            ("batch_norm2", nn.BatchNorm2d(out_channels, track_running_stats=True)),
+            ("conv2", nn.Conv2d(out_channels, out_channels,
+             kernel_size=3, stride=stride, padding=1)),
+            ("batch_norm2", nn.BatchNorm2d(out_channels,track_running_stats=True)),
             ("relu2", nn.ReLU()),
             ("conv3", nn.Conv2d(out_channels, out_channels *
              self.expansion, kernel_size=1, stride=1, padding=0)),
@@ -55,14 +58,14 @@ class Resnet(nn.Module):
     def __init__(self, ResBlock, block_list, num_classes):
         super().__init__()
         self.stem = nn.Sequential(OrderedDict([
-            ("conv1", nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)),
+            ("conv1", nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)),
             ("batch_norm1", nn.BatchNorm2d(64, track_running_stats=True)),
             ("relu", nn.ReLU())
         ]))
         self.max_pool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         self.layers1 = self._make_layers(
-            ResBlock, block_list[0], inplanes=64, outplanes=64)
+            ResBlock, block_list[0], inplanes=64, outplanes=64, stride=1)
         self.layers2 = self._make_layers(
             ResBlock, block_list[1], inplanes=256, outplanes=128, stride=2)
         self.layers3 = self._make_layers(
@@ -86,8 +89,8 @@ class Resnet(nn.Module):
         return x
 
     def _make_layers(self, ResBlock, blocks, inplanes, outplanes, stride=1):
+        layers =[]
         downsample = None
-        layers = []
         if stride != 1 or inplanes != outplanes*ResBlock.expansion:
             downsample = nn.Sequential(
                 nn.Conv2d(inplanes, outplanes*ResBlock.expansion,
@@ -105,11 +108,26 @@ class Resnet(nn.Module):
 
 
 def ResNet(num_classes, layers):
+    if layers == 18:
+        return Resnet(ConvBlock, [2, 2, 2, 2], num_classes)
     if layers == 50:
-        return Resnet(ConvBlock, [3, 4, 6, 3], num_classes) 
+        return Resnet(ConvBlock, [3, 4, 6, 3], num_classes)
     elif layers == 101:
         return Resnet(ConvBlock, [3, 4, 23, 3], num_classes)
     elif layers == 152:
         return Resnet(ConvBlock, [3, 8, 36, 3], num_classes)
+    elif layers == 'unit_test':
+        return Resnet(ConvBlock, [2,2,2,2], num_classes)
     else:
         raise NotImplementedError("Only support ResNet50, ResNet101, ResNet152 currently, please change layers")
+
+
+
+# if __name__ == "__main__":
+#     import torch
+#     from thop import profile, clever_format
+#     input = torch.randn(1, 3, 224, 224)
+#     model = ResNet(10,50)
+#     macs, params = profile(model, inputs=(input, ))
+#     macs, params = clever_format([macs, params], "%.3f")
+#     print(macs, params)

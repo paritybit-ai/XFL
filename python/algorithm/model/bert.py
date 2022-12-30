@@ -36,3 +36,4 @@ class BertForSst2(keras.Model):
                               token_type_ids=token_type_ids, labels = labels)[:2]
         prob = self.softmax(logits)
         return loss, logits, prob
+

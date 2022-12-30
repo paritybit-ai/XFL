@@ -71,5 +71,4 @@ class FedConfParser():
             "host": host,
             "port": port
         }
-            
         return out_conf

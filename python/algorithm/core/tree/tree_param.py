@@ -29,7 +29,7 @@ class LossParam(object):
 
 class XGBTreeParam(object):
     def __init__(self,
-                 task_type: str,  # 'classification', 'regression'
+                #  task_type: str,  # 'classification', 'regression'
                  loss_param: LossParam,  # ["cross_entropy", "lse", "lae", "huber", "fair", "log_cosh", "tweedie"]
                  num_trees: int,
                  learning_rate: float,
@@ -47,7 +47,7 @@ class XGBTreeParam(object):
                  top_rate: float,
                  other_rate: float,
                
-                 validation_freqs: int,
+                #  validation_freqs: int,
                  metrics: List[str],
                
                  early_stopping_param: Optional[EarlyStoppingParam] = None,  # 'split',(split time) 'gain'(split gain)
@@ -69,7 +69,7 @@ class XGBTreeParam(object):
                  
                  cat_smooth: float = 0):
 
-        self.task_type = task_type
+        # self.task_type = task_type
         self.loss_param = loss_param
         self.num_trees = num_trees
         self.learning_rate = learning_rate
@@ -93,7 +93,7 @@ class XGBTreeParam(object):
         self.other_rate = other_rate
 
         # validation
-        self.validation_freqs = validation_freqs
+        # self.validation_freqs = validation_freqs
         self.metrics = metrics
         
         # multiprocess

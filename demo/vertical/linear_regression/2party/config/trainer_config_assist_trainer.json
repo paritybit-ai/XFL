@@ -1,0 +1,8 @@
+[
+    {
+        "identity": "assist_trainer",
+        "model_info": {
+            "name": "vertical_linear_regression"
+        }
+    }
+]

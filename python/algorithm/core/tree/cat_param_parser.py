@@ -95,7 +95,7 @@ def parse_category_param(df: pd.DataFrame,
         else:
             raise ValueError(
                 f"max_num_value_type {max_num_value_type} not valid, need to be one of the 'union' and 'intersect'.")
-            
+
     res = list(set(res))
     return res
 

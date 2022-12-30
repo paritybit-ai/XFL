@@ -2,26 +2,15 @@
     {
         "identity": "assist_trainer",
         "model_info": {
-            "name": "vertical_kmeans",
-            "config": {
-
-            }
+            "name": "vertical_kmeans"
         },
         "input": {
-            "trainset": [
-            ]
         },
         "output": {
         },
         "train_info": {
-            "device": "cpu",
-            "interaction_params": {
-            },
-            "aggregation_config": {
-                "method": "FedAvg",
-                "weight_factor": 0.5,
-                "encryption": {
-                    "method": "otp",
+            "encryption": {
+                "otp": {
                     "key_bitlength": 128,
                     "data_type": "torch.Tensor",
                     "key_exchange": {
@@ -34,13 +23,11 @@
                     }
                 }
             },
-            "params": {
+            "train_params": {
                 "k": 5,
                 "max_iter": 99,
                 "tol": 1e-3,
-                "extra_config": {
-                    "shuffle_seed": 50
-                }
+                "random_seed": 50
             }
         }
     }

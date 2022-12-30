@@ -36,7 +36,7 @@ class TestDecisionTable:
 	@pytest.mark.parametrize('bins', [-1, 0, 1, 2, 5, 10, 50])
 	def test_bins(self, bins, env):
 		io_file_path = "/opt/checkpoints/decision_table_{}.csv".format(bins)
-		config = {"bin_number": bins}
+		config = {"bins": bins}
 
 		if bins <= 1:
 			with pytest.raises(ValueError) as e:
@@ -81,10 +81,10 @@ class TestDecisionTable:
 			# read_from_file
 			df = pd.read_csv(io_file_path)
 			if method == "equal_frequency":
-				assert (df["样本数"] == 100000 / dt.bin_number).all()
+				assert (df["样本数"] == 100000 / dt.bins).all()
 			elif method == "equal_width":
 				max_value, min_value = y_pred.max(), y_pred.min()
-				interval = (max_value - min_value) / dt.bin_number
+				interval = (max_value - min_value) / dt.bins
 				left = float(df["区间"].iloc[0].strip("(]").split(', ')[0])
 				right = float(df["区间"].iloc[0].strip("(]").split(', ')[1])
 				assert left <= min_value

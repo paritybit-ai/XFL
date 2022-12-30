@@ -16,8 +16,9 @@ Parameter List
 **model_info**:
     - **name**: ``str`` Model name, should be `horizontal_bert`.
     - **config**:
+        - **from_pretrained**: ``bool`` Whether to use pretrained model. If not, set config like num_attention_head, hidden_size below.
         - **num_labels**: ``int`` Number of output labels.
-        - **hidden_dropout_prob**: ``float`` Hidden dropout probability.
+
 
 **input**:
     - **trainset**:

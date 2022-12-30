@@ -19,6 +19,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from common.checker.matcher import get_matched_config
+from common.checker.x_types import All
 from common.communication.gRPC.python.channel import BroadcastChannel
 from common.utils.logger import logger
 from .base import VerticalFeatureSelectionBase
@@ -32,6 +34,8 @@ class VerticalFeatureSelectionLabelTrainer(VerticalFeatureSelectionBase):
 			train_conf:
 
 		"""
+		self.sync_channel = BroadcastChannel(name="sync")
+		self._sync_config(train_conf)
 		super().__init__(train_conf, label=True)
 		self.channels = dict()
 		self.channels["feature_id_com"] = BroadcastChannel(name="feature_id_com")
@@ -52,6 +56,13 @@ class VerticalFeatureSelectionLabelTrainer(VerticalFeatureSelectionBase):
 					metric,
 					params.get("threshold", 1)
 				)
+
+	def _sync_config(self, config):
+		sync_rule = {
+			"train_info": All()
+		}
+		config_to_sync = get_matched_config(config, sync_rule)
+		self.sync_channel.broadcast(config_to_sync)
 
 	def _threshold_filter(self, metric, threshold):
 		ret = []
@@ -108,7 +119,7 @@ class VerticalFeatureSelectionLabelTrainer(VerticalFeatureSelectionBase):
 
 	def fit(self):
 		logger.info("feature selection label trainer start.")
-		for k, v in self.filter_params.items():
+		for k, v in self.filter.items():
 			if k == "common":
 				self._common_filter(v)
 			elif k == "correlation":
@@ -130,23 +141,24 @@ class VerticalFeatureSelectionLabelTrainer(VerticalFeatureSelectionBase):
 				df = pd.concat([self.train_label, self.train_features], axis=1).set_index(self.train_id)
 			else:
 				df = self.train_features.set_index(self.train_id)
-			df.to_csv(
-				Path(self.output["trainset"].get("path"), self.output["trainset"].get("name")),
-				header=True, index=True, index_label="id", float_format="%.6g"
-			)
+
+			output_train_path = Path(self.output.get("path"), self.output["trainset"].get("name"))
+			if not os.path.exists(os.path.dirname(output_train_path)):
+				os.makedirs(os.path.dirname(output_train_path))
+			df.to_csv(output_train_path, header=True, index=True, index_label="id", float_format="%.6g")
 		if "valid" in self.transform_stages:
 			self.val_features = self.val_features[selected_features]
 			if self.val_label is not None:
 				df = pd.concat([self.val_label, self.val_features], axis=1).set_index(self.val_id)
 			else:
 				df = self.val_features.set_index(self.val_id)
-			df.to_csv(
-				Path(self.output["valset"].get("path"), self.output["valset"].get("name")),
-				header=True, index=True, index_label="id", float_format="%.6g"
-			)
+			output_val_path = Path(self.output.get("path"), self.output["valset"].get("name"))
+			if not os.path.exists(os.path.dirname(output_val_path)):
+				os.makedirs(os.path.dirname(output_val_path))
+			df.to_csv(output_val_path, header=True, index=True, index_label="id", float_format="%.6g")
 
 	def save(self):
-		save_dir = str(Path(self.output.get("model")["path"]))
+		save_dir = str(Path(self.output.get("path")))
 		if not os.path.exists(save_dir):
 			os.makedirs(save_dir)
 

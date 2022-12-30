@@ -31,9 +31,10 @@ from common.communication.gRPC.python.channel import BroadcastChannel
 from common.crypto.paillier.paillier import Paillier
 from common.communication.gRPC.python.commu import Commu
 
+
 def prepare_data():
     case_df = pd.DataFrame({
-        'x0': list(np.random.random(800))+[999]*200,
+        'x0': list(np.random.random(800)) + [999] * 200,
         'x1': [0] * 500 + [1] * 500,
         'x2': [999] * 1000,
         'x3': 3 * np.random.random(1000) - 1.0,
@@ -65,11 +66,8 @@ def get_label_trainer_conf():
     with open("python/algorithm/config/vertical_binning_woe_iv/label_trainer.json") as f:
         label_trainer_conf = json.load(f)
         label_trainer_conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
-        label_trainer_conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
-        label_trainer_conf["output"]["trainset"]["path"] = "/opt/checkpoints/unit_test_1"
-        label_trainer_conf["output"]["valset"]["path"] = "/opt/checkpoints/unit_test_1"
+        label_trainer_conf["output"]["path"] = "/opt/checkpoints/unit_test_1"
         label_trainer_conf["input"]["trainset"][0]["name"] = "breast_cancer_wisconsin_guest_train.csv"
-        label_trainer_conf["input"]["valset"][0]["name"] = "breast_cancer_wisconsin_guest_test.csv"
     yield label_trainer_conf
 
 
@@ -78,17 +76,14 @@ def get_trainer_conf():
     with open("python/algorithm/config/vertical_binning_woe_iv/trainer.json") as f:
         trainer_conf = json.load(f)
         trainer_conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
-        trainer_conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
-        trainer_conf["output"]["trainset"]["path"] = "/opt/checkpoints/unit_test_1"
-        trainer_conf["output"]["valset"]["path"] = "/opt/checkpoints/unit_test_1"
+        trainer_conf["output"]["path"] = "/opt/checkpoints/unit_test_1"
         trainer_conf["input"]["trainset"][0]["name"] = "breast_cancer_wisconsin_host_train.csv"
-        trainer_conf["input"]["valset"][0]["name"] = "breast_cancer_wisconsin_host_test.csv"
     yield trainer_conf
 
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
-    Commu.node_id="node-1"
+    Commu.node_id = "node-1"
     Commu.trainer_ids = ['node-1', 'node-2']
     Commu.scheduler_id = 'assist_trainer'
     if not os.path.exists("/opt/dataset/unit_test"):
@@ -111,42 +106,56 @@ def simu_data():
 
 
 class TestBinningWoeIv:
-    @pytest.mark.parametrize("encryption_method, strategy, binning", [
-        ("paillier", "mean", "equalWidth"), ("plain", "constant", "equalWidth"),
-        ("plain", "mean", "equalFrequency")])
-    def test_trainer(self, get_trainer_conf, encryption_method, strategy, binning, mocker):
+    @pytest.mark.parametrize("encryption, binning", [
+        ("paillier", "equal_width"), ("plain", "equal_width"),
+        ("plain", "equal_frequency")])
+    def test_trainer(self, get_trainer_conf, encryption, binning, mocker):
         case_df = simu_data()
         train_conf = get_trainer_conf
-        train_conf = get_trainer_conf
-        if binning == "equalFrequency":
-            train_conf["train_info"]["params"]['binning_params']['method'] = "equalFrequency"
+        with open("python/algorithm/config/vertical_binning_woe_iv/label_trainer.json") as f:
+            label_trainer_conf = json.load(f)
+
+        def mock_config_recv(*args, **kwargs):
+            tmp = {"train_info": label_trainer_conf["train_info"]}
+            return tmp
+        mocker.patch.object(
+            BroadcastChannel, "__init__", return_value=None
+        )
+        mock_channel_recv = mocker.patch.object(
+            BroadcastChannel, "recv", side_effect=mock_config_recv
+        )
+
         bwi = VerticalBinningWoeIvTrainer(train_conf)
 
-        if encryption_method == "plain":
-            bwi.train_params["encryption_params"] = {
-                "method": "plain"
-            }
-        encryption_config = bwi.train_params["encryption_params"]
+        if binning == "equal_frequency":
+            train_conf["train_info"]["train_params"]['binning']['method'] = "equal_frequency"
 
-        if encryption_method == "paillier":
-            pri_context = Paillier.context(encryption_config["key_bit_size"], djn_on=encryption_config["djn_on"])
-        elif encryption_method == "plain":
+        if encryption == "plain":
+            bwi.train_params["encryption"] = {
+                "plain": {}
+            }
+        encryption_config = bwi.train_params["encryption"]
+
+        if encryption == "paillier":
+            pri_context = Paillier.context(encryption_config["paillier"]["key_bit_size"],
+                                           djn_on=encryption_config["paillier"]["djn_on"])
+        elif encryption == "plain":
             pass
 
         def mock_recv(*args, **kwargs):
-            if encryption_method == "paillier":
+            if encryption == "paillier":
                 if mock_channel_recv.call_count <= 1:
                     return pri_context.to_public().serialize()
                 elif mock_channel_recv.call_count % 2 == 0:
-                    num_cores = -1 if encryption_config["parallelize_on"] else 1
+                    num_cores = -1 if encryption_config["paillier"]["parallelize_on"] else 1
                     label = case_df[["y"]].to_numpy().flatten().astype(np.int32)
                     en_label = Paillier.encrypt(pri_context,
                                                 label,
-                                                precision=encryption_config["precision"],
+                                                precision=encryption_config["paillier"]["precision"],
                                                 obfuscation=True,
                                                 num_cores=num_cores)
                     return Paillier.serialize(en_label)
-            elif encryption_method == "plain":
+            elif encryption == "plain":
                 return case_df[["y"]]
 
         mock_channel_recv = mocker.patch.object(
@@ -157,13 +166,12 @@ class TestBinningWoeIv:
         )
         bwi.fit()
 
-    @pytest.mark.parametrize("encryption_method, strategy, binning", [
-        ("paillier", "mean", "equalWidth"), ("plain", "constant", "equalWidth"),
-        ("plain", "mean", "equalFrequency")])
-    def test_label_trainer(self, get_label_trainer_conf, encryption_method, strategy, binning, mocker):
+    @pytest.mark.parametrize("encryption, binning", [
+        ("paillier", "equal_width"), ("plain", "equal_width"), ("plain", "equal_frequency")])
+    def test_label_trainer(self, get_label_trainer_conf, encryption, binning, mocker):
         label_train_conf = get_label_trainer_conf
-        if binning == "equalFrequency":
-            label_train_conf["train_info"]["params"]['binning_params']['method'] = "equalFrequency"
+        if binning == "equal_frequency":
+            label_train_conf["train_info"]["train_params"]["binning"]["method"] = "equal_frequency"
         mocker.patch.object(
             BroadcastChannel, "__init__", return_value=None
         )
@@ -174,26 +182,27 @@ class TestBinningWoeIv:
         bwi = VerticalBinningWoeIvLabelTrainer(label_train_conf)
         bwi.broadcast_channel.remote_ids = ["node-2"]
 
-        if encryption_method == "plain":
-            bwi.train_params["encryption_params"] = {
-                "method": "plain"
+        if encryption == "plain":
+            bwi.train_params["encryption"] = {
+                "plain": {}
             }
-        encryption_config = bwi.train_params["encryption_params"]
+        encryption_config = bwi.train_params["encryption"]
 
-        if encryption_method == "paillier":
-            pri_context = Paillier.context(encryption_config["key_bit_size"], djn_on=encryption_config["djn_on"])
+        if encryption == "paillier":
+            pri_context = Paillier.context(encryption_config["paillier"]["key_bit_size"],
+                                           djn_on=encryption_config["paillier"]["djn_on"])
             pub_context = Paillier.context_from(pri_context.to_public().serialize())
-        elif encryption_method == "plain":
+        elif encryption == "plain":
             pass
 
         def mock_collect(*args, **kwargs):
             case_df = simu_data()
             y = case_df[["y"]]
             case_df = case_df[['x3', 'x4']]
-            bin_num = bwi.train_params["binning_params"]["bins"]
+            bin_num = bwi.train_params["binning"]["bins"]
             labels = [i for i in range(bin_num)]
             columns_name = case_df.columns
-            if bwi.train_params["binning_params"]['method'] == "equalWidth":
+            if bwi.train_params["binning"]["method"] == "equal_width":
                 case_df = pd.Series(case_df.columns).apply(
                     lambda x: pd.cut(case_df[x], bin_num, retbins=True, labels=labels)[0]).T
             else:
@@ -203,7 +212,7 @@ class TestBinningWoeIv:
                     case_df[i] = LabelEncoder().fit_transform(case_df[i])
             case_df.columns = columns_name
 
-            if encryption_method == "paillier":
+            if encryption == "paillier":
                 # num_cores = -1 if encryption_config["parallelize_on"] else 1
                 # label = y.to_numpy().flatten().astype(np.int32)
                 # en_label = Paillier.encrypt(pri_context,
@@ -224,7 +233,7 @@ class TestBinningWoeIv:
                 # for _, feature in woe_feedback_list.items():
                 #     woe_feedback_list[_] = feature.apply(lambda x: x.serialize())
                 return [{"woe_feedback_list": {}, "bins_count": {}}]
-            elif encryption_method == "plain":
+            elif encryption == "plain":
                 encrypt_id_label_pair = pd.DataFrame(y)
                 tmp = []
                 for feat in case_df.columns:
@@ -240,9 +249,10 @@ class TestBinningWoeIv:
         bwi.fit()
 
         # 检查是否正常留存
-        assert os.path.exists("/opt/checkpoints/unit_test_1/vertical_binning_woe_iv_train.json")
+        assert os.path.exists("/opt/checkpoints/unit_test_1/woe_iv_result_[STAGE_ID].json")
 
-        with open("/opt/checkpoints/unit_test_1/vertical_binning_woe_iv_train.json", "r", encoding='utf-8') as f:
+        with open("/opt/checkpoints/unit_test_1/woe_iv_result_[STAGE_ID].json", "r",
+                  encoding='utf-8') as f:
             conf = json.loads(f.read())
             for k in ["woe", "iv", "count_neg", "count_pos", "ratio_pos", "ratio_neg"]:
                 assert k in conf

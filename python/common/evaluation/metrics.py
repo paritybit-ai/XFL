@@ -25,6 +25,7 @@ from torch.nn import BCELoss
 
 from common.utils.algo_utils import (BiClsAccuracy, BiClsAuc, BiClsF1, BiClsKS,
                                      BiClsPrecision, BiClsRecall)
+from algorithm.core.metrics import get_metric
 from common.utils.logger import logger
 
 
@@ -114,6 +115,38 @@ class BiClsMetric:
                 f.write("%d,%s\n" % (self.epoch, ','.join(features)))
 
 
+class RegressionMetric:
+
+    def __init__(self, epoch, output_file=None, metric_config={}):
+        self.metric_functions = {}
+        self.metrics = {}
+        self.epoch = epoch
+        self.output_file = output_file
+
+        for metric_function in metric_config:
+            self.metric_functions[metric_function] = get_metric(metric_function)
+
+    def calc_metrics(self, y_true: np.array, y_pred: np.array):
+        for metric_function in self.metric_functions:
+            self.metrics[metric_function] = self.metric_functions[metric_function](y_true, y_pred)
+
+    def __repr__(self):
+        output = ["epoch: %d" % self.epoch]
+        for k, v in self.metrics.items():
+            output.append("%s: %.6g" % (k, v))
+        return ', '.join(output)
+
+    def save(self, met):
+        features = ["%.6g" % met[k] for k in met]
+        if os.path.exists(self.output_file):
+            with open(self.output_file, 'a') as f:
+                f.write("%d,%s\n" % (self.epoch, ','.join(features)))
+        else:
+            with open(self.output_file, 'w') as f:
+                f.write("%s,%s\n" % ("epoch", ','.join([_ for _ in met])))
+                f.write("%d,%s\n" % (self.epoch, ','.join(features)))
+
+
 class ThresholdCutter:
     def __init__(self, output_file=None):
         self.bst_threshold = 0.5
@@ -181,7 +214,7 @@ class ThresholdCutter:
 class DecisionTable:
     def __init__(self, conf):
         self.method = conf.get("method", "equal_frequency")
-        self.bin_number = conf.get("bin_number", 5)
+        self.bins = conf.get("bins", 5)
         self.type = conf.get("type")
         self._check_params()
         self.stats = pd.DataFrame()
@@ -189,15 +222,20 @@ class DecisionTable:
     def _check_params(self):
         if self.method not in ("equal_frequency", "equal_width"):
             raise NotImplementedError("decision table: method '{}' is not implemented.".format(self.method))
-        if self.bin_number <= 1:
-            raise ValueError("decision table: bin number ({}) must be greater than 1.".format(self.bin_number))
+        if self.bins <= 1:
+            raise ValueError("decision table: bins ({}) must be greater than 1.".format(self.bins))
 
     def fit(self, y_true: np.array, y_pred: np.array):
         df = pd.DataFrame({"label": y_true, "pred": y_pred})
+        n = len(set(y_pred))
+        if n <= self.bins:
+            logger.info("metric::decision table::number of unique values in the prediction (%d) is less than "
+                        "the bins (%d), set the bins=%d." % (n, self.bins, n))
+            self.bins = n
         if self.method == "equal_frequency":
-            groups = pd.qcut(y_pred, self.bin_number, duplicates='drop', precision=3)
+            groups = pd.qcut(y_pred, self.bins, duplicates='drop', precision=3)
         elif self.method == "equal_width":
-            groups = pd.cut(y_pred, self.bin_number, right=True, duplicates='drop', precision=3)
+            groups = pd.cut(y_pred, self.bins, right=True, duplicates='drop', precision=3)
         if self.type == "score_card":
             groups = [pd.Interval(int(_.left), int(_.right), _.closed) for _ in groups]
         df["区间"] = groups
@@ -230,7 +268,6 @@ class DecisionTable:
         self.stats["区间"] = self.stats["区间"].apply(str)
 
     def save(self, file_name):
-        logger.info("decision table: saved to {}.".format(file_name))
         self.stats.to_csv(file_name, header=True, index=False, float_format='%.2g')
 
 

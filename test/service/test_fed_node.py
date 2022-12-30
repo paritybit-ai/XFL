@@ -1,11 +1,11 @@
 # Copyright 2022 The XFL Authors. All rights reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import json
 import os
 import unittest.mock as um
 
@@ -23,8 +24,9 @@ from service.fed_node import FedNode
 
 
 class mock_server():
-    def add_insecure_port(self,address):
+    def add_insecure_port(self, address):
         self.address = address
+
 
 class Test_FedNode():
     def test_init_fednode(self, monkeypatch):
@@ -71,29 +73,75 @@ class Test_FedNode():
                                     "assist_trainer": {"host": "localhost", "port": "57001", "use_tls": False}}
         assert FedNode.listening_port == 56001
 
+    def test_init_fednode2(self, tmp_path):
+        path = tmp_path / "fed_conf_scheduler.json"
+        fed_conf = {
+            "fed_info": {
+                "scheduler": {
+                    "node-1": "localhost:55001"
+                },
+                "trainer": {
+                    "node-1": "localhost:56001",
+                    "node-2": "localhost:56002"
+                },
+                "assist_trainer": {
+                    "assist_trainer": "localhost:57001"
+                }
+            },
+            "redis_server": "localhost:6379",
+            "grpc": {
+                "use_tls": False
+            }
+        }
+        f = open(path, 'w')
+        json.dump(fed_conf, f)
+        f.close()
+        FedNode.init_fednode("scheduler", "scheduler", tmp_path)
+        assert FedNode.node_id == "scheduler"
+        assert FedNode.listening_port == '55001'
+
+        path2 = tmp_path / "fed_conf.json"
+        f = open(path2, 'w')
+        json.dump(fed_conf, f)
+        f.close()
+        FedNode.init_fednode("assist_trainer", "assist_trainer", tmp_path)
+        assert FedNode.node_id == "assist_trainer"
+        assert FedNode.listening_port == '57001'
+
+        FedNode.init_fednode("trainer", "node-1", tmp_path)
+        assert FedNode.config == {'node_id': 'node-1', 'scheduler': {'node_id': 'node-1', 'host': 'localhost', 'port': '55001', 'use_tls': False}, 
+                                  'trainer': {'assist_trainer': {'node_id': 'assist_trainer', 'host': 'localhost', 'port': '57001', 'use_tls': False}, 'node-1': {'host': 'localhost', 'port': '56001', 'use_tls': False}, 'node-2': {'host': 'localhost', 'port': '56002', 'use_tls': False}}, 'redis_server': {'host': 'localhost', 'port': '6379'}}
+        assert FedNode.scheduler_host == "localhost"
+        assert FedNode.scheduler_port == "55001"
+        assert FedNode.trainers == {"node-1": {"host": "localhost", "port": "56001", "use_tls": False},
+                                    'node-2': {'host': 'localhost', 'port': '56002', 'use_tls': False},
+                                    "assist_trainer": {"host": "localhost", 'node_id': 'assist_trainer', "port": "57001", "use_tls": False}}
+        assert FedNode.listening_port == '56001'
+
     def test_add_server(self, mocker):
         server = mock_server()
         mocker.patch.object(FedNode, 'listening_port', 55001)
-        spy_add_server=mocker.spy(FedNode,'add_server')
+        spy_add_server = mocker.spy(FedNode, 'add_server')
         FedNode.add_server(server)
         assert server.address == "[::]:55001"
-        
-        
 
     def test_create_channel(self, mocker):
         mocker.patch.object(FedNode, 'scheduler_host', "localhost")
-        mocker.patch.object(FedNode, 'scheduler_port', 55001)
+        mocker.patch.object(FedNode, 'scheduler_port', "55001")
         mocker.patch.object(FedNode, 'config', {"scheduler": {
                             "node_id": "node-1", "host": "localhost", "port": "55001", "use_tls": False}})
         mocker.patch.object(FedNode, 'trainers', {"node-1": {"host": "localhost", "port": "56001",
                             "use_tls": True}, "assist_trainer": {"host": "localhost", "port": "57001", "use_tls": False}})
         mocker.patch("grpc.secure_channel", return_value="secure_channel")
         mocker.patch("grpc.insecure_channel", return_value="insecure_channel")
+        mocker.patch("grpc.intercept_channel",
+                     return_value='intercept_channel')
+
         channel = FedNode.create_channel("node-1")
-        assert FedNode.channels["node-1"] == "secure_channel"
+        assert FedNode.channels["node-1"] == "intercept_channel"
 
         channel = FedNode.create_channel("scheduler")
-        assert FedNode.channels["scheduler"] == "insecure_channel"
+        assert FedNode.channels["scheduler"] == "intercept_channel"
         grpc.insecure_channel.assert_called_once_with(
             "localhost:55001", options=insecure_options)
 

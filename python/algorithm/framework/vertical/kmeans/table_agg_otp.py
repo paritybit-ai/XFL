@@ -25,7 +25,7 @@ from common.communication.gRPC.python.commu import Commu
 from common.crypto.csprng.drbg import get_drbg_inst
 from common.crypto.csprng.drbg_base import DRBGBase
 from common.crypto.key_agreement.diffie_hellman import DiffieHellman
-from common.crypto.one_time_pad.component import OneTimePadCiphertext, OneTimePadContext
+from common.crypto.one_time_pad.component import OneTimePadCiphertext, OneTimePadContext, OneTimeKey
 from common.crypto.one_time_pad.one_time_add import OneTimeAdd
 from .table_agg_base import TableAggregatorAbstractAssistTrainer, TableAggregatorAbstractTrainer
 
@@ -120,6 +120,8 @@ class TableAggregatorOTPTrainer(TableAggregatorAbstractTrainer):
             x = bytearray(next(g))
             y = split_bytes(x, table.shape)
             one_time_key.append(np.array(y))
+        one_time_key = OneTimeKey(one_time_key, self.otp_context.modulus_exp)    
+        
         encrypted_table = OneTimeAdd.encrypt(context_=self.otp_context,
                                              data=table,
                                              one_time_key=one_time_key,

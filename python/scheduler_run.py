@@ -63,13 +63,11 @@ def start_server(config_path):
                                 break
                             elif resp[i].code == status_pb2.SUCCESSFUL:
                                 trainer_status[i] = resp[i].code
-
                         if FedJob.status == status_pb2.FAILED:
                             break
                         elif len(trainer_status) == len(FedNode.trainers):
                             logger.info(f"Stage {stage} Successful.")
                             break
-
                     if FedJob.status == status_pb2.FAILED:
                         break
 

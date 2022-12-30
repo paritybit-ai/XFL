@@ -23,7 +23,6 @@ Parameters List
 
 **model_info**:
     - **name**: ``str`` Model name, should be `vertical_xgboost`.
-    - **config**: ``map`` Model configuration, no need to config here.
 
 **input**:
     - **trainset**: 
@@ -40,24 +39,36 @@ Parameters List
         - **has_label**: ``bool`` If type is `csv`, whether dataset has label column.
 
 **output**:
+    - **path**: ``str`` Folder path of output.
     - **model**:
-        - **path**: ``str`` Folder path of output model.
         - **name**: ``str`` File name of output model.
-    - **metrics**:
-        - **path**: ``str`` Folder path of output metrics.
-    - **evaluations**:
-        - **path**: ``str`` Folder path of output evaluations.
+    - **metric_train**:
+        - **name**: ``str`` File name of trainset metrics.
+    - **metric_val**:
+        - **name**: ``str`` File name of valset metrics.
+    - **prediction_train**:
+        - **name**: ``str`` File name of trainset prediction.
+    - **prediction_val**:
+        - **name**: ``str`` File name of valset prediction.
+    - **ks_plot_train**:
+        - **name**: ``str`` File name of trainset ks values.
+    - **ks_plot_val**:
+        - **name**: ``str`` File name of valset ks values.
+    - **decision_table_train**:
+        - **name**: ``str`` File name of trainset decision table.
+    - **decision_table_val**:
+        - **name**: ``str`` File name of valset decision table.
+    - **feature_importance**:
+        - **name**: ``str`` File name of feature importance table.
         
 **train_info**:
-    - **device**: ``str`` Device on which the algorithm runs, support `cpu`.
     - **interaction_params**:
         - **save_frequency**: ``int`` Frequency(per tree) to save model, set to -1 for not saving model.
         - **echo_training_metrics**: ``bool`` Whether to output metrics on train dataset.
+        - **write_training_prediction**: ``bool`` Whether to save predictions on training dataset. 
         - **write_validation_prediction**: ``bool`` Whether to save predictions on validation dataset. 
-    - **params**:
-        - **task_type**: ``str`` Task type, support `classification`.
-        - **lossfunc_config**: ``map`` Configuration of loss function.
-            - **method**: ``str`` Name of loss function, support `BCEWithLogitsLoss`.
+    - **train_params**:
+        - **lossfunc**: ``map`` Configuration of loss function. Key is the loss name, value is its parameters. For example. "BCEWithLogitsLoss": {}
         - **num_trees**: ``int`` Number of trees.
         - **learning_rate**: ``float`` Learning rate.
         - **gamma**: ``float`` L1 regularization term on number of leafs.
@@ -67,34 +78,47 @@ Parameters List
         - **min_split_gain**: ``float`` Min split gain. 
         - **min_sample_split**: ``int``  Min number of samples in a tree node.
         - **feature_importance_type**: ``str``  Type of feature importance, support `gain` and `split`.
-        - **run_goss**: ``bool`` Whether to use goss sampling.
-        - **top_rate**: ``float`` The retain ratio of large gradient data in goss.
-        - **other_rate**: ``float`` The retain ratio of small gradient data in goss, `0 < top_rate + other_rate <= 1`.
-        - **cat_smooth**: ``float`` Used for reducing the effect of noises in categorical features. Default to 0.
-        - **cat_feature**: ``map`` For defining which columns are categorial feature columns. The formulation is: features that column indexes are in col_index if col_index_type is 'inclusive' or not in col_index if col_index_type is 'exclusive'. `union`` featuresthat column names are in col_names if col_names_type is 'inclusive' or not in col_names if col_names_type is 'exclusive'. `union if max_num_value_type is 'union' or intersect if max_num_value_type is 'intersection'` features that number of different values is less equal than max_num_value.
-            - **col_index** ``str``: Column index of features which are supposed to be (or not to be) a categorial feature. Accept slice or number, for example: `"1, 4:5"`. Defaults to "".
-            - **col_names** ``list<str>``: Column names of features which are supposed to be (or not to be) a categorical feature. Defaults to [].
-            - **max_num_value** ``int``: If n <= max_num_value where n is the number of different values in a feature column, then the feature is supposed to be a category feature. Defalts to 0.
-            - **col_index_type** ``str``: Support 'inclusive' and 'exclusive'. Defaults to 'inclusive'.
-            - **col_names_type** ``str``: Support 'inclusive' and 'exclusive'. Defaults to 'inclusive'.
-            - **max_num_value_type** ``str``: Support 'intersection' and 'union'. Defaults to 'union'.
-        - **metric_config**: ``map`` Metrics configuration, support `decision_table` , `ks` , `acc` , `auc` , `precision` , `recall` , `f1_score` , `decision_table`.
-        - **early_stopping_params**:
+        - **downsampling**: ``map``
+            - **column**: ``map``
+                - **rate**: ``float`` Subsample rate of feature dimension.
+            - **row**: ``map``
+                - **run_goss**: ``bool`` Whether to use goss sampling.
+                - **top_rate**: ``float`` The retain ratio of large gradient data in goss.
+                - **other_rate**: ``float`` The retain ratio of small gradient data in goss, `0 < top_rate + other_rate <= 1`.
+        - **category**: ``map``
+            - **cat_smooth**: ``float`` Used for reducing the effect of noises in categorical features. Default to 0.
+            - **cat_feature**: ``map`` For defining which columns are categorical feature columns. The formulation is: features that column indexes are in col_index if col_index_type is 'inclusive' or not in col_index if col_index_type is 'exclusive'. `union`` featuresthat column names are in col_names if col_names_type is 'inclusive' or not in col_names if col_names_type is 'exclusive'. `union if max_num_value_type is 'union' or intersect if max_num_value_type is 'intersection'` features that number of different values is less equal than max_num_value.
+                - **col_index** ``str``: Column index of features which are supposed to be (or not to be) a categorial feature. Accept slice or number, for example: `"1, 4:5"`. Defaults to "".
+                - **col_names** ``list<str>``: Column names of features which are supposed to be (or not to be) a categorical feature. Defaults to [].
+                - **max_num_value** ``int``: If n <= max_num_value where n is the number of different values in a feature column, then the feature is supposed to be a category feature. Defalts to 0.
+                - **col_index_type** ``str``: Support 'inclusive' and 'exclusive'. Defaults to 'inclusive'.
+                - **col_names_type** ``str``: Support 'inclusive' and 'exclusive'. Defaults to 'inclusive'.
+                - **max_num_value_type** ``str``: Support 'intersection' and 'union'. Defaults to 'union'.
+        - **metric**: ``map`` Metrics to output, all the keys are optional.
+            - **decision_table**: ``map``
+                - **method**: ``str`` Support "equal_frequency" and "equal_with"
+                - **bins**: ``int`` number of bins in decision table
+            - **acc**: {}
+            - **precision**: {}
+            - **recall**: {}
+            - **f1_score**: {}
+            - **auc**: {}
+            - **ks**: {}
+        - **early_stopping**:
             - **key**: ``str`` Metrics name for early stopping.
             - **patience**: ``int`` Number of steps with no improvement after which training will be stopped.
             - **delta**: ``float`` Minimum change in the value of metric to qualify as an improvement.
-
-        - **encryption_params**:
+        - **encryption**:
             - **paillier**:
                 - **key_bit_size**: ``int`` Bit length of paillier key, recommend to be greater than or equal to 2048.
                 - **precision**: ``int`` Precison.
                 - **djn_on**: ``bool`` Whether to use djn method to generate key pair.
                 - **parallelize_on**: ``bool`` Whether to use multicore for computing.
-        - **subsample_feature_rate**: ``float`` Subsample rate of feature dimension.
         - **max_num_cores**: ``int`` Max number of cpu cores for computing.
-        - **validation_batch_size**: ``int`` Batch size for validation.
-        - **col_batch**: ``int`` Number of features used in a batch during node splitting.
-        - **row_batch**: ``int`` Number of samples used in a batch during node splitting.
+        - **batch_size_val**: ``int`` Batch size for validation.
+        - **advanced**: ``map``
+            - **col_batch**: ``int`` Number of features used in a batch during node splitting.
+            - **row_batch**: ``int`` Number of samples used in a batch during node splitting.
 
 
 .. [SecureBoost] Cheng K, Fan T, Jin Y, et al. Secureboost: A lossless federated learning framework[J]. IEEE Intelligent Systems, 2021, 36(6): 87-98.

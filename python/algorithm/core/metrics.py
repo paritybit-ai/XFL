@@ -11,8 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
+import math
 import sys
 
 import numpy as np
@@ -29,6 +28,9 @@ metric_dict = {
     "mape": "mean_absolute_percentage_error",
     "mse": "mean_squared_error",
     "mae": "mean_absolute_error",
+    "r2": "r2_score",
+    "median_ae": "median_absolute_error",
+    "rmse": "root_mean_squared_error"
 }
 
 
@@ -52,3 +54,9 @@ def ks(y_true, y_pred):
     fpr, tpr, _ = sklearn_metrics.roc_curve(y_true, y_pred)
     ks = max(np.max(tpr - fpr), 0)
     return ks
+
+
+def root_mean_squared_error(y_true, y_pred):
+    mse_value = sklearn_metrics.mean_squared_error(y_true, y_pred)
+    rmse_value = math.sqrt(mse_value)
+    return rmse_value

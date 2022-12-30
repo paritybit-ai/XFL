@@ -20,6 +20,7 @@ from common.communication.gRPC.python import scheduler_pb2, scheduler_pb2_grpc
 from common.utils.config import load_json_config
 from common.utils.logger import (add_job_log_handler,
                                  add_job_stage_log_handler, logger)
+from common.xoperator import get_operator
 from service.fed_job import FedJob
 from service.fed_node import FedNode
 
@@ -77,15 +78,81 @@ class FedConfig(object):
         cls.trainer_config = cls.load_trainer_config(config_path)
         logger.info("Load Config Completed.")
 
+    # @classmethod
+    # def load_trainer_config(cls, config_path):
+    #     trainer_config = {}
+    #     for node_id in FedNode.trainers.keys():
+    #         info = load_json_config(f"{config_path}/trainer_config_{node_id}.json")
+    #         for idx in range(len(info)):
+    #             if idx not in trainer_config.keys():
+    #                 trainer_config[idx] = {}
+    #             trainer_config[idx][node_id] = info[idx]
+                    
+    #     for stage_id in trainer_config:
+    #         fed_info = {
+    #             "label_trainer": [],
+    #             "trainer": [],
+    #             "assist_trainer": []
+    #         }
+    #         for node_id in trainer_config[stage_id]:
+    #             # identity = trainer_config[stage_id][node_id]["identity"]
+    #             identity = trainer_config[stage_id][node_id].get("identity")
+    #             if identity:
+    #                 fed_info[identity].append(node_id)
+    #             trainer_config[stage_id][node_id]["fed_info"] = fed_info
+
+    #     return trainer_config
+    
     @classmethod
     def load_trainer_config(cls, config_path):
         trainer_config = {}
+        unconfiged_node_ids = []
+        op_names = {}
         for node_id in FedNode.trainers.keys():
-            info = load_json_config(f"{config_path}/trainer_config_{node_id}.json")
-            for idx in range(len(info)):
-                if idx not in trainer_config.keys():
-                    trainer_config[idx] = {}
-                trainer_config[idx][node_id] = info[idx]
+            f_path = f"{config_path}/trainer_config_{node_id}.json"
+            if not os.path.exists(f_path):
+                unconfiged_node_ids.append(node_id)
+                continue
+            
+            info = load_json_config(f_path)
+            for stage_id in range(len(info)):
+                if stage_id not in trainer_config.keys():
+                    trainer_config[stage_id] = {}
+                    op_names[stage_id] = []
+                trainer_config[stage_id][node_id] = info[stage_id]
+                
+                op_name = info[stage_id].get("model_info", {}).get("name")
+                if op_name:
+                    op_names[stage_id].append(op_name)
+                
+        if len(unconfiged_node_ids) > 1:
+            logger.warning(f"{len(unconfiged_node_ids)} nodes-{unconfiged_node_ids} are not configed.")
+            
+        if len(unconfiged_node_ids) == 1:
+            assist_trainer_id = unconfiged_node_ids[0]
+        
+            for stage_id in op_names:
+                if len(set(op_names[stage_id])) != 1:
+                    logger.warning(f"Operator names {op_names[stage_id]} not the same in stage {stage_id}.")
+                    continue
+                
+                op_name = op_names[stage_id][0]
+                try:
+                    operator = get_operator(op_name, "assist_trainer")
+                except Exception:
+                    operator = None
+
+                if operator is not None:
+                    assist_trainer_config = {
+                        "identity": "assist_trainer",
+                        "model_info": {
+                            "name": op_name
+                        },
+                    }
+                else:
+                    assist_trainer_config = {}
+                
+                trainer_config[stage_id][assist_trainer_id] = assist_trainer_config
                     
         for stage_id in trainer_config:
             fed_info = {
@@ -94,8 +161,9 @@ class FedConfig(object):
                 "assist_trainer": []
             }
             for node_id in trainer_config[stage_id]:
-                identity = trainer_config[stage_id][node_id]["identity"]
-                fed_info[identity].append(node_id)
+                identity = trainer_config[stage_id][node_id].get("identity")
+                if identity:
+                    fed_info[identity].append(node_id)
                 trainer_config[stage_id][node_id]["fed_info"] = fed_info
 
         return trainer_config
@@ -111,9 +179,9 @@ class FedConfig(object):
         FedJob.job_id = response.jobId
         cls.job_log_handler = add_job_log_handler(FedJob.job_id)
         cls.job_stage_log_handler = add_job_stage_log_handler(
-            FedJob.job_id, FedConfig.stage_config["model_info"]["name"])
-        if "global_epoch" in cls.stage_config["train_info"]["params"]:
-            FedJob.global_epoch = cls.stage_config["train_info"]["params"]["global_epoch"]
+            FedJob.job_id, FedConfig.stage_config.get("model_info", {}).get("name", ""))
+        if "global_epoch" in cls.stage_config.get("train_info", {}).get("train_params", {}):
+            FedJob.global_epoch = cls.stage_config["train_info"].get("train_params", {}).get("global_epoch")
 
         logger.info("stage_config: " + str(cls.stage_config))
 

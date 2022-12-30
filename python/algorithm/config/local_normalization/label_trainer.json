@@ -1,8 +1,7 @@
 {
     "identity": "label_trainer",
     "model_info": {
-        "name": "local_normalization",
-        "config": {}
+        "name": "local_normalization"
     },
     "input": {
         "trainset": [
@@ -25,33 +24,23 @@
         ]
     },
     "output": {
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
         "model": {
-            "type": "file",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "local_normalizer_guest.pt"
+            "name": "local_normalization_[STAGE_ID].pt"
         },
         "trainset": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "normalized_breast_vertical_guest_train.csv",
-            "header": true,
-            "has_id": true
+            "name": "temp/normalized_train_[STAGE_ID].csv"
         },
         "valset": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "normalized_breast_vertical_guest_test.csv",
-            "header": true,
-            "has_id": true
+            "name": "temp/normalized_val_[STAGE_ID].csv"
         }
     },
     "train_info": {
-        "device": "cpu",
-        "interaction_params": {
-        },
-        "params": {
+        "train_params": {
             "norm": "max",
-            "axis": 0
+            "axis": 0,
+            "feature_norm": {
+            }
         }
     }
 }

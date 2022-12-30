@@ -19,6 +19,8 @@ from pathlib import Path
 
 import numpy as np
 
+from common.checker.matcher import get_matched_config
+from common.checker.x_types import All
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
 from .base import VerticalPearsonBase
@@ -36,6 +38,8 @@ class VerticalPearsonLabelTrainer(VerticalPearsonBase):
 		Args:
 			train_conf:
 		"""
+		self.sync_channel = BroadcastChannel(name="sync")
+		self._sync_config(train_conf)
 		super().__init__(train_conf, label=False)
 		self.feature_mapping = dict()
 		self.channels = dict()
@@ -64,6 +68,13 @@ class VerticalPearsonLabelTrainer(VerticalPearsonBase):
 			self.channels["encryption_context"].broadcast(self.public_context.serialize(), use_pickle=False)
 		else:
 			raise TypeError(f"Encryption param type {type(self.encryption_param)} not valid.")
+
+	def _sync_config(self, config):
+		sync_rule = {
+			"train_info": All()
+		}
+		config_to_sync = get_matched_config(config, sync_rule)
+		self.sync_channel.broadcast(config_to_sync)
 
 	def fit(self):
 		logger.info("vertical pearson label trainer start.")
@@ -183,7 +194,7 @@ class VerticalPearsonLabelTrainer(VerticalPearsonBase):
 		self.save()
 
 	def save(self):
-		save_dir = str(Path(self.output.get("model")["path"]))
+		save_dir = str(Path(self.output.get("path")))
 		if not os.path.exists(save_dir):
 			os.makedirs(save_dir)
 		model_name = self.output.get("model")["name"]

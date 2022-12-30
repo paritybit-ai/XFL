@@ -22,7 +22,10 @@ import pandas as pd
 import tenseal as ts
 import torch
 from sklearn.metrics import confusion_matrix
+import random
 
+from common.checker.matcher import get_matched_config
+from common.checker.x_types import All
 from common.communication.gRPC.python.channel import BroadcastChannel
 from common.crypto.paillier.paillier import Paillier
 from common.evaluation.metrics import ThresholdCutter
@@ -36,6 +39,8 @@ from .base import VerticalLogisticRegressionBase
 
 class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
     def __init__(self, train_conf: dict, *args, **kwargs):
+        self.sync_channel = BroadcastChannel(name="sync")
+        self._sync_config(train_conf)
         super().__init__(train_conf, label=True, *args, **kwargs)
         self._init_model(bias=True)
         self.export_conf = [{
@@ -45,7 +50,10 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
             "input_dim": self.data_dim,
             "bias": True
         }]
-        self.set_seed(self.extra_config["shuffle_seed"])
+        if self.random_seed is None:
+            self.random_seed = random.randint(-(1 << 32), 1 << 32)
+            self.sync_channel.broadcast(self.random_seed)
+        self.set_seed(self.random_seed)
         self.es = earlyStopping(key=self.early_stopping_config["key"],
                                 patience=self.early_stopping_config["patience"],
                                 delta=self.early_stopping_config["delta"])
@@ -53,12 +61,32 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
         self.best_prediction_val = None
         self.best_prediction_train = None
 
+    def _sync_config(self, config):
+        sync_rule = {
+            "train_info": {
+                "interaction_params": All(),
+                "train_params": {
+                    "global_epoch": All(),
+                    "batch_size": All(),
+                    "encryption": All(),
+                    "optimizer": All(),
+                    "early_stopping": All(),
+                    "random_seed": All()
+                }
+            }
+        }
+        
+        config_to_sync = get_matched_config(config, sync_rule)
+        self.sync_channel.broadcast(config_to_sync)
+
     def fit(self):
+        self.check_data()
         logger.debug("Vertical logistic regression training start")
         broadcast_channel = BroadcastChannel(name="vertical_logistic_regression_channel")
 
-        encryption_config = self.aggregation_config["encryption"]
-        encryption_method = encryption_config["method"].lower()
+        encryption_config = self.encryption_config
+        # encryption_method = encryption_config["method"].lower()
+        encryption_method = list(self.encryption_config.keys())[0].lower()
 
         private_context = None
         num_cores = -1
@@ -66,12 +94,12 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
         if encryption_method == "ckks":
             private_context = ts.context(
                 ts.SCHEME_TYPE.CKKS,
-                poly_modulus_degree=encryption_config["poly_modulus_degree"],
-                coeff_mod_bit_sizes=encryption_config["coeff_mod_bit_sizes"]
+                poly_modulus_degree=encryption_config[encryption_method]["poly_modulus_degree"],
+                coeff_mod_bit_sizes=encryption_config[encryption_method]["coeff_mod_bit_sizes"]
             )
             private_context.generate_galois_keys()
             private_context.generate_relin_keys()
-            private_context.global_scale = 1 << encryption_config["global_scale_bit_size"]
+            private_context.global_scale = 1 << encryption_config[encryption_method]["global_scale_bit_size"]
 
             serialized_public_context = private_context.serialize(
                 save_public_key=True,
@@ -84,9 +112,9 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
             broadcast_channel.broadcast(serialized_public_context, use_pickle=False)
             logger.debug("Broadcast completed.")
         elif encryption_method == "paillier":
-            num_cores = -1 if encryption_config["parallelize_on"] else 1
-            private_context = Paillier.context(encryption_config["key_bit_size"],
-                                               djn_on=encryption_config["djn_on"])
+            num_cores = -1 if encryption_config[encryption_method]["parallelize_on"] else 1
+            private_context = Paillier.context(encryption_config[encryption_method]["key_bit_size"],
+                                               djn_on=encryption_config[encryption_method]["djn_on"])
             logger.debug("Broadcast paillier public keys.")
             broadcast_channel.broadcast(private_context.to_public().serialize(), use_pickle=False)
             logger.debug("Broadcast completed.")
@@ -128,7 +156,7 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
                 elif encryption_method == "paillier":
                     enc_pred_residual = Paillier.encrypt(private_context,
                                                          pred_residual.numpy().astype(np.float32).flatten(),
-                                                         precision=encryption_config["precision"],
+                                                         precision=encryption_config[encryption_method]["precision"],
                                                          obfuscation=True,
                                                          num_cores=num_cores)
                     broadcast_channel.broadcast(Paillier.serialize(enc_pred_residual), use_pickle=False)
@@ -201,7 +229,7 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
                 cm += confusion_matrix(y_true=y_batch.detach().numpy(), y_pred=pred_total.detach().numpy())
 
             metric = self._calc_metrics(np.array(y_list, dtype=float), np.array(pred_prob_list),
-                                        epoch, stage="validation")
+                                        epoch, stage="val")
 
             if self.early_stopping_config["patience"] > 0:
                 early_stop_flag, save_flag = self.es(metric)
@@ -216,11 +244,12 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
             broadcast_channel.broadcast([early_stop_flag, save_flag, self.early_stopping_config["patience"]],
                                         use_pickle=True)
             if early_stop_flag:
-                ModelPreserver.save(save_dir=self.save_dir, model_name=self.save_model_name,
-                                    state_dict=self.best_model.state_dict(), final=True)
-                if self.save_probabilities:
-                    self._save_prob(best_model=self.best_model, channel=broadcast_channel)
-                return None
+                break
+                # ModelPreserver.save(save_dir=self.save_dir, model_name=self.save_model_name,
+                #                     state_dict=self.best_model.state_dict(), final=True)
+                # # if self.save_probabilities:
+                # self._save_prob(best_model=self.best_model, channel=broadcast_channel)
+                # return None
 
             if self.save_frequency > 0 and epoch % self.save_frequency == 0:
                 ModelPreserver.save(save_dir=self.save_dir,
@@ -234,8 +263,8 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
             self.best_prediction_val = copy.deepcopy(np.array(pred_prob_list))
 
         self.save(y_list, training_y_list)
-        if self.save_probabilities:
-            self._save_prob(best_model=self.best_model, channel=broadcast_channel)
+        # if self.save_probabilities:
+        self._save_prob(best_model=self.best_model, channel=broadcast_channel)
 
         self._save_feature_importance(broadcast_channel)
 
@@ -248,12 +277,12 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
         # dump out ks plot
         suggest_threshold = 0.5
         if "ks" in self.metric_config or "auc_ks" in self.metric_config:
-            tc = ThresholdCutter(os.path.join(self.evaluation_path, "ks_plot_valid.csv"))
+            tc = ThresholdCutter(os.path.join(self.save_dir, self.output.get("ks_plot_val")["name"]))
             tc.cut_by_value(np.array(y_list, dtype=float), self.best_prediction_val)
             suggest_threshold = tc.bst_threshold
             tc.save()
             if self.interaction_params.get("echo_training_metrics"):
-                tc = ThresholdCutter(os.path.join(self.evaluation_path, "ks_plot_train.csv"))
+                tc = ThresholdCutter(os.path.join(self.save_dir, self.output.get("ks_plot_val")["name"]))
                 tc.cut_by_value(np.array(training_y_list, dtype=float), self.best_prediction_train)
                 tc.save()
 
@@ -274,34 +303,46 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
             res["importance"].append(float(weight))
         res = pd.DataFrame(res).sort_values(by="importance", key=lambda col: np.abs(col), ascending=False)
         res.to_csv(
-            Path(self.save_dir, "feature_importances.csv"), header=True, index=False, float_format="%.6g"
+            # Path(self.save_dir, "feature_importances.csv"), header=True, index=False, float_format="%.6g"
+            Path(self.save_dir, self.output["feature_importance"]["name"]), header=True, index=False, float_format="%.6g"
         )
 
     def _save_prob(self, best_model, channel):
-        train_prob_list, train_label_list, train_id_list = [], [], []
-        for batch_idx, (x_batch, y_batch, id_batch) in enumerate(self.train_dataloader):
-            x_batch, y_batch, id_batch = x_batch.to(self.device), y_batch.to(self.device), id_batch.to(self.device)
-            pred_label_trainer = best_model(x_batch)
-            pred_trainer_list = channel.collect()
-            pred_total = torch.clone(pred_label_trainer)
-            for pred_trainer in pred_trainer_list:
-                pred_total += pred_trainer
-            pred_total = torch.sigmoid(pred_total)
-            train_id_list += torch.squeeze(id_batch, dim=-1).tolist()
-            train_label_list += torch.squeeze(y_batch, dim=-1).tolist()
-            train_prob_list += torch.squeeze(pred_total, dim=-1).tolist()
-        self._write_prediction(train_label_list, train_prob_list, train_id_list, final=True)
+        if self.interaction_params.get("write_training_prediction"):
+            train_prob_list, train_label_list, train_id_list = [], [], []
+            for batch_idx, (x_batch, y_batch, id_batch) in enumerate(self.train_dataloader):
+                x_batch, y_batch, id_batch = x_batch.to(self.device), y_batch.to(self.device), id_batch.to(self.device)
+                pred_label_trainer = best_model(x_batch)
+                pred_trainer_list = channel.collect()
+                pred_total = torch.clone(pred_label_trainer)
+                for pred_trainer in pred_trainer_list:
+                    pred_total += pred_trainer
+                pred_total = torch.sigmoid(pred_total)
+                train_id_list += torch.squeeze(id_batch, dim=-1).tolist()
+                train_label_list += torch.squeeze(y_batch, dim=-1).tolist()
+                train_prob_list += torch.squeeze(pred_total, dim=-1).tolist()
+            self._write_prediction(train_label_list, train_prob_list, train_id_list, final=True)
 
-        val_prob_list, val_label_list, val_id_list = [], [], []
-        for batch_idx, (x_batch, y_batch, id_batch) in enumerate(self.val_dataloader):
-            x_batch, y_batch, id_batch = x_batch.to(self.device), y_batch.to(self.device), id_batch.to(self.device)
-            pred_label_trainer = best_model(x_batch)
-            pred_trainer_list = channel.collect()
-            pred_total = torch.clone(pred_label_trainer)
-            for pred_trainer in pred_trainer_list:
-                pred_total += pred_trainer
-            pred_total = torch.sigmoid(pred_total)
-            val_id_list += torch.squeeze(id_batch, dim=-1).tolist()
-            val_label_list += torch.squeeze(y_batch, dim=-1).tolist()
-            val_prob_list += torch.squeeze(pred_total, dim=-1).tolist()
-        self._write_prediction(val_label_list, val_prob_list, val_id_list, stage="val", final=True)
+        if self.interaction_params.get("write_validation_prediction"):
+            val_prob_list, val_label_list, val_id_list = [], [], []
+            for batch_idx, (x_batch, y_batch, id_batch) in enumerate(self.val_dataloader):
+                x_batch, y_batch, id_batch = x_batch.to(self.device), y_batch.to(self.device), id_batch.to(self.device)
+                pred_label_trainer = best_model(x_batch)
+                pred_trainer_list = channel.collect()
+                pred_total = torch.clone(pred_label_trainer)
+                for pred_trainer in pred_trainer_list:
+                    pred_total += pred_trainer
+                pred_total = torch.sigmoid(pred_total)
+                val_id_list += torch.squeeze(id_batch, dim=-1).tolist()
+                val_label_list += torch.squeeze(y_batch, dim=-1).tolist()
+                val_prob_list += torch.squeeze(pred_total, dim=-1).tolist()
+            self._write_prediction(val_label_list, val_prob_list, val_id_list, stage="val", final=True)
+
+    def check_data(self):
+        dim_channel = BroadcastChannel(name="check_data_com")
+        n = self.data_dim
+        dims = dim_channel.collect()
+        for dim in dims:
+            n += dim
+        if n <= 0:
+            raise ValueError("Number of the feature is zero. Stop training.")

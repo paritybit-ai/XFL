@@ -21,6 +21,8 @@ import time
 import numpy as np
 import pandas as pd
 
+from common.checker.matcher import get_matched_config
+from common.checker.x_types import All
 from common.communication.gRPC.python.channel import BroadcastChannel
 from common.crypto.paillier.paillier import Paillier, PaillierCiphertext
 from common.utils.logger import logger
@@ -35,6 +37,8 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
             *args:
             **kwargs:
         """
+        self.sync_channel = BroadcastChannel(name="sync")
+        self._sync_config(train_conf)
         super().__init__(train_conf, label=True, *args, **kwargs)
         self.neg_total_count, self.pos_total_count = 0, 0
         logger.info("node-1:successfully binning.")
@@ -46,11 +50,19 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
         self.pos_bin_ratio = {}
         self.broadcast_channel = BroadcastChannel(name="vertical_binning_woe_iv_channel")
 
+    def _sync_config(self, config):
+        sync_rule = {
+            "train_info": All()
+        }
+        config_to_sync = get_matched_config(config, sync_rule)
+        self.sync_channel.broadcast(config_to_sync)
+
     def fit(self):
         # broadcast_channel = BroadcastChannel(name="vertical_binning_woe_iv_channel")
 
-        encryption_config = self.train_params["encryption_params"]
-        encryption_method = encryption_config["method"].lower()
+        encryption_config_pre = self.train_params["encryption"]
+        encryption_method = list(encryption_config_pre.keys())[0].lower()
+        encryption_config = encryption_config_pre[encryption_method]
 
         # if encryption_method == "paillier":
         #     pri_context = Paillier.context(encryption_config["key_bit_size"], djn_on=encryption_config["djn_on"])
@@ -118,8 +130,10 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
                 self.neg_bin_count[k] = neg_.to_dict()
                 pos_prob = pos_prob.apply(lambda x: float("%.6f" % x))
                 neg_prob = neg_prob.apply(lambda x: float("%.6f" % x))
+
                 self.pos_bin_ratio[k] = pos_prob.to_dict()
                 self.neg_bin_ratio[k] = neg_prob.to_dict()
+
                 client_woe_dict[k] = woe.to_dict()
                 client_iv_dict[k] += float("%.6f" % np.sum((pos_prob - neg_prob) * woe))
             logger.info("Trainer woe cost:" + str(time.time() - time_s))
@@ -130,10 +144,7 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
             # Save host dicts
             self.woe_dict_total.update(client_woe_dict)
             self.iv_dict_total.update(client_iv_dict)
-            save_dir = self.output["trainset"]["path"]
-            if not os.path.exists(save_dir):
-                os.makedirs(save_dir)
-            guest_file_path = f'{save_dir}/{self.output["trainset"]["name"]}.json'
+            guest_file_path = f'{self.save_dir}/{self.output["result"]["name"]}'
             with open(guest_file_path, "w") as wf:
                 json.dump({"woe": self.woe_dict_total, "iv": self.iv_dict_total, "count_neg": self.neg_bin_count,
                            "count_pos": self.pos_bin_count, "ratio_pos": self.pos_bin_ratio,
@@ -171,12 +182,14 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
             neg_bin_count.index = pd.Series(neg_bin_count.index).apply(lambda x: self.woe_map[feature][x])
             self.pos_bin_count[feature] = tmp_count['sum'].to_dict()
             self.neg_bin_count[feature] = neg_bin_count.to_dict()
+
             pos_prob = pos_prob.apply(lambda x: float("%.6f" % x))
             neg_prob = neg_prob.apply(lambda x: float("%.6f" % x))
             pos_prob.index = pd.Series(pos_prob.index).apply(lambda x: self.woe_map[feature][x])
             neg_prob.index = pd.Series(neg_prob.index).apply(lambda x: self.woe_map[feature][x])
             self.pos_bin_ratio[feature] = pos_prob.to_dict()
             self.neg_bin_ratio[feature] = neg_prob.to_dict()
+
             woe_dict[feature] = woe.to_dict()
 
         logger.info("label trainer cost:" + str(time.time() - time_s))

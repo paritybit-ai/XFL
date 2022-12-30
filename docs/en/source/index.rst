@@ -75,9 +75,6 @@ PIR(Private Information Retrieval)            ✅
    ./algorithms/algos/HorizontalLinearRegression
    ./algorithms/algos/HorizontalLogisticRegression
    ./algorithms/algos/HorizontalResNet
-   ./algorithms/algos/HorizontalBert
-   ./algorithms/algos/HorizontalVGG
-   ./algorithms/algos/HorizontalDenseNet
    ./algorithms/algos/VerticalLogisticRegression
    ./algorithms/algos/VerticalXgboost
    ./algorithms/algos/VerticalBinningWoeIV

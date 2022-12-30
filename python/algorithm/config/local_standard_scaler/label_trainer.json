@@ -1,8 +1,7 @@
 {
     "identity": "label_trainer",
     "model_info": {
-        "name": "local_standard_scaler",
-        "config": {}
+        "name": "local_standard_scaler"
     },
     "input": {
         "trainset": [
@@ -25,39 +24,22 @@
         ]
     },
     "output": {
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
         "model": {
-            "type": "file",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "local_standard_scaler_guest.pt"
+            "name": "local_standard_scaler_[STAGE_ID].pt"
         },
         "trainset": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "standardized_breast_vertical_guest_train.csv",
-            "header": true,
-            "has_id": true
+            "name": "temp/standardized_train_[STAGE_ID].csv"
         },
         "valset": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "standardized_breast_vertical_guest_test.csv",
-            "header": true,
-            "has_id": true
+            "name": "temp/standardized_val_[STAGE_ID].csv"
         }
     },
     "train_info": {
-        "device": "cpu",
-        "interaction_params": {
-            "save_frequency": -1
-        },
-        "params": {
+        "train_params": {
             "with_mean": true,
             "with_std": true,
-            "feature_standardize_config": {
-                "x0": {
-                    "with_mean": false,
-                    "with_std": false
-                }
+            "feature_standard": {
             }
         }
     }

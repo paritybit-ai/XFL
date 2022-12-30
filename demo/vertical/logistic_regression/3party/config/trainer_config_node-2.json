@@ -2,11 +2,7 @@
     {
         "identity": "trainer",
         "model_info": {
-            "name": "vertical_logistic_regression",
-            "config": {
-                "input_dim": null,
-                "bias": false
-            }
+            "name": "vertical_logistic_regression"
         },
         "input": {
             "trainset": [
@@ -27,47 +23,25 @@
                     "has_id": true
                 }
             ],
-            "pretrain_model": {
+            "pretrained_model": {
+                "path": "",
+                "name": ""
             }
         },
         "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "model": {
-                "type": "file",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "vertical_logistic_regression_1.pt"
+                "name": "vertical_logitstic_regression_[STAGE_ID].pt"
             }
         },
         "train_info": {
-            "device": "cpu",
             "interaction_params": {
-                "save_frequency": -1,
-                "save_probabilities": true,
-                "save_probabilities_bins_number": 10
+                "save_frequency": 1,
+                "write_training_prediction": true,
+                "write_validation_prediction": true,
+                "echo_training_metrics": true
             },
-            "params": {
-                "global_epoch": 30,
-                "batch_size": 2048,
-                "aggregation_config": {
-                    "encryption": {
-                        "method": "ckks",
-                        "poly_modulus_degree": 8192,
-                        "coeff_mod_bit_sizes": [
-                            60,
-                            40,
-                            40,
-                            60
-                        ],
-                        "global_scale_bit_size": 40
-                    }
-                },
-                "optimizer_config": {
-                    "lr": 0.01,
-                    "p": 2,
-                    "alpha": 1e-4
-                },
-                "extra_config": {
-                    "shuffle_seed": 50
-                }
+            "train_params": {
             }
         }
     }

@@ -1,0 +1,92 @@
+{
+    "identity": "label_trainer",
+    "model_info": {
+        "name": "vertical_linear_regression"
+    },
+    "input": {
+        "trainset": [
+            {
+                "type": "csv",
+                "path": "../../../../dataset/boston_house_price_linear",
+                "name": "guest_train_norm.csv",
+                "has_label": true,
+                "has_id": true
+            }
+        ],
+        "valset": [
+            {
+                "type": "csv",
+                "path": "../../../../dataset/boston_house_price_linear",
+                "name": "guest_test_norm.csv",
+                "has_label": true,
+                "has_id": true
+            }
+        ],
+        "pretrained_model": {
+            "path": "",
+            "name": ""
+        }
+    },
+    "output": {
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "model": {
+            "name": "vertical_linear_regression_[STAGE_ID].pt"
+        },
+        "metric_train": {
+            "name": "linear_reg_metric_train_[STAGE_ID].csv"
+        },
+        "metric_val": {
+            "name": "linear_reg_metric_val_[STAGE_ID].csv"
+        },
+        "prediction_train": {
+            "name": "linear_reg_prediction_train_[STAGE_ID].csv"
+        },
+        "prediction_val": {
+            "name": "linear_reg_prediction_val_[STAGE_ID].csv"
+        },
+        "feature_importance": {
+            "name": "linear_reg_feature_importance_[STAGE_ID].csv"
+        }
+    },
+    "train_info": {
+        "interaction_params": {
+            "save_frequency": -1,
+            "write_training_prediction": true,
+            "write_validation_prediction": true,
+            "echo_training_metrics": true
+        },
+        "train_params": {
+            "global_epoch": 10,
+            "batch_size": 32,
+            "encryption": {
+                "ckks": {
+                    "poly_modulus_degree": 8192,
+                    "coeff_mod_bit_sizes": [
+                        60,
+                        40,
+                        40,
+                        60
+                    ],
+                    "global_scale_bit_size": 40
+                }
+            },
+            "optimizer": {
+                "lr": 0.01,
+                "p": 2,
+                "alpha": 1e-4
+            },
+            "metric": {
+                "mse": {},
+                "mape": {},
+                "mae": {},
+                "rmse": {}
+            },
+            "early_stopping": {
+                "key": "loss",
+                "patience": -1,
+                "delta": 0
+            },
+            "random_seed": 50
+        }
+    }
+}

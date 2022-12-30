@@ -26,9 +26,11 @@ def _get_table_agg_inst(role: str, sec_conf: dict, *args, **kwargs) -> Union[Tab
 
     if sec_conf is None or not sec_conf:  # sec_conf may be None or {}
         method = "plain"
-        sec_conf = {"method": "plain"}
+        sec_conf = {
+            "plain": {}
+        }
     else:
-        method = sec_conf["method"]
+        method = list(sec_conf.keys())[0]
 
     opt = {
         "otp": {
@@ -42,7 +44,7 @@ def _get_table_agg_inst(role: str, sec_conf: dict, *args, **kwargs) -> Union[Tab
     }
 
     try:
-        return opt[method][role](sec_conf, *args, **kwargs)
+        return opt[method][role](sec_conf[method], *args, **kwargs)
     except KeyError as e:
         raise KeyError("Combination of method {} and role {} is not supported "
                        "for creating TableAggregator instance".format(method, role)) from e

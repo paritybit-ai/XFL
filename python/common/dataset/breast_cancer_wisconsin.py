@@ -66,6 +66,7 @@ class WDBC(torch.utils.data.Dataset):
         test_ratio = reallocate_dict['test_ratio']
         random_state = reallocate_dict["random_seed"]
         parties = reallocate_dict["parties"]
+        np.random.seed(random_state)
 
         final_dir_path = os.path.join(
             self.dirpath, self.datadir, reallocate_folder)
