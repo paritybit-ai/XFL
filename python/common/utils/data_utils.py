@@ -62,7 +62,26 @@ def extract_file_recursively(from_path: str, to_path: str) -> None:
     def extract(from_path, to_path, suffix):
         if suffix == ".tar":
             with tarfile.open(from_path,  "r") as tar:
-                tar.extractall(to_path)
+                def is_within_directory(directory, target):
+                    
+                    abs_directory = os.path.abspath(directory)
+                    abs_target = os.path.abspath(target)
+                
+                    prefix = os.path.commonprefix([abs_directory, abs_target])
+                    
+                    return prefix == abs_directory
+                
+                def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+                
+                    for member in tar.getmembers():
+                        member_path = os.path.join(path, member.name)
+                        if not is_within_directory(path, member_path):
+                            raise Exception("Attempted Path Traversal in Tar File")
+                
+                    tar.extractall(path, members, numeric_owner) 
+                    
+                
+                safe_extract(tar, to_path)
         elif suffix == ".gz":
             with gzip.open(from_path, "rb") as rfh, open(to_path, "wb") as wfh:
                 wfh.write(rfh.read())
