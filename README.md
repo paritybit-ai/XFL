@@ -13,7 +13,7 @@ and applies secure communication protocols to ensure communication security.
   - High-performance algorithm library
 
     - Comprehensive algorithms: support a variety of mainstream horizontal/vertical federation algorithms.
-    - Excellent performance: significantly exceeds the average performace of federated learning products. 
+    - Excellent performance: significantly exceeds the average performance of federated learning products. 
     - Network optimization: adapt to high latency, frequent packet loss, and unstable network environments.
 
   - Flexible deployment
