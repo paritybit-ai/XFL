@@ -21,7 +21,7 @@ pyspark>=3.2.1
 pyarrow>=1.0.0
 dill==0.3.4
 tqdm==4.62.3
-tensorflow==2.9.3
+tensorflow==2.11.1
 paddlepaddle==2.4.0
 transformers==4.21.1
 jax>=0.3.24
