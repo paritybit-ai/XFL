@@ -1,11 +1,11 @@
 # Copyright 2022 The XFL Authors. All rights reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,12 +30,12 @@ class OneTimeAdd(object):
     def context(modulus_exp: int = 128,
                 data_type: str = "torch.Tensor"):
         return OneTimePadContext(modulus_exp, data_type)
-    
+
     @staticmethod
     def ciphertext(data: Union[list, np.ndarray, bytes],
                    context_: OneTimePadContext):
         return OneTimePadCiphertext(data, context_)
-    
+
     @staticmethod
     def _xcrypt(context_: OneTimePadContext,
                 data: Union[np.ndarray, torch.Tensor],
@@ -50,18 +50,24 @@ class OneTimeAdd(object):
         if isinstance(is_addition, (bool, int)):
             is_addition = [is_addition] * len(one_time_key)
         elif len(is_addition) != len(one_time_key):
-            raise ValueError(f"Length of is_additon ({len(is_addition)}) and one_time_key ({len(one_time_key)}) not match.")
+            raise ValueError(
+                f"Length of is_additon ({len(is_addition)}) and one_time_key ({len(one_time_key)}) not match.")
 
         if data.shape == ():
             zero_shape = True
             data = np.array([data])
         else:
             zero_shape = False
-            
+
         dtype = np.uint64 if context_.modulus_exp == 64 else object
-        
+
         if not is_decrypt:
-            out = np.mod(np.trunc(data * context_.scalar).astype('int'), context_.modulus).astype(dtype)
+            if dtype == np.uint64:
+                out = np.mod(np.trunc(data * context_.scalar).astype("int"),
+                             context_.modulus).astype(dtype)
+            else:
+                out = np.mod(np.trunc(data * context_.scalar),
+                             context_.modulus).astype(dtype)
         else:
             out = deepcopy(data)
 
@@ -70,23 +76,25 @@ class OneTimeAdd(object):
                 if context_.modulus_exp == 64:
                     out = out + one_time_key[i]
                 else:
-                    out = np.mod(out + one_time_key[i], context_.modulus).astype(object)
+                    out = np.mod(
+                        out + one_time_key[i], context_.modulus).astype(object)
             else:
                 if context_.modulus_exp == 64:
                     out = out - one_time_key[i]
                 else:
-                    out = np.mod(out - one_time_key[i], context_.modulus).astype(object)
+                    out = np.mod(
+                        out - one_time_key[i], context_.modulus).astype(object)
 
         if is_decrypt:
             out = out.astype(object)
             idx = np.where(out > context_.modulus // 2)
             out[idx] -= context_.modulus
             out /= context_.scalar
-            
+
         if zero_shape:
             out = np.array(out[0])
         return out
-    
+
     @classmethod
     def encrypt(cls,
                 context_: OneTimePadContext,
@@ -108,7 +116,7 @@ class OneTimeAdd(object):
 
         Raises:
             ValueError: if shape of data is different from shape of one_time_key or one_time_key[0].
-            
+
         Warnings:
             if context_.data_type is different from the type of data, which means the type of plaintext
                 after decryption will be different from the type of plaintext before encryption.
@@ -121,23 +129,25 @@ class OneTimeAdd(object):
             one_time_key = [one_time_key.value]
         else:
             one_time_key = one_time_key.value
-            
+
         if data.shape != one_time_key[0].shape:
-            raise ValueError(f"Input data's shape {data.shape} and one_time_key's shape {one_time_key[0].shape} not match.")
-            
+            raise ValueError(
+                f"Input data's shape {data.shape} and one_time_key's shape {one_time_key[0].shape} not match.")
+
         if not isinstance(data, context_.data_type) and not isinstance(data, np.float64):
-            warnings.warn(f"Input data type {type(data)} and context_.data_type {context_.data_type} are different.")
+            warnings.warn(
+                f"Input data type {type(data)} and context_.data_type {context_.data_type} are different.")
 
         if isinstance(data, torch.Tensor):
             data = data.numpy()
-            
+
         out = cls._xcrypt(context_, data, one_time_key, is_addition, False)
         if not serialized:
             out = OneTimePadCiphertext(out, context_)
         else:
             out = OneTimePadContext.serialize(out)
         return out
-    
+
     @classmethod
     def decrypt(cls,
                 context_: OneTimePadContext,
@@ -151,7 +161,7 @@ class OneTimeAdd(object):
             ciphertext (Union[OneTimePadCiphertext, bytes]): result of cls.encrypt(...) method.
             one_time_key (OneTimeKey): the same as it is in cls.encrypt(...).
             is_addition (Union[List[bool], bool]): the same as it is in cls.encrypt(...).
-            
+
         Raises:
             ValueError: if the shape of ciphertext.data is different from the shape of one_time_key.
 
@@ -162,15 +172,17 @@ class OneTimeAdd(object):
             one_time_key = [one_time_key.value]
         else:
             one_time_key = one_time_key.value
-            
+
         if isinstance(ciphertext, bytes):
             ciphertext = OneTimePadContext.deserialize(ciphertext)
-        
+
         if ciphertext.data.shape != one_time_key[0].shape:
-            raise ValueError(f"Input ciphertext's shape {ciphertext.data.shape} and one_time_key's shape {one_time_key[0].shape} not match.")
-        
-        out = cls._xcrypt(context_, ciphertext.data, one_time_key, is_addition, True)
-        
+            raise ValueError(
+                f"Input ciphertext's shape {ciphertext.data.shape} and one_time_key's shape {one_time_key[0].shape} not match.")
+
+        out = cls._xcrypt(context_, ciphertext.data,
+                          one_time_key, is_addition, True)
+
         if context_.data_type == np.ndarray:
             out = out.astype(np.float32)
         else:

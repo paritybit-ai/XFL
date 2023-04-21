@@ -27,6 +27,7 @@ from service.fed_node import FedNode
 
 class FedConfig(object):
     trainer_config = {}
+    converted_trainer_config = {}  # temp
     stage_config = {}
     algorithm_list = []
     default_config_map = {}
@@ -73,7 +74,7 @@ class FedConfig(object):
     
     @classmethod
     def load_config(cls, config_path):
-        cls.job_log_handler = add_job_log_handler(FedJob.job_id)
+        cls.job_log_handler = add_job_log_handler(FedJob.job_id, FedNode.node_id)
         logger.info("Loading Config...")
         cls.trainer_config = cls.load_trainer_config(config_path)
         logger.info("Load Config Completed.")
@@ -115,6 +116,7 @@ class FedConfig(object):
                 continue
             
             info = load_json_config(f_path)
+            assert type(info) == list, "trainer config should be wrapped by '[]'"
             for stage_id in range(len(info)):
                 if stage_id not in trainer_config.keys():
                     trainer_config[stage_id] = {}
@@ -177,9 +179,9 @@ class FedConfig(object):
         response = stub.getConfig(request)
         cls.stage_config = json.loads(response.config)
         FedJob.job_id = response.jobId
-        cls.job_log_handler = add_job_log_handler(FedJob.job_id)
+        cls.job_log_handler = add_job_log_handler(FedJob.job_id, FedNode.node_id)
         cls.job_stage_log_handler = add_job_stage_log_handler(
-            FedJob.job_id, FedConfig.stage_config.get("model_info", {}).get("name", ""))
+            FedJob.job_id, FedNode.node_id, FedJob.current_stage, FedConfig.stage_config.get("model_info", {}).get("name", ""))
         if "global_epoch" in cls.stage_config.get("train_info", {}).get("train_params", {}):
             FedJob.global_epoch = cls.stage_config["train_info"].get("train_params", {}).get("global_epoch")
 

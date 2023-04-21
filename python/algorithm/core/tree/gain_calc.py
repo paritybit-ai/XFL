@@ -86,6 +86,7 @@ class BestSplitInfo(object):
                  gain: float = -float('inf'),
                  feature_ower: str = '',
                  feature_index: int = 0, 
+                 feature_name: str = '',
                  is_category: bool = False,
                  split_point: Optional[float] = None,
                  left_cat: Optional[list] = None,
@@ -100,6 +101,7 @@ class BestSplitInfo(object):
         self.gain = gain
         self.feature_owner = feature_ower
         self.feature_idx = feature_index
+        self.feature_name = feature_name
         self.is_category = is_category
         self.split_point = split_point
         self.left_cat = left_cat

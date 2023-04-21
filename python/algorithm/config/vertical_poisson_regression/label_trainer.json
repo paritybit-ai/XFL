@@ -1,0 +1,88 @@
+{
+    "identity": "label_trainer",
+    "model_info": {
+        "name": "vertical_poisson_regression"
+    },
+    "input": {
+        "trainset": [
+            {
+                "type": "csv",
+                "path": "./dataset/bike_sharing_data_vertical/2party",
+                "name": "bike_sharing_data_vertical_labeled_train.csv",
+                "has_label": true,
+                "has_id": true
+            }
+        ],
+        "valset": [
+            {
+                "type": "csv",
+                "path": "./dataset/bike_sharing_data_vertical/2party",
+                "name": "bike_sharing_data_vertical_labeled_test.csv",
+                "has_label": true,
+                "has_id": true
+            }
+        ],
+        "pretrained_model": {
+            "path": "",
+            "name": ""
+        }
+    },
+    "output": {
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "model": {
+            "name": "vertical_poisson_regression_[STAGE_ID].pt"
+        },
+        "metric_train": {
+            "name": "poisson_reg_metric_train_[STAGE_ID].csv"
+        },
+        "metric_val": {
+            "name": "poisson_reg_metric_val_[STAGE_ID].csv"
+        },
+        "prediction_train": {
+            "name": "poisson_reg_prediction_train_[STAGE_ID].csv"
+        },
+        "prediction_val": {
+            "name": "poisson_reg_prediction_val_[STAGE_ID].csv"
+        },
+        "feature_importance": {
+            "name": "poisson_reg_feature_importance_[STAGE_ID].csv"
+        }
+    },
+    "train_info": {
+        "interaction_params": {
+            "save_frequency": -1,
+            "write_training_prediction": true,
+            "write_validation_prediction": true,
+            "echo_training_metrics": true
+        },
+        "train_params": {
+            "global_epoch": 10,
+            "batch_size": 128,
+            "encryption": {
+                "paillier": {
+                    "key_bit_size": 2048,
+                    "precision": 6,
+                    "djn_on": true,
+                    "parallelize_on": true
+                }
+            },
+            "optimizer": {
+                "lr": 0.01,
+                "p": 2,
+                "alpha": 1e-4
+            },
+            "metric": {
+                "mse": {},
+                "mape": {},
+                "mae": {},
+                "rmse": {}
+            },
+            "early_stopping": {
+                "key": "loss",
+                "patience": -1,
+                "delta": 0
+            },
+            "random_seed": 50
+        }
+    }
+}

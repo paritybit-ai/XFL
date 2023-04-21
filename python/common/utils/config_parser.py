@@ -17,7 +17,7 @@
 # from service.fed_node import FedNode
 
 
-def replace_variable(input, stage_id: str, job_id: str, node_id: str):
+def replace_variable(input, stage_id: int, job_id: str, node_id: str):
     if isinstance(input, dict):
         return {k: replace_variable(v, stage_id, job_id, node_id) for k, v in input.items()}
     elif isinstance(input, list):

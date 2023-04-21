@@ -490,6 +490,7 @@ class TestVerticalXGBoost:
                 conf["train_info"]["train_params"]["encryption"] = {"plain": {}}
             del conf["input"]["testset"]
 
+        mocker.patch("algorithm.framework.vertical.xgboost.decision_tree_label_trainer._three_layer_progress")
         mocker.patch.object(
             BroadcastChannel, "__init__", return_value=None
         )

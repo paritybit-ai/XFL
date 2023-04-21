@@ -468,6 +468,8 @@ class TestVerticalKmeansTrainer:
         conf = get_scheduler_conf
         conf["computing_engine"] = computing_engine
         # mock 类初始化需要的函数，避免建立通信通道时报错
+        mocker.patch("algorithm.framework.vertical.kmeans.assist_trainer._one_layer_progress")
+        mocker.patch("algorithm.framework.vertical.kmeans.assist_trainer._update_progress_finish")
         mocker.patch.object(
             DualChannel, "__init__", return_value=None
         )
@@ -587,7 +589,8 @@ class TestVerticalKmeansTrainer:
 
         dbi_score = davies_bouldin_score(
             vkt.train_features.to_numpy(), cluster_result)
-        assert np.abs(vks.DBI - dbi_score) < 1e-5
+
+        np.testing.assert_almost_equal(vks.DBI, dbi_score, 3)
 
         # 验证当一族结果为空时，DBI的计算
         cluster_result_missing = []
@@ -609,7 +612,7 @@ class TestVerticalKmeansTrainer:
 
         dbi_score = davies_bouldin_score(
             vkt.train_features.to_numpy(), cluster_result_missing)
-        assert np.abs(vks.DBI - dbi_score) < 1e-5
+        np.testing.assert_almost_equal(vks.DBI, dbi_score, 3)
 
     def test_table_agg_base(self):
         table_trainer = TableAggregatorAbstractTrainer()

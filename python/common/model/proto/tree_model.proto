@@ -1,0 +1,49 @@
+syntax = "proto3";
+package model;
+
+
+message SplitInfo {
+    string owner_id = 1;
+    int32 feature_idx = 2;
+    string feature_name = 3;
+    bool is_category = 4;
+    double split_point = 5;
+    repeated double left_cat = 6;
+}
+
+message Node {
+    string id = 1;
+    int32 depth = 2;
+    string left_node_id = 3;
+    string right_node_id = 4;
+    SplitInfo split_info = 5;
+    bool is_leaf = 6;
+    double weight = 7;
+    string linkage = 8;
+}
+
+message Tree {
+    string party_id = 1;
+    int32 tree_index = 2;
+    string root_node_id = 3;
+    map<string, Node> nodes = 4;
+}
+
+message NodeIdList {
+    repeated string node_id_list = 1;
+}
+
+message XGBoostModel {
+    double suggest_threshold = 1;
+    repeated double lr = 2;
+    repeated int32 max_depth = 3;
+    repeated Tree trees = 4;
+    string version = 5;
+    string loss_method = 6;
+    int32 num_trees = 7;
+    map<string, NodeIdList> node_id_group = 8;
+}
+
+message NodeModel {
+    map<string, Node> nodes = 1;
+}

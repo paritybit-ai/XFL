@@ -172,6 +172,7 @@ class TestBinningWoeIv:
         label_train_conf = get_label_trainer_conf
         if binning == "equal_frequency":
             label_train_conf["train_info"]["train_params"]["binning"]["method"] = "equal_frequency"
+        mocker.patch("algorithm.framework.vertical.binning_woe_iv.label_trainer._two_layer_progress")
         mocker.patch.object(
             BroadcastChannel, "__init__", return_value=None
         )

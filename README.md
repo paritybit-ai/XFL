@@ -1,6 +1,8 @@
+### [中文](./README_zh.md)
+
 [![License](https://img.shields.io/github/license/paritybit-ai/XFL)](https://opensource.org/licenses/Apache-2.0)
 [![Documentation Status](https://readthedocs.org/projects/xfl/badge/?version=latest)](https://xfl.readthedocs.io/en/latest/?badge=latest)
-
+[![coverage report](https://git.basebit.me/bag1/federated-learning/badges/master/coverage.svg)](https://git.basebit.me/bag1/federated-learning/-/commits/master)
 
 XFL is a high-performance, high-flexibility, high-applicability, lightweight, open and easy-to-use Federated Learning framework.
 It supports a variety of federation models in both horizontal and vertical federation scenarios. 
@@ -13,14 +15,14 @@ and applies secure communication protocols to ensure communication security.
   - High-performance algorithm library
 
     - Comprehensive algorithms: support a variety of mainstream horizontal/vertical federation algorithms.
-    - Excellent performance: significantly exceeds the average performance of federated learning products. 
+    - Excellent performance: significantly exceeds the average performace of federated learning products. 
     - Network optimization: adapt to high latency, frequent packet loss, and unstable network environments.
 
   - Flexible deployment
 
-    - Parties: support two-party/multi-party federated learning.
-    - Schedulering: any participant can act as a task scheduler.
-    - Hardware: support CPU/GPU/hybrid deployment.
+    - parties: support two-party/multi-party federated learning.
+    - schedulering: any participant can act as a task scheduler.
+    - hardware: support CPU/GPU/hybrid deployment.
 
   - Lightweight, open and easy to use:
 
@@ -65,9 +67,10 @@ sh run.sh
 ```
 
 - [Quick Start](./docs/en/source/tutorial/usage.md)
-# Document
 
+# Document
 - [Document](https://xfl.readthedocs.io/en/latest)
+
 ## Tutorial
 - [Introduction](./docs/en/source/tutorial/introduction.md)
 

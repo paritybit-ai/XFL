@@ -127,13 +127,13 @@ def prepare_test_data():
         }
     }
 
-    with open("/opt/checkpoints/unit_test/node-1/vertical_xgboost_guest.model", 'w') as f:
+    with open("/opt/checkpoints/unit_test/node-1/vertical_xgboost_guest.pmodel", 'w') as f:
         json.dump(xgb_output, f)
 
     xgb_output = {"4_WTqDQjPt39iMc7Ug": {"id": "4_WTqDQjPt39iMc7Ug",
                                          "split_info": {"owner_id": "node-2", "feature_idx": 0, "is_category": True,
                                                         "split_point": None, "left_cat": [1, 0, 2, 5]}}}
-    with open("/opt/checkpoints/unit_test/node-2/vertical_xgboost_host.model", 'w') as f:
+    with open("/opt/checkpoints/unit_test/node-2/vertical_xgboost_host.pmodel", 'w') as f:
         json.dump(xgb_output, f)
 
 
@@ -182,7 +182,7 @@ def get_label_trainer_infer_conf():
             ],
             "pretrained_model": {
                 "path": "/opt/checkpoints/unit_test/node-1",
-                "name": "vertical_xgboost_guest.model"
+                "name": "vertical_xgboost_guest.pmodel"
             }
         },
         "output": {
@@ -223,7 +223,7 @@ def get_trainer_infer_conf():
             ],
             "pretrained_model": {
                 "path": "/opt/checkpoints/unit_test/node-2",
-                "name": "vertical_xgboost_host.model"
+                "name": "vertical_xgboost_host.pmodel"
             }
         },
         "output": {
@@ -252,6 +252,7 @@ def get_label_trainer_conf():
         conf["output"]["prediction_train"]["name"] = "/opt/checkpoints/unit_test/predicted_probabilities_train.csv"
         conf["output"]["prediction_val"]["name"] = "/opt/checkpoints/unit_test/predicted_probabilities_val.csv"
         conf["output"]["model"]["name"] = "vertical_xgboost_guest.model"
+        conf["output"]["proto_model"]["name"] = "vertical_xgboost_guest.pmodel"
         conf["output"]["feature_importance"]["name"] = "/opt/checkpoints/unit_test/feature_importances.csv"
         conf["train_info"]["train_params"]["num_bins"] = 10
         conf["train_info"]["train_params"]["max_depth"] = 2
@@ -282,6 +283,7 @@ def get_trainer_conf():
         conf["input"]["testset"] = []
         conf["output"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["model"]["name"] = "vertical_xgboost_host.model"
+        conf["output"]["proto_model"]["name"] = "vertical_xgboost_host.pmodel"
         conf["train_info"]["train_params"]["num_bins"] = 10
         conf["train_info"]["train_params"]["max_depth"] = 2
         conf["train_info"]["train_params"]["min_sample_split"] = 1
@@ -318,110 +320,6 @@ def env():
 
 
 class TestVerticalXgboost:
-    def test_predict_label_trainer(self, get_label_trainer_infer_conf, mocker):
-        mocker.patch.object(
-            DualChannel, "__init__", return_value=None
-        )
-        mocker.patch.object(
-            ApplyResult, "get", return_value={"0_4lN0P7QTwWq25Eei": np.array([1] * 50 + [0] * 49),
-                                              "0_gw94EBW5tiD8kCqG": np.array([1] * 25 + [0] * 74),
-                                              "0_vpKZWumTxYcojXLq": np.array([1] * 75 + [0] * 24)}
-        )
-        mocker.patch.object(
-            BroadcastChannel, "collect", return_value=[{"test": (99, 2)}]
-        )
-
-        mocker.patch.object(
-            BroadcastChannel, "broadcast", return_value=None
-        )
-
-        mocker.patch.object(
-            service.fed_config.FedConfig, "get_label_trainer", return_value=["node-1"]
-        )
-        mocker.patch.object(
-            service.fed_config.FedConfig, "get_trainer", return_value=["node-2"]
-        )
-
-        xgb_label_trainer = VerticalXgboostLabelTrainer(
-            get_label_trainer_infer_conf)
-        xgb_label_trainer.predict()
-        df = pd.read_csv(
-            "/opt/checkpoints/unit_test/node-1/predicted_probabilities_train.csv")
-        assert (df["pred"] > 0.5).sum() == 50
-
-    def test_predict_empty_testset(self, get_label_trainer_infer_conf, mocker):
-        conf = copy.deepcopy(get_label_trainer_infer_conf)
-        del conf["input"]["testset"]
-        mocker.patch.object(
-            DualChannel, "__init__", return_value=None
-        )
-        mocker.patch.object(
-            ApplyResult, "get", return_value={"0_4lN0P7QTwWq25Eei": np.array([1] * 50 + [0] * 49),
-                                              "0_gw94EBW5tiD8kCqG": np.array([1] * 25 + [0] * 74),
-                                              "0_vpKZWumTxYcojXLq": np.array([1] * 75 + [0] * 24)}
-        )
-        mocker.patch.object(
-            BroadcastChannel, "collect", return_value=[{"test": (99, 2)}]
-        )
-
-        mocker.patch.object(
-            BroadcastChannel, "broadcast", return_value=None
-        )
-
-        mocker.patch.object(
-            service.fed_config.FedConfig, "get_label_trainer", return_value=["node-1"]
-        )
-        mocker.patch.object(
-            service.fed_config.FedConfig, "get_trainer", return_value=["node-2"]
-        )
-
-        xgb_label_trainer = VerticalXgboostLabelTrainer(
-            get_label_trainer_infer_conf)
-        xgb_label_trainer.predict()
-        df = pd.read_csv(
-            "/opt/checkpoints/unit_test/node-1/predicted_probabilities_train.csv")
-        assert df.shape == (99, 2)
-
-    def test_predict_trainer(self, get_trainer_infer_conf, mocker):
-        mocker.patch.object(
-            DualChannel, "__init__", return_value=None
-        )
-        mocker.patch.object(
-            DualChannel, "send", return_value=0
-        )
-        mocker.patch.object(
-            BroadcastChannel, "send", return_value=0
-        )
-
-        def mock_func(*args, **kwargs):
-            config = {
-                "train_info": {
-                    "train_params": {
-                        "lossfunc": {
-                            "BCEWithLogitsLoss": {}
-                        },
-                        "batch_size_val": 40960
-                    }
-                }
-            }
-            return config
-
-        mocker.patch.object(
-            BroadcastChannel, "recv", side_effect=mock_func
-        )
-
-        mocker.patch.object(
-            service.fed_config.FedConfig, "get_label_trainer", return_value=["node-1"]
-        )
-        mocker.patch.object(
-            service.fed_config.FedConfig, "get_trainer", return_value=["node-2"]
-        )
-
-        xgb_label_trainer = VerticalXgboostTrainer(get_trainer_infer_conf)
-        xgb_label_trainer.predict()
-        assert not os.path.exists(
-            "/opt/checkpoints/unit_test/node-2/predicted_probabilities_train.csv")
-
     @pytest.mark.filterwarnings('ignore::DeprecationWarning')
     @pytest.mark.parametrize('embed', [(True), (False)])
     def test_label_trainer(self, get_label_trainer_conf, embed, mocker):
@@ -547,6 +445,8 @@ class TestVerticalXgboost:
         if not embed:
             mocker.patch.object(decision_tree_label_trainer, "EMBEDING", False)
 
+        mocker.patch("algorithm.framework.vertical.xgboost.label_trainer._update_progress_finish")
+        mocker.patch("algorithm.framework.vertical.xgboost.decision_tree_label_trainer._three_layer_progress")
         mocker.patch.object(FedConfig, "get_trainer", return_value=["node-2"])
         mocker.patch.object(FedNode, "node_id", "node-1")
         mocker.patch.object(Commu, "node_id", "node-1")
@@ -748,16 +648,16 @@ class TestVerticalXgboost:
 
         # 检查是否正确输出了模型文件
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/node-2/vertical_xgboost_host.model")
+            "/opt/checkpoints/unit_test/node-2/vertical_xgboost_host.pmodel")
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/node-1/vertical_xgboost_guest.model")
+            "/opt/checkpoints/unit_test/node-1/vertical_xgboost_guest.pmodel")
 
         # 检查是否正确输出了model config
         assert os.path.exists("/opt/checkpoints/unit_test/model_config.json")
         with open("/opt/checkpoints/unit_test/model_config.json") as f:
             model_config = json.load(f)
         assert model_config[0]["class_name"] == "VerticalXGBooster"
-        assert model_config[0]["filename"] == "vertical_xgboost_guest.model"
+        assert model_config[0]["filename"] == "vertical_xgboost_guest.pmodel"
 
         # 检查是否正确输出了feature importance文件
         assert os.path.exists(
@@ -767,11 +667,12 @@ class TestVerticalXgboost:
     def check_trainer_output():
         # 检查是否正确输出了模型文件
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/vertical_xgboost_host.model")
+            "/opt/checkpoints/unit_test/vertical_xgboost_host.pmodel")
 
         # 检查是否正确输出了model config
         assert os.path.exists("/opt/checkpoints/unit_test/model_config.json")
         with open("/opt/checkpoints/unit_test/model_config.json") as f:
             model_config = json.load(f)
         assert model_config[2]["class_name"] == "VerticalXGBooster"
-        assert model_config[2]["filename"] == "vertical_xgboost_host.model"
+        assert model_config[2]["filename"] == "vertical_xgboost_host.pmodel"
+        

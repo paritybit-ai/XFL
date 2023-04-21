@@ -22,6 +22,7 @@ from common.evaluation.metrics import ClusteringMetric
 from common.utils.logger import logger
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
+from service.fed_control import _one_layer_progress, _update_progress_finish
 from .api import get_table_agg_scheduler_inst
 from .base import VerticalKmeansBase
 
@@ -168,8 +169,14 @@ class VerticalKmeansAssistTrainer(VerticalKmeansBase):
             self.dist_sum = self.dist_table_agg_executor.aggregate()
 
             self._calc_metrics(self.dist_sum, cluster_result, iter_)
-
+            
+            # calculate and update the progress of the training
+            _one_layer_progress(iter_ + 1, self.max_iter)
+            
             if self.is_converged:
+                if iter_ + 1 < self.max_iter:
+                    # update the progress of 100 to show the training is finished
+                    _update_progress_finish()
                 break
 
     def _calc_metrics(self, dist_sum, cluster_result, epoch):

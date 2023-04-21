@@ -1,0 +1,40 @@
+syntax = "proto3";
+package model;
+
+message NaValue {
+    double ori = 1;
+    double val = 2;
+}
+
+message Binning {
+    repeated double binning_split = 1;
+    repeated double woe = 2;
+    string feature = 3;
+    NaValue na = 4;
+}
+
+message WOEModel {
+    map<int32, Binning> feature_binning = 1;
+}
+
+message Normalizer {
+    string feature = 1;
+    double norm_value = 2;
+}
+
+message StandardScaler {
+    string feature = 1;
+    double u = 2;
+    double s = 3;
+}
+
+message NormalizationModel {
+    int32 axis = 1;
+    string norm = 2;
+    map<int32, Normalizer>normalizer = 3;
+}
+
+
+message StandardizationModel {
+    map<int32, StandardScaler>standard_scaler = 2;
+}

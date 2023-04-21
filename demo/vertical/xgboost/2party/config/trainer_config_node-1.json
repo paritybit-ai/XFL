@@ -29,6 +29,9 @@
             "model": {
                 "name": "vertical_xgboost_[STAGE_ID].model"
             },
+            "proto_model": {
+                "name": "vertical_xgboost_[STAGE_ID].pmodel"
+            },
             "metric_train": {
                 "name": "xgb_metric_train_[STAGE_ID].csv"
             },
@@ -45,7 +48,7 @@
                 "name": "xgb_ks_plot_train_[STAGE_ID].csv"
             },
             "ks_plot_val": {
-                "name": "xgb_ks_plot_val[STAGE_ID].csv"
+                "name": "xgb_ks_plot_val_[STAGE_ID].csv"
             },
             "decision_table_train": {
                 "name": "xgb_decision_table_train_[STAGE_ID].csv"
@@ -55,11 +58,32 @@
             },
             "feature_importance": {
                 "name": "xgb_feature_importance_[STAGE_ID].csv"
+            },
+            "plot_ks": {
+                "name": "xgb_plot_ks_[STAGE_ID].json"
+            },
+            "plot_roc": {
+                "name": "xgb_plot_roc_[STAGE_ID].json"
+            },
+            "plot_lift": {
+                "name": "xgb_plot_lift_[STAGE_ID].json"
+            },
+            "plot_gain": {
+                "name": "xgb_plot_gain_[STAGE_ID].json"
+            },
+            "plot_precision_recall": {
+                "name": "xgb_plot_precision_recall_[STAGE_ID].json"
+            },
+            "plot_feature_importance": {
+                "name": "xgb_plot_feature_importance_[STAGE_ID].json"
+            },
+            "plot_loss": {
+                "name": "xgb_plot_loss_[STAGE_ID].json"
             }
         },
         "train_info": {
             "interaction_params": {
-                "save_frequency": -1,
+                "save_frequency": 1,
                 "echo_training_metrics": true,
                 "write_training_prediction": true,
                 "write_validation_prediction": true
@@ -74,8 +98,8 @@
                 "lambda_": 1,
                 "max_depth": 3,
                 "num_bins": 16,
-                "min_split_gain": 0,
-                "min_sample_split": 20,
+                "min_split_gain": 10,
+                "min_sample_split": 1,
                 "feature_importance_type": "gain",
                 "downsampling": {
                     "column": {
@@ -87,7 +111,7 @@
                         "other_rate": 0.4
                     }
                 },
-                "category":{
+                "category": {
                     "cat_smooth": 1,
                     "cat_features": {
                         "col_index": "",
@@ -125,9 +149,7 @@
                 },
                 "max_num_cores": 999,
                 "batch_size_val": 40960
-    
             }
         }
     }
-    
 ]

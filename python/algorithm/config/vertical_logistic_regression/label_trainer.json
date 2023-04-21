@@ -30,7 +30,10 @@
     "output": {
         "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
         "model": {
-            "name": "vertical_logitstic_regression_[STAGE_ID].pt"
+            "name": "vertical_logitstic_regression_[STAGE_ID].pmodel"
+        },
+        "onnx_model": {
+            "name": "vertical_logitstic_regression_[STAGE_ID].onnx"
         },
         "metric_train": {
             "name": "lr_metric_train_[STAGE_ID].csv"

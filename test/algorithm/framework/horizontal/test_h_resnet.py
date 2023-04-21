@@ -53,7 +53,8 @@ def get_assist_trainer_conf():
         conf["output"]["model"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
-        conf["train_info"]["params"]["batch_size"] = 16
+        conf["model_info"]["config"]["layers"] = "unit_test"
+        conf["train_info"]["params"]["batch_size"] = 8
         conf["train_info"]["params"]["global_epoch"] = 2
     yield conf
 
@@ -66,7 +67,8 @@ def get_trainer_conf():
         conf["input"]["trainset"][0]["name"] = "train_data.npz"
         conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
-        conf["train_info"]["params"]["batch_size"] = 16
+        conf["model_info"]["config"]["layers"] = "unit_test"
+        conf["train_info"]["params"]["batch_size"] = 8
         conf["train_info"]["params"]["global_epoch"] = 2
     yield conf
 
@@ -184,5 +186,6 @@ class TestResnet:
         mocker.patch.object(
             AggregationPlainRoot, "aggregate", side_effect=mock_agg
         )
+        mocker.patch("service.fed_control._send_progress")
         rest.fit()
         rest_a.fit()

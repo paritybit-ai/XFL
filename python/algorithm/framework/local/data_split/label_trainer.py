@@ -21,10 +21,9 @@ import numpy as np
 
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
-
+from service.fed_control import _two_layer_progress
 import glob
 import time
-from tqdm import tqdm
 
 # import multiprocessing
 # multiprocessing.set_start_method('fork')
@@ -159,7 +158,9 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
 
     def generator(self):
         batch, k = [], 0
-        for j in tqdm(self.files, ncols=0, desc="Local Shuffling"):
+        index = 0
+        for j in self.files:
+            index += 1
             header = self.header
             with open(j) as f:
                 for line in f:
@@ -173,6 +174,7 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
                         yield batch, k
                         batch = []
                         k += 1
+                _two_layer_progress(index-1, len(self.files), 0, 2)
         if batch:
             yield batch, k
 
@@ -195,7 +197,7 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
             F = open(self.save_trainset_name, "w")
             if self.header:
                 F.write(self.header_data)
-            for i in tqdm(range(self.batch_size), ncols=0, desc="Global Shuffling"):
+            for i in range(self.batch_size):
                 orders = np.random.permutation(len(opens))
                 for j in orders:
                     text = opens[j].readline()
@@ -208,10 +210,13 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
                             F = open(self.save_valset_name, "w")
                             if self.header:
                                 F.write(self.header_data)
+                _two_layer_progress(i, self.batch_size, 1, 2)
             shutil.rmtree(temp_path, ignore_errors=True)  # del temp path
         else:
             # count line num
-            for j in tqdm(self.files, ncols=0, desc="Counting lines"):
+            index = 0
+            for j in self.files:
+                index += 1
                 header = self.header
                 with open(j) as f:
                     for line in f:
@@ -220,6 +225,7 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
                             header = False
                             continue
                         self.line_num += 1
+                    _two_layer_progress(index-1, len(self.files), 0, 2)
             # train and val line num
             trainset_num = int(self.line_num * self.train_ratio)
             # read and write directly
@@ -227,7 +233,9 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
             if self.header:
                 F.write(self.header_data)
             n = 0
-            for i in tqdm(self.files, ncols=0, desc="Write to train and val"):
+            index = 0
+            for i in self.files:
+                index += 1
                 header = self.header
                 with open(i) as f:
                     for text in f:
@@ -241,6 +249,7 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
                             F = open(self.save_valset_name, "w")
                             if self.header:
                                 F.write(self.header_data)
+                    _two_layer_progress(index-1, len(self.files), 1, 2)
 
         end_time = time.time()
-        logger.info("Time cost：%ss" % (end_time - start_time))
+        logger.info("Time cost: %ss" % (end_time - start_time))

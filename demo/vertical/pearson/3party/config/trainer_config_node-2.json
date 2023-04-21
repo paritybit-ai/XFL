@@ -17,7 +17,7 @@
         },
         "output": {
             "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "model": {
+            "corr": {
                 "name": "vertical_pearson_[STAGE_ID].pkl"
             }
         },

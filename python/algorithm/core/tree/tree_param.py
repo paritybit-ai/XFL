@@ -47,7 +47,7 @@ class XGBTreeParam(object):
                  top_rate: float,
                  other_rate: float,
                
-                #  validation_freqs: int,
+                 # validation_freqs: int,
                  metrics: List[str],
                
                  early_stopping_param: Optional[EarlyStoppingParam] = None,  # 'split',(split time) 'gain'(split gain)
@@ -58,6 +58,11 @@ class XGBTreeParam(object):
                  
                  col_batch: int = 128,
                  row_batch: int = 10000,
+                 atomic_row_size_per_cpu_core: int = 10000,
+                 ray_task_num_returns: Optional[int] = None,
+                 ray_col_step: int = 20,
+                 pack_grad_hess: bool = True,
+                 batch_blocks_on_recv: int = 10,
                  
                  # category feature params
                  cat_col_index: str = "",
@@ -101,6 +106,11 @@ class XGBTreeParam(object):
         
         self.col_batch = col_batch
         self.row_batch = row_batch
+        self.atomic_row_size_per_cpu_core = atomic_row_size_per_cpu_core
+        self.ray_task_num_returns = ray_task_num_returns
+        self.ray_col_step = ray_col_step
+        self.pack_grad_hess = pack_grad_hess
+        self.batch_blocks_on_recv = batch_blocks_on_recv
         
         self.cat_col_index = cat_col_index
         self.cat_col_names = cat_col_names

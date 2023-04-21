@@ -13,19 +13,23 @@
 # limitations under the License.
 
 
+import copy
 import random
 import string
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+from google.protobuf import json_format
 
 from common.utils.logger import logger
+from common.model.python.tree_model_pb2 import XGBoostModel, NodeModel
 
 
 class SplitInfo(object):
     def __init__(self, 
                  owner_id: str,
                  feature_idx: Optional[int] = None,
+                 feature_name: Optional[str] = None,
                  is_category: bool = False,
                  missing_value_on_left: Optional[bool] = True,
                  split_point: Optional[float] = None,
@@ -33,6 +37,7 @@ class SplitInfo(object):
                  gain: int = 0):
         self.owner_id = owner_id
         self.feature_idx = feature_idx
+        self.feature_name = feature_name
         self.is_category = is_category
         self.missing_value_on_left = missing_value_on_left
         self.split_point = split_point
@@ -48,9 +53,9 @@ class SplitInfo(object):
         
     def to_dict(self):
         res = {}
-        attribute_list = ["owner_id", "feature_idx", "is_category", "split_point", "left_cat"]
+        attribute_list = ["owner_id", "feature_idx", "feature_name", "is_category", "split_point", "left_cat"]
         for name in attribute_list:
-            res[name] = getattr(self, name)
+            res[name] = getattr(self, name, None)
         return res
     
     # def to_min_dict(self):
@@ -286,7 +291,28 @@ class BoostingTree(object):
                             loss_method=data.get("loss_method", None),
                             version=data.get('version', '1.0'))
         return tree
-    
+
+    @classmethod
+    def from_proto(cls, bs: str):
+        xgb = XGBoostModel()
+        xgb.ParseFromString(bs)
+        d = json_format.MessageToDict(xgb,
+                                      including_default_value_fields=True,
+                                      preserving_proto_field_name=True)
+        return cls.from_dict(d)
+
+    def to_proto(self,
+                suggest_threshold: Optional[float] = None,
+                compute_group: bool = False):
+        xgb = XGBoostModel()
+        # logger.info("to dict")
+        d = self.to_dict(suggest_threshold, compute_group)
+        # logger.info("after to dict, to proto")
+        json_format.ParseDict(d, xgb)
+        out = xgb.SerializeToString()
+        # logger.info("after to proto")
+        return out
+
     def to_dict(self,
                 suggest_threshold: Optional[float] = None,
                 compute_group: bool = False):
@@ -324,7 +350,7 @@ class BoostingTree(object):
             node_id_group = {}
             for _, v in node_id_of_owner.items():
                 # Because owner_id is unstable
-                node_id_group[v[0]] = v
+                node_id_group[v[0]] = {"node_id_list": v}
             
             res["node_id_group"] = node_id_group
         
@@ -368,7 +394,24 @@ class NodeDict(object):
     
     def to_dict(self) -> dict:
         res = {id: node.to_min_dict() for id, node in self.nodes.items()}
-        return res
+        return res  # {"nodes": res}
+
+    @classmethod
+    def from_proto(cls, bs: str):
+        node = NodeModel()
+        node.ParseFromString(bs)
+        d = json_format.MessageToDict(node,
+                                      including_default_value_fields=True,
+                                      preserving_proto_field_name=True)
+        return cls.from_dict(d["nodes"])
+
+    def to_proto(self):
+        node = NodeModel()
+        d = {"nodes": self.to_dict()}
+        d = {k: v for k, v in sorted(d.items())}
+        json_format.ParseDict(d, node)
+        out = node.SerializeToString()
+        return out
         
     def update(self, nodes: Dict[str, Node]):
         for id, node in nodes.items():

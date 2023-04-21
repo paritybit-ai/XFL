@@ -37,6 +37,8 @@ def add_args(parser):
     group.add_argument("-c", "--client", type=str, metavar="start",
                        choices=["start", "stop", "status", "algo", "stage"],
                        help="run command line client")
+    parser.add_argument("--bar", action="store_true",
+                        help="display a progress bar on scheduler")
     parser.add_argument("--config_path", type=str,
                         default="/opt/config", metavar="/opt/config", nargs="?",
                         help="config file path")
@@ -48,7 +50,7 @@ def main():
     args = parser.parse_args()
 
     if args.scheduler:
-        scheduler_run.main(args.config_path)
+        scheduler_run.main(args.config_path, args.bar)
     elif args.client:
         # client.main(args.client)
         client.main(args.client, args.config_path)

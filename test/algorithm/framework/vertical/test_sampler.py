@@ -87,10 +87,10 @@ class TestVerticalSampler:
     @pytest.mark.parametrize('datatype, fraction', [("csv", {"percentage": 1}), ("json", {"percentage": 1}),
                                                     ("csv", {"wrong_key": 1})])
     def test_label_trainer_default(self, get_label_trainer_conf, datatype, fraction, mocker):
+        mocker.patch("algorithm.framework.vertical.sampler.label_trainer._update_progress_finish")
         mocker.patch.object(
             BroadcastChannel, "broadcast", return_value=0
         )
-
         mocker.patch.object(
             service.fed_config.FedConfig, "get_label_trainer", return_value=["node-1"]
         )
@@ -155,6 +155,7 @@ class TestVerticalSampler:
         ("try", "downsample", {"percentage": 0.1}, {})
     ])
     def test_label_trainer_fit(self, get_label_trainer_conf, method, strategy, fraction, mocker, infer_params):
+        mocker.patch("algorithm.framework.vertical.sampler.label_trainer._update_progress_finish")
         mocker.patch.object(
             BroadcastChannel, "broadcast", return_value=0
         )

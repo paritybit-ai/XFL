@@ -71,16 +71,16 @@
                         "global_scale_bit_size": 40
                     }
                 },
-                "optimizer": {
-                    "lr": 0.01,
-                    "p": 2,
-                    "alpha": 1e-4
-                },
                 "metric": {
                     "mse": {},
                     "mape": {},
                     "mae": {},
                     "rmse": {}
+                },
+                "optimizer": {
+                    "lr": 0.01,
+                    "p": 2,
+                    "alpha": 1e-4
                 },
                 "early_stopping": {
                     "key": "loss",

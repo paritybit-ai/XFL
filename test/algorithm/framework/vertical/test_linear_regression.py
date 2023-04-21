@@ -103,6 +103,38 @@ class TestVerticalLinearRegressionTrainer:
         "poly_modulus_degree": 8192, "coeff_mod_bit_sizes": [60, 40, 40, 60], "global_scale_bit_size": 40}},
         {"plain": {}}, {"paillier": {"key_bit_size": 2048, "precision": 7, "djn_on": True, "parallelize_on": True}}])
     def test_all_trainers(self, get_label_trainer_conf, encryption, mocker):
+        config_sync = {
+            "train_info": {
+                "interaction_params": {
+                    "save_frequency": -1,
+                    "write_training_prediction": True,
+                    "write_validation_prediction": True,
+                    "echo_training_metrics": True
+                },
+                "train_params": {
+                    "global_epoch": 1,
+                    "batch_size": 1000,
+                    "encryption": encryption,
+                    "optimizer": {
+                        "lr": 0.01,
+                        "p": 2,
+                        "alpha": 1e-4
+                    },
+                    "metric": {
+                        "mse": {},
+                        "mape": {},
+                        "mae": {},
+                        "rmse": {}
+                    },
+                    "early_stopping": {
+                        "key": "loss",
+                        "patience": -1,
+                        "delta": 0
+                    },
+                    "random_seed": 50
+                }
+            }
+        }
         conf = get_label_trainer_conf
         with open("python/algorithm/config/vertical_linear_regression/trainer.json") as f:
             conf_t = json.load(f)
@@ -115,13 +147,19 @@ class TestVerticalLinearRegressionTrainer:
         conf["train_info"]["train_params"]["global_epoch"] = 1
         conf["train_info"]["train_params"]["batch_size"] = 1000
         conf["train_info"]["train_params"]["encryption"] = encryption
-        conf_t["train_info"]["train_params"]["batch_size"] = 1000
-        conf_t["train_info"]["train_params"]["encryption"] = encryption
-        conf_t["train_info"]["train_params"]["global_epoch"] = 1
 
         # test trainset not configured error
         conf2 = copy.deepcopy(conf)
         conf2["input"]["trainset"] = []
+
+        mocker.patch.object(
+            BroadcastChannel, "__init__", return_value=None
+        )
+
+        mocker.patch.object(
+            BroadcastChannel, "broadcast", return_value=0
+        )
+
         with pytest.raises(NotImplementedError) as e:
             vlr_ = VerticalLinearRegressionLabelTrainer(conf2)
             exec_msg = e.value.args[0]
@@ -164,12 +202,12 @@ class TestVerticalLinearRegressionTrainer:
             paillier_key = private_context.to_public().serialize()
             public_context = Paillier.context_from(paillier_key)
 
+        mocker.patch("algorithm.framework.vertical.linear_regression.label_trainer._two_layer_progress")
+        mocker.patch("algorithm.framework.vertical.linear_regression.label_trainer._update_progress_finish")
         mocker.patch.object(
             DualChannel, "__init__", return_value=None
         )
-        mocker.patch.object(
-            BroadcastChannel, "__init__", return_value=None
-        )
+
         mocker.patch.object(
             service.fed_config.FedConfig, "get_label_trainer", return_value=['node-1']
         )
@@ -181,6 +219,22 @@ class TestVerticalLinearRegressionTrainer:
         )
         mocker.patch.object(
             DualChannel, "send", return_value=0
+        )
+
+        def mock_broadcast_recv(*args, **kwargs):
+            if mock_broadcast_recv_func.call_count == 1:
+                return copy.deepcopy(config_sync)
+            else:
+                if vlr.encryption_method == "ckks":
+                    return serialized_public_context
+                elif vlr.encryption_method == "paillier":
+                    return private_context.to_public().serialize()
+
+        def mock_broadcast_collect(*args, **kwargs):
+            return [2, 2]
+
+        mock_broadcast_recv_func = mocker.patch.object(
+            BroadcastChannel, "recv", side_effect=mock_broadcast_recv
         )
 
         vlr = VerticalLinearRegressionLabelTrainer(conf)
@@ -310,18 +364,6 @@ class TestVerticalLinearRegressionTrainer:
             vlr.dual_channels["intermediate_label_trainer"]["node-3"], "recv", side_effect=mock_dual_label_t_recv_1
         )
 
-        def mock_broadcast_recv(*args, **kwargs):
-            if vlr.encryption_method == "ckks":
-                return serialized_public_context
-            elif vlr.encryption_method == "paillier":
-                return private_context.to_public().serialize()
-
-        def mock_broadcast_collect(*args, **kwargs):
-            return [2, 2]
-
-        mocker.patch.object(
-            BroadcastChannel, "recv", side_effect=mock_broadcast_recv
-        )
         mocker.patch.object(
             BroadcastChannel, "collect", side_effect=mock_broadcast_collect
         )
@@ -343,9 +385,6 @@ class TestVerticalLinearRegressionTrainer:
         # mock for trainer
         mocker.patch.object(
             BroadcastChannel, "send", return_value=0
-        )
-        mocker.patch.object(
-            BroadcastChannel, "broadcast", return_value=0
         )
 
         def mock_trainer_collect(*args, **kwargs):
@@ -424,7 +463,7 @@ class TestVerticalLinearRegressionTrainer:
                 elif encryption_method == "paillier":
                     return Paillier.serialize(Paillier.encrypt(public_context, float(loss),
                                                                precision=encryption_config[encryption_method][
-                                                               "precision"], obfuscation=True, num_cores=num_cores))
+                                                                   "precision"], obfuscation=True, num_cores=num_cores))
                 elif encryption_method == "plain":
                     return loss
             elif mock_dual_label_recv_.call_count == 2:

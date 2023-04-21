@@ -1,11 +1,11 @@
 # Copyright 2022 The XFL Authors. All rights reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,10 +28,59 @@ from common.utils.algo_utils import (BiClsAccuracy, BiClsAuc, BiClsF1, BiClsKS,
 from algorithm.core.metrics import get_metric
 from common.utils.logger import logger
 
+from multiprocessing import Pool, cpu_count
+
+
+def cumulative_gain_curve(y_true, y_score, pos_label=None):
+    """Adapted from skplot package. Add some simplifications and modifications
+
+    `skplot` github: https://github.com/reiinakano/scikit-plot
+
+    This function generates the points necessary to plot the Cumulative Gain
+    Note: This implementation is restricted to the binary classification task.
+    Args:
+        y_true (array-like, shape (n_samples)): True labels of the data.
+        y_score (array-like, shape (n_samples)): Target scores, can either be
+            probability estimates of the positive class, confidence values, or
+            non-thresholded measure of decisions (as returned by
+            decision_function on some classifiers).
+        pos_label (int or str, default=None): Label considered as positive and
+            others are considered negative
+    Returns:
+        percentages (numpy.ndarray): An array containing the X-axis values for
+            plotting the Cumulative Gains chart.
+        gains (numpy.ndarray): An array containing the Y-axis values for one
+            curve of the Cumulative Gains chart.
+    Raises:
+        ValueError: If `y_true` is not composed of 2 classes. The Cumulative
+            Gain Chart is only relevant in binary classification.
+    """
+    y_true, y_score = np.asarray(y_true), np.asarray(y_score)
+
+    classes = np.unique(y_true)
+    pos_label = 1
+
+    # make y_true a boolean vector
+    y_true = (y_true == pos_label)
+
+    sorted_indices = np.argsort(y_score)[::-1]
+    y_true = y_true[sorted_indices]
+    gains = np.cumsum(y_true)
+
+    percentages = np.arange(start=1, stop=len(y_true) + 1)
+
+    gains = gains / float(np.sum(y_true))
+    percentages = percentages / float(len(y_true))
+
+    gains = np.insert(gains, 0, [0])
+    percentages = np.insert(percentages, 0, [0])
+
+    return percentages, gains
+
 
 class BiClsMetric:
 
-    def __init__(self, epoch, output_file=None, metric_config={}, lossfunc_conifg={}):
+    def __init__(self, epoch, output_file=None, metric_config={}, lossfunc_config={}):
         self.metric_functions_map = {
             "BCEWithLogitsLoss": BCELoss,
             "acc": BiClsAccuracy,
@@ -46,14 +95,18 @@ class BiClsMetric:
         self.epoch = epoch
         self.output_file = output_file
 
-        loss_function = lossfunc_conifg.get("method")
+        if len(lossfunc_config):
+            loss_function = list(lossfunc_config.keys())[0]
+        else:
+            loss_function = None
         if loss_function:
             if loss_function not in self.metric_functions_map:
-                raise NotImplementedError("Loss function {} is not supported in this model.".format(loss_function))
+                raise NotImplementedError(
+                    "Loss function {} is not supported in this model.".format(loss_function))
             func = self.metric_functions_map[loss_function]
             method_args = inspect.getfullargspec(func).args
             defined_args = {}
-            for (key, value) in lossfunc_conifg.items():
+            for (key, value) in lossfunc_config.items():
                 if key in method_args:
                     defined_args[key] = value
             self.metric_functions[loss_function] = func(**defined_args)
@@ -70,7 +123,8 @@ class BiClsMetric:
             if metric_function == "decision_table":
                 continue
             elif metric_function not in self.metric_functions_map:
-                raise NotImplementedError("Metric function {} is not supported in this model.".format(metric_function))
+                raise NotImplementedError(
+                    "Metric function {} is not supported in this model.".format(metric_function))
             func = self.metric_functions_map[metric_function]
             defined_args = {}
             self.metric_functions[metric_function] = func(**defined_args)
@@ -80,9 +134,11 @@ class BiClsMetric:
         cm = confusion_matrix(y_true, y_pred > 0.5)
         for metric_function in self.metric_functions:
             if metric_function in ("acc", "precision", "recall", "f1_score"):
-                self.metrics[metric_function] = self.metric_functions[metric_function](cm).item()
+                self.metrics[metric_function] = self.metric_functions[metric_function](
+                    cm).item()
             elif metric_function in ("auc", "ks"):
-                self.metrics[metric_function] = self.metric_functions[metric_function](tpr, fpr).item()
+                self.metrics[metric_function] = self.metric_functions[metric_function](
+                    tpr, fpr).item()
             elif metric_function == "BCEWithLogitsLoss":
                 self.metrics[metric_function] = self.metric_functions[metric_function](torch.tensor(y_pred),
                                                                                        torch.tensor(y_true)).item()
@@ -105,7 +161,8 @@ class BiClsMetric:
                 f.write("%d,%s\n" % (self.epoch, ','.join(features)))
         else:
             with open(self.output_file, 'w') as f:
-                f.write("%s,%s\n" % ("epoch", ','.join([_ for _ in self.metric_functions_map])))
+                f.write("%s,%s\n" % ("epoch", ','.join(
+                    [_ for _ in self.metric_functions_map])))
                 features = []
                 for k in self.metric_functions_map:
                     if k in self.metrics:
@@ -124,11 +181,13 @@ class RegressionMetric:
         self.output_file = output_file
 
         for metric_function in metric_config:
-            self.metric_functions[metric_function] = get_metric(metric_function)
+            self.metric_functions[metric_function] = get_metric(
+                metric_function)
 
     def calc_metrics(self, y_true: np.array, y_pred: np.array):
         for metric_function in self.metric_functions:
-            self.metrics[metric_function] = self.metric_functions[metric_function](y_true, y_pred)
+            self.metrics[metric_function] = self.metric_functions[metric_function](
+                y_true, y_pred)
 
     def __repr__(self):
         output = ["epoch: %d" % self.epoch]
@@ -166,6 +225,40 @@ class ThresholdCutter:
             "ks": []
         }
 
+    def sim_cut_by_value(self, y_true, y_pred):
+        fpr, tpr, thresholds = roc_curve(y_true, y_pred)
+        fpr, tpr, thresholds = fpr[:-1], tpr[:-1], thresholds[:-1]
+        ks_curve = tpr - fpr
+        ks_curve = np.where(ks_curve > 0, ks_curve, 0)
+
+        # shrink output size
+        probs = np.unique(y_pred)
+        if len(probs) < len(self.default_percentile):
+            self.metrics = {
+                'tpr': tpr,
+                'fpr': fpr,
+                'ks': ks_curve,
+                'threshold': thresholds
+            }
+            return
+
+        cuts = np.arange(0.01, 1, 0.01)
+        size = thresholds.size
+        index_list = [int(size * cut) for cut in cuts]
+        if index_list[-1] >= size:
+            index_list = index_list[:-1]
+        thresholds = [thresholds[idx] for idx in index_list]
+        ks_curve = [ks_curve[idx] for idx in index_list]
+        tpr = [tpr[idx] for idx in index_list]
+        fpr = [fpr[idx] for idx in index_list]
+        self.metrics = {
+            'tpr': tpr,
+            'fpr': fpr,
+            'ks': ks_curve,
+            'threshold': thresholds
+        }
+        return
+
     def cut_by_value(self, y_true: np.array, y_pred: np.array, values: List = None):
         probs = np.unique(y_pred)
         logger.info("num of probs: %d." % len(probs))
@@ -174,12 +267,15 @@ class ThresholdCutter:
                 # logger.warning("ks points %d less than the default num: %d." % (len(probs),
                 #                                                                 len(self.default_percentile)))
                 values = np.array(sorted(probs, reverse=True))
-                self.default_percentile = np.array([sum(y_pred < _) / (len(y_pred) - 1) * 100 for _ in values])
+                self.default_percentile = np.array(
+                    [sum(y_pred < _) / (len(y_pred) - 1) * 100 for _ in values])
             else:
                 values = np.percentile(y_pred, self.default_percentile)
+
         # -	Threshold, TP, FN, FP, TN, TPR, FPR, KS
         for threshold in values:
-            tn, fp, fn, tp = confusion_matrix(y_true, y_pred >= threshold).ravel()
+            tn, fp, fn, tp = confusion_matrix(
+                y_true, y_pred >= threshold, labels=[1, 0]).ravel()
             if tp + fn > 0:
                 tpr = tp / (tp + fn)
             else:
@@ -208,7 +304,8 @@ class ThresholdCutter:
     def save(self):
         df = pd.DataFrame(self.metrics)
         df["top_percentile"] = 100 - self.default_percentile
-        df.to_csv(self.output_file, header=True, index=False, float_format='%.6g')
+        df.to_csv(self.output_file, header=True,
+                  index=False, float_format='%.6g')
 
 
 class DecisionTable:
@@ -221,9 +318,11 @@ class DecisionTable:
 
     def _check_params(self):
         if self.method not in ("equal_frequency", "equal_width"):
-            raise NotImplementedError("decision table: method '{}' is not implemented.".format(self.method))
+            raise NotImplementedError(
+                "decision table: method '{}' is not implemented.".format(self.method))
         if self.bins <= 1:
-            raise ValueError("decision table: bins ({}) must be greater than 1.".format(self.bins))
+            raise ValueError(
+                "decision table: bins ({}) must be greater than 1.".format(self.bins))
 
     def fit(self, y_true: np.array, y_pred: np.array):
         df = pd.DataFrame({"label": y_true, "pred": y_pred})
@@ -235,13 +334,17 @@ class DecisionTable:
         if self.method == "equal_frequency":
             groups = pd.qcut(y_pred, self.bins, duplicates='drop', precision=3)
         elif self.method == "equal_width":
-            groups = pd.cut(y_pred, self.bins, right=True, duplicates='drop', precision=3)
+            groups = pd.cut(y_pred, self.bins, right=True,
+                            duplicates='drop', precision=3)
         if self.type == "score_card":
-            groups = [pd.Interval(int(_.left), int(_.right), _.closed) for _ in groups]
+            groups = [pd.Interval(int(_.left), int(
+                _.right), _.closed) for _ in groups]
         df["区间"] = groups
         self.stats["样本数"] = df.groupby("区间").size()
-        self.stats["负样本数"] = df.groupby("区间")["label"].agg(lambda x: sum(x == 0))
-        self.stats["正样本数"] = df.groupby("区间")["label"].agg(lambda x: sum(x == 1))
+        self.stats["负样本数"] = df.groupby(
+            "区间")["label"].agg(lambda x: sum(x == 0))
+        self.stats["正样本数"] = df.groupby(
+            "区间")["label"].agg(lambda x: sum(x == 1))
         self.stats["区间内负样本占比"] = self.stats["负样本数"] / self.stats["样本数"]
         self.stats["区间内正样本占比"] = self.stats["正样本数"] / self.stats["样本数"]
         self.stats["样本占比"] = self.stats["样本数"] / self.stats["样本数"].sum()
@@ -250,12 +353,16 @@ class DecisionTable:
         self.stats["累计总样本数"] = self.stats["样本数"].cumsum()
         self.stats["累计负样本数"] = self.stats["负样本数"].cumsum()
         self.stats["累计正样本数"] = self.stats["正样本数"].cumsum()
-        self.stats["累计负样本/负样本总数"] = self.stats["累计负样本数"] / self.stats["负样本数"].sum()
-        self.stats["累计正样本/正样本总数"] = self.stats["累计正样本数"] / self.stats["正样本数"].sum()
+        self.stats["累计负样本/负样本总数"] = self.stats["累计负样本数"] / \
+            self.stats["负样本数"].sum()
+        self.stats["累计正样本/正样本总数"] = self.stats["累计正样本数"] / \
+            self.stats["正样本数"].sum()
         self.stats["累计负样本/累计总样本"] = self.stats["累计负样本数"] / self.stats["累计总样本数"]
         self.stats["累计正样本/累计总样本"] = self.stats["累计正样本数"] / self.stats["累计总样本数"]
-        self.stats["累计样本数/总样本数"] = self.stats["累计总样本数"] / self.stats["样本数"].sum()
-        self.stats["累计正样本占比/累计总样本占比"] = self.stats["正样本占比"].cumsum() / self.stats["样本占比"].cumsum()
+        self.stats["累计样本数/总样本数"] = self.stats["累计总样本数"] / \
+            self.stats["样本数"].sum()
+        self.stats["累计正样本占比/累计总样本占比"] = self.stats["正样本占比"].cumsum() / \
+            self.stats["样本占比"].cumsum()
         for _ in ["区间内负样本占比", "区间内正样本占比", "样本占比", "负样本占比", "正样本占比",
                   "累计负样本/负样本总数", "累计正样本/正样本总数", "累计负样本/累计总样本", "累计正样本/累计总样本",
                   "累计样本数/总样本数", "累计正样本占比/累计总样本占比"]:
@@ -268,7 +375,55 @@ class DecisionTable:
         self.stats["区间"] = self.stats["区间"].apply(str)
 
     def save(self, file_name):
-        self.stats.to_csv(file_name, header=True, index=False, float_format='%.2g')
+        self.stats.to_csv(file_name, header=True,
+                          index=False, float_format='%.2g')
+
+
+class LiftGainCalculator():
+    def __init__(self, output_file=None, step=0.001):
+        self.output_file = output_file
+        self.step = step
+        self.num_proc = 4
+
+    @staticmethod
+    def _pred_thres(pred: np.array, thres: float):
+        return (pred >= thres).astype(np.int32)
+
+    def cal_lift_gain(self, label: np.array, pred: np.array):
+        step = self.step
+        # thresholds = np.sort(np.unique(pred))
+        cuts = np.arange(step, 1, step)
+
+        # new_thresholds = [thresholds[idx] for idx in index_list]
+
+        percentages, gains = cumulative_gain_curve(label, pred)
+        logger.info(
+            f"Length of percentages before pruning: {percentages.size}")
+        lifts = gains / percentages
+
+        size = percentages.size
+        index_list = [int(size * cut) for cut in cuts]
+        if index_list[-1] >= size:
+            index_list = index_list[:-1]
+
+        percentages = [percentages[idx] for idx in index_list]
+        gains = [gains[idx] for idx in index_list]
+        lifts = [lifts[idx] for idx in index_list]
+        logger.info(f"Length of percentages after pruning: {len(percentages)}")
+
+        self.metrics = pd.DataFrame(
+            {
+                'percentage_data': percentages,
+                'cum_gain': gains,
+                'lift': lifts
+            }
+        )
+
+    def save(self, file_name):
+        self.metrics.to_csv(
+            file_name, header=True,
+            index=False, float_format="%.2g"
+        )
 
 
 class ClusteringMetric:
@@ -286,7 +441,8 @@ class ClusteringMetric:
             dij_list = []
             for j in range(0, len(dist_table)):
                 if j != i:
-                    dij_list.append((dist_table[i] + dist_table[j]) / (cluster_dist[d] ** 0.5))
+                    dij_list.append(
+                        (dist_table[i] + dist_table[j]) / (cluster_dist[d] ** 0.5))
                     d += 1
             dij_list = [_ for _ in dij_list if ~torch.isnan(_)]
             if len(dij_list) <= 0:

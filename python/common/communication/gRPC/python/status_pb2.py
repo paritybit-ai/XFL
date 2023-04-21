@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0cstatus.proto\x12\x06status\"&\n\x06Status\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0e\n\x06status\x18\x02 \x01(\t\"\x1e\n\rStatusRequest\x12\r\n\x05jobId\x18\x01 \x01(\x05\"\xf3\x01\n\x0eStatusResponse\x12\r\n\x05jobId\x18\x01 \x01(\x05\x12!\n\tjobStatus\x18\x02 \x01(\x0b\x32\x0e.status.Status\x12\'\n\x0fschedulerStatus\x18\x03 \x01(\x0b\x32\x0e.status.Status\x12@\n\rtrainerStatus\x18\x04 \x03(\x0b\x32).status.StatusResponse.TrainerStatusEntry\x1a\x44\n\x12TrainerStatusEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1d\n\x05value\x18\x02 \x01(\x0b\x32\x0e.status.Status:\x02\x38\x01*m\n\nStatusEnum\x12\n\n\x06STATUS\x10\x00\x12\x08\n\x04IDLE\x10\x01\x12\x0c\n\x08TRAINING\x10\x02\x12\x0e\n\nSUCCESSFUL\x10\x03\x12\n\n\x06\x46\x41ILED\x10\x04\x12\x0f\n\x0bSTART_TRAIN\x10\x05\x12\x0e\n\nSTOP_TRAIN\x10\x06\x62\x06proto3'
+  serialized_pb=b'\n\x0cstatus.proto\x12\x06status\"&\n\x06Status\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0e\n\x06status\x18\x02 \x01(\t\"\x1e\n\rStatusRequest\x12\r\n\x05jobId\x18\x01 \x01(\x05\"\x97\x02\n\x0eStatusResponse\x12\r\n\x05jobId\x18\x01 \x01(\x05\x12!\n\tjobStatus\x18\x02 \x01(\x0b\x32\x0e.status.Status\x12\'\n\x0fschedulerStatus\x18\x03 \x01(\x0b\x32\x0e.status.Status\x12@\n\rtrainerStatus\x18\x04 \x03(\x0b\x32).status.StatusResponse.TrainerStatusEntry\x12\x11\n\tstartTime\x18\x05 \x01(\x05\x12\x0f\n\x07\x65ndTime\x18\x06 \x01(\x05\x1a\x44\n\x12TrainerStatusEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1d\n\x05value\x18\x02 \x01(\x0b\x32\x0e.status.Status:\x02\x38\x01*m\n\nStatusEnum\x12\n\n\x06STATUS\x10\x00\x12\x08\n\x04IDLE\x10\x01\x12\x0c\n\x08TRAINING\x10\x02\x12\x0e\n\nSUCCESSFUL\x10\x03\x12\n\n\x06\x46\x41ILED\x10\x04\x12\x0f\n\x0bSTART_TRAIN\x10\x05\x12\x0e\n\nSTOP_TRAIN\x10\x06\x62\x06proto3'
 )
 
 _STATUSENUM = _descriptor.EnumDescriptor(
@@ -68,8 +68,8 @@ _STATUSENUM = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=342,
-  serialized_end=451,
+  serialized_start=378,
+  serialized_end=487,
 )
 _sym_db.RegisterEnumDescriptor(_STATUSENUM)
 
@@ -189,8 +189,8 @@ _STATUSRESPONSE_TRAINERSTATUSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=272,
-  serialized_end=340,
+  serialized_start=308,
+  serialized_end=376,
 )
 
 _STATUSRESPONSE = _descriptor.Descriptor(
@@ -229,6 +229,20 @@ _STATUSRESPONSE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='startTime', full_name='status.StatusResponse.startTime', index=4,
+      number=5, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='endTime', full_name='status.StatusResponse.endTime', index=5,
+      number=6, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -242,7 +256,7 @@ _STATUSRESPONSE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=97,
-  serialized_end=340,
+  serialized_end=376,
 )
 
 _STATUSRESPONSE_TRAINERSTATUSENTRY.fields_by_name['value'].message_type = _STATUS

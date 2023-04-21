@@ -42,7 +42,7 @@ docker run -it --entrypoint /bin/bash \
 -v /opt/config:/opt/config \
 -v /opt/log:/opt/log \
 -v /opt/checkpoints:/opt/checkpoints \
-basebit/xfl:1.2.0
+basebit/xfl:1.4.0
 ```
 
 ### Quick start demo

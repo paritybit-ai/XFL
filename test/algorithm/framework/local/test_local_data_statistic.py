@@ -109,9 +109,10 @@ class TestLocalDataStatistic:
             assert len(lds.data) == 2000
 
     @pytest.mark.parametrize('train_info_params', [{}, {"quantile": [0.5, 0.8, 0.9]}])
-    def test_fit(self, get_conf, train_info_params):
+    def test_fit(self, get_conf, train_info_params, mocker):
         conf = copy.deepcopy(get_conf)
         conf["train_info"]["train_params"] = train_info_params
+        mocker.patch("service.fed_control._send_progress")
         lds = LocalDataStatistic(conf)
         if train_info_params == {}:
             assert lds.quantile == [0.25, 0.5, 0.75]

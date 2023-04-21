@@ -13,45 +13,32 @@
 # limitations under the License.
 
 
-from algorithm.framework.vertical.kmeans.trainer import VerticalKmeansTrainer
 from common.storage.redis.redis_conn import RedisConn
-
+from common.communication.gRPC.python import status_pb2
 from service.fed_job import FedJob
 
 
-class mock_model():
-    VerticalKmeansTrainer = lambda x,y: x
+class mock_model(object):
+    def __init__(self, stage_config):
+        pass
+
 
 class Test_FedJob():
 
     def test_init_fedjob(self, mocker):
-
         mocker.patch.object(RedisConn, 'get', return_value=1)
         FedJob.init_fedjob()
         RedisConn.get.assert_called_once_with("XFL_JOB_ID")
         assert FedJob.job_id == 1
 
-    # def test_get_model(self, mocker):
-    #     # mocker.patch("service.fed_job.load_json_config", return_value={"vertical_kmeans": {
-    #     #     "assist_trainer": {
-    #     #         "module_name": "algorithm.framework.vertical.kmeans.assist_trainer",
-    #     #         "class_name": "VerticalKmeansAssist_trainer"
-    #     #     },
-    #     #     "label_trainer": {
-    #     #         "module_name": "algorithm.framework.vertical.kmeans.trainer",
-    #     #         "class_name": "VerticalKmeansTrainer"
-    #     #     },
-    #     #     "trainer": {
-    #     #         "module_name": "algorithm.framework.vertical.kmeans.trainer",
-    #     #         "class_name": "VerticalKmeansTrainer"}}})
-    #     # mocker.patch.object(importlib, "import_module", return_value=mock_model)
+    def test_init_progress(self):
+        FedJob.init_progress(2)
+        assert FedJob.total_stage_num == 2
+        assert FedJob.progress == [0, 0]
     
-    #     stage_config = {"model_info": {"name": "vertical_kmeans","config":{"test":{}}}, "train_info": {"params": {}}, "input": {}, "output": {}}
-    #     model = FedJob.get_model("trainer", stage_config)
-
-    #     importlib.import_module.assert_called_once_with(
-    #         "algorithm.framework.vertical.kmeans.vertical_kmeans_trainer")
-        
-    #     assert model == stage_config 
-
+    def test_get_model(self, mocker):
+        # mock get_operator
+        mocker.patch('service.fed_job.get_operator', return_value=mock_model)
+        model = FedJob.get_model("trainer", {"model_info": {"name": "VerticalKmeansTrainer"}})
+        assert isinstance(model, mock_model)
         

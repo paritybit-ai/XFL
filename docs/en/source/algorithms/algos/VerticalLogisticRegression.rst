@@ -5,12 +5,12 @@ Vertical Logistic Regression
 Introduction
 ------------
 
-The reaization of vertical logistic regression algorithm is based on [Yang2019]_ .
+The realization of vertical logistic regression algorithm is based on [Yang2019]_ .
 
 Parameter List
 --------------
 
-**identity**: ``str`` Federated identity of the party, should be one of `label_trainer`, `trainer` or `assist trainer`.
+**identity**: ``str`` Federated identity of the party, should be one of `label_trainer` or `trainer`.
 
 **model_info**:
     - **name**: ``str`` Model name, should be `vertical_logistic_regression`.
@@ -62,7 +62,7 @@ Parameter List
         - **echo_training_metrics**: ``bool`` Whether to output metrics on train dataset.
         - **write_validation_prediction**: ``bool`` Whether to save predictions on validation dataset.
 
-    - **params**:  
+    - **train_params**:  
         - **global_epoch**: ``int`` Global training epoch.
         - **batch_size**: ``int`` Batch size of samples in global process.
         - **encryption**: ``map`` Can choose either "ckks" or "paillier".
@@ -72,7 +72,7 @@ Parameter List
                 - **global_scale_bit_size**: ``int`` Global scale factor bit size.
             - **paillier**:
                 - **key_bit_size**: ``int`` Bit length of paillier key, recommend to be greater than or equal to 2048.
-                - **precision**: ``int`` Precison.
+                - **precision**: ``int`` Precision.
                 - **djn_on**: ``bool`` Whether to use djn method to generate key pair.
                 - **parallelize_on**: ``bool`` Whether to use multicore for computing.
 
@@ -83,14 +83,14 @@ Parameter List
 
         - **metric**: ``map`` Metrics to output, all the keys are optional.
             - **decision_table**: ``map``
-                - **method**: ``str`` Support "equal_frequency" and "equal_with"
-                - **bins**: ``int`` number of bins in decision table
-            - **acc**: {}
-            - **precision**: {}
-            - **recall**: {}
-            - **f1_score**: {}
-            - **auc**: {}
-            - **ks**: {}
+                - **method**: ``str`` Support "equal_frequency" and "equal_with".
+                - **bins**: ``int`` Number of bins in decision table.
+            - **acc**: ``map`` Accuracy, support {}.
+            - **precision**: ``map`` Precision, support {}.
+            - **recall**: ``map`` Recall, support {}.
+            - **f1_score**: ``map`` The harmonic mean of the precision and recall, support {}.
+            - **auc**: ``map`` Area under the ROC Curve, support {}.
+            - **ks**: ``map`` Kolmogorov–Smirnov test, support {}.
 
         - **early_stopping**:
             - **key**: ``str`` Variable to be monitored.

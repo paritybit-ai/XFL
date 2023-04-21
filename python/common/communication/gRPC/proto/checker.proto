@@ -1,0 +1,67 @@
+syntax = "proto3";
+package checker;
+
+
+message DictPathInfo {
+    string key = 1;
+}
+
+message ListPathInfo {
+    int32 index = 1;
+}
+
+message PathInfo {
+    oneof pathInfo {
+        DictPathInfo dictPath = 1;
+        ListPathInfo listPath = 2;
+    }
+}
+
+message ItemInfo {
+    repeated PathInfo pathInfo = 1;
+    string notes = 2;
+}
+
+message CrossStagePositionInfo {
+    int32 stageId = 1;
+    repeated PathInfo pathInfo = 2;
+}
+
+message CrossStageItemInfo {
+    string dumpedValue = 1;
+    repeated CrossStagePositionInfo positionList = 2;
+    
+}
+
+message StageResult {
+    int32 stageId = 1;
+    string dumpedCheckedConfig = 2;
+    repeated ItemInfo unmatchedItems = 3;
+    int32 passedRules = 4;
+    int32 checkedRules = 5;
+    int32 code = 6; // 0 - success, 1 - runtime fail, 2 - rule not found, 
+}
+
+message MultiStageResult {
+    repeated StageResult stageResultList = 1;
+    int32 code = 2;
+}
+
+message CrossStageResult {
+    repeated CrossStageItemInfo duplicatedInputOutput = 1;
+    repeated CrossStageItemInfo blankInputOutput = 2;
+    repeated CrossStageItemInfo nonexistentInput = 3;
+    int32 code = 4;
+}
+
+message CheckTaskConfigRequest {
+    string dumpedTrainConfig = 1;
+    repeated string existedInputPath = 2;
+}
+
+message CheckTaskConfigResponse {
+    int32 code = 1;
+    string message = 2;
+    MultiStageResult multiStageResult = 3;
+    CrossStageResult crossStageResult = 4;
+}

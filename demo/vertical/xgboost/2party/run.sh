@@ -46,9 +46,9 @@ else
 fi
 
 cd $PROJECT_HOME
-python "$EXECUTE_PATH" -s --config_path ${config_path} &
+python "$EXECUTE_PATH" -s --config_path ${config_path} --bar &
 sleep 1
-python "$EXECUTE_PATH" -t node-1 --config_path ${config_path} &
+python "$EXECUTE_PATH" -t node-1 --config_path ${config_path}&
 sleep 1
 python "$EXECUTE_PATH" -t node-2 --config_path ${config_path} &
 sleep 1

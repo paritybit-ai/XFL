@@ -14,7 +14,6 @@
 
 
 import json
-import os
 import time
 
 import numpy as np
@@ -156,7 +155,7 @@ class VerticalBinningWoeIvTrainer(VerticalBinningWoeIvBase):
         send_msg = {"woe_feedback_list": self.woe_feedback_list, "bins_count": self.bins_count}
         self.broadcast_channel.send(send_msg)
         # save feature map
-        feature_map = self.output.get("result", None)
+        feature_map = self.output.get("iv", None)
         if feature_map is not None:
             host_file_path = f'{self.save_dir}/{feature_map["name"]}'
             with open(host_file_path, "w") as wf:

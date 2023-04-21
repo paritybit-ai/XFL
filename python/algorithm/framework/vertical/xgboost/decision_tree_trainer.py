@@ -30,7 +30,10 @@ from common.crypto.paillier.paillier import Paillier, PaillierContext
 from common.crypto.paillier.utils import get_core_num
 from common.utils.constants import PAILLIER, PLAIN
 from common.utils.logger import logger
-from ray.internal.internal_api import free
+try:
+    from ray.internal.internal_api import free
+except Exception:
+    from ray._private.internal_api import free
 from service.fed_config import FedConfig
 from .debug_params import EMBEDING
 

@@ -1,9 +1,11 @@
 syntax = "proto3";
 package scheduler;
 
+import "checker.proto";
 import "commu.proto";
 import "status.proto";
 import "control.proto";
+
 
 message GetConfigRequest {
     string nodeId = 1;
@@ -30,13 +32,31 @@ message GetAlgorithmListResponse {
     map<string, DefaultConfig> defaultConfigMap = 3;
 }
 
+message RecProgressRequest {
+    int32 stageId = 1;
+    int32 progress = 2;
+}
+
+message RecProgressResponse {
+    int32 code = 1;
+}
+
 message GetStageRequest {
+    int32 jobId = 1;
 }
 
 message GetStageResponse {
     int32 code = 1;
-    string stageId = 2;
-    string stageName = 3;
+    int32 currentStageId = 2;
+    int32 totalStageNum = 3;
+    string currentStageName = 4;
+    bool isRunning = 5;
+    repeated ProgressBar progressBar = 6;
+}
+
+message ProgressBar {
+    int32 stageId = 1;
+    int32 stageProgress = 2;
 }
 
 service Scheduler {
@@ -45,5 +65,7 @@ service Scheduler {
     rpc control(control.ControlRequest) returns (control.ControlResponse) {}
     rpc status(status.StatusRequest) returns (status.StatusResponse) {}
     rpc getAlgorithmList(GetAlgorithmListRequest) returns (GetAlgorithmListResponse) {}
+    rpc recProgress(RecProgressRequest) returns (RecProgressResponse) {}
     rpc getStage(GetStageRequest) returns (GetStageResponse) {}
+    rpc checkTaskConfig(checker.CheckTaskConfigRequest) returns (checker.CheckTaskConfigResponse) {}
 }

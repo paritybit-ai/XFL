@@ -21,15 +21,22 @@ from common.xoperator import get_operator
 class FedJob(object):
     job_id = 0
     current_stage = 0
+    total_stage_num = 0
     global_epoch = None
     algo_info = None
 
     status = status_pb2.IDLE
-    process = None
+    progress = []
+    max_progress = 100
 
     @classmethod
     def init_fedjob(cls):
         cls.job_id = int(RedisConn.get("XFL_JOB_ID"))
+
+    @classmethod
+    def init_progress(cls, total_stage_num):
+        cls.total_stage_num = total_stage_num
+        cls.progress = [0] * total_stage_num
 
     @classmethod
     def get_model(cls, role: str, stage_config: dict) -> object:

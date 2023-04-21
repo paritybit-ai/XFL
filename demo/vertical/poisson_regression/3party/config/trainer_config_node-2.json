@@ -1,0 +1,64 @@
+[
+    {
+        "identity": "trainer",
+        "model_info": {
+            "name": "vertical_poisson_regression"
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/azpro_data_vertical/3party",
+                    "name": "azpro_data_vertical_1_train.csv",
+                    "has_label": false,
+                    "has_id": true
+                }
+            ],
+            "valset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/azpro_data_vertical/3party",
+                    "name": "azpro_data_vertical_1_test.csv",
+                    "has_label": false,
+                    "has_id": true
+                }
+            ],
+            "pretrained_model": {
+                "path": "",
+                "name": ""
+            }
+        },
+        "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "model": {
+                "name": "vertical_poisson_regression_[STAGE_ID].pt"
+            }
+        },
+        "train_info": {
+            "interaction_params": {
+                "save_frequency": -1,
+                "write_training_prediction": true,
+                "write_validation_prediction": true,
+                "echo_training_metrics": true
+            },
+            "train_params": {
+                "global_epoch": 10,
+                "batch_size": 128,
+                "encryption": {
+                    "paillier": {
+                        "key_bit_size": 2048,
+                        "precision": 6,
+                        "djn_on": true,
+                        "parallelize_on": true
+                    }
+                },
+                "optimizer": {
+                    "lr": 0.01,
+                    "p": 2,
+                    "alpha": 1e-4
+                },
+                "random_seed": 50
+            }
+        }
+    }
+]

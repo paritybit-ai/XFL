@@ -212,6 +212,7 @@ class TestPoissonRegression:
         mocker.patch.object(
             AggregationPlainRoot, "aggregate", side_effect=mock_agg
         )
+        mocker.patch("service.fed_control._send_progress")
 
         print(prt.model)
         prt.model.linear.weight = torch.nn.parameter.Parameter(

@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+import json
+
 from common.communication.gRPC.python import (control_pb2, scheduler_pb2,
                                               scheduler_pb2_grpc, status_pb2)
 from common.storage.redis.redis_conn import RedisConn
@@ -28,6 +30,8 @@ def start():
     print("JobID:", response.jobId)
     print("Code:", response.code)
     print("Message:", response.message)
+    print("NodeLogPath:", response.nodeLogPath)
+    print("StageNodeLogPath:", response.stageNodeLogPath)
 
 
 def stop():
@@ -79,8 +83,9 @@ def stage():
     response = stub.getStage(request)
     print("---------- Stage ----------")
     print("code:", response.code)
-    print("stage_id:", response.stageId)
-    print("stage_name:", response.stageName)
+    print("stage_id:", response.currentStageId)
+    print("total_stage_num:", response.totalStageNum)
+    print("stage_name:", response.currentStageName)
 
 
 def main(cmd, config_path=''):

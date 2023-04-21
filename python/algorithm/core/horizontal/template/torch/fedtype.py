@@ -19,13 +19,13 @@ def _get_assist_trainer():
     aggregation_config = FedConfig.stage_config["train_info"]["params"]["aggregation_config"]
     type = aggregation_config.get("type")
     if type == "fedprox":
-        from python.algorithm.core.horizontal.template.torch.fedprox.assist_trainer import FedProxAssistTrainer
+        from algorithm.core.horizontal.template.torch.fedprox.assist_trainer import FedProxAssistTrainer
         return FedProxAssistTrainer
     elif type == "scaffold":
-        from python.algorithm.core.horizontal.template.torch.scaffold.assist_trainer import SCAFFOLDAssistTrainer
+        from algorithm.core.horizontal.template.torch.scaffold.assist_trainer import SCAFFOLDAssistTrainer
         return SCAFFOLDAssistTrainer
         
-    from python.algorithm.core.horizontal.template.torch.fedavg.assist_trainer import FedAvgAssistTrainer
+    from algorithm.core.horizontal.template.torch.fedavg.assist_trainer import FedAvgAssistTrainer
     return FedAvgAssistTrainer
 
 
@@ -33,11 +33,11 @@ def _get_label_trainer():
     aggregation_config = FedConfig.stage_config["train_info"]["params"]["aggregation_config"]
     type = aggregation_config.get("type")
     if type == "fedprox":
-        from python.algorithm.core.horizontal.template.torch.fedprox.label_trainer import FedProxLabelTrainer
+        from algorithm.core.horizontal.template.torch.fedprox.label_trainer import FedProxLabelTrainer
         return FedProxLabelTrainer
     if type == "scaffold":
-        from python.algorithm.core.horizontal.template.torch.scaffold.label_trainer import SCAFFOLDLabelTrainer
+        from algorithm.core.horizontal.template.torch.scaffold.label_trainer import SCAFFOLDLabelTrainer
         return SCAFFOLDLabelTrainer
 
-    from python.algorithm.core.horizontal.template.torch.fedavg.label_trainer import FedAvgLabelTrainer
+    from algorithm.core.horizontal.template.torch.fedavg.label_trainer import FedAvgLabelTrainer
     return FedAvgLabelTrainer

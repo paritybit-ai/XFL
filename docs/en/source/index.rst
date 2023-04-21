@@ -17,7 +17,7 @@ Highlights:
   - High-performance algorithm library
 
     - Comprehensive algorithms: support a variety of mainstream horizontal/vertical federation algorithms.
-    - Excellent performance: significantly exceeds the average performace of federated learning products. 
+    - Excellent performance: significantly exceeds the average performance of federated learning products.
     - Network optimization: adapt to high latency, frequent packet loss, and unstable network environments.
 
   - Flexible deployment
@@ -29,7 +29,7 @@ Highlights:
   - Lightweight, open and easy to use:
 
     - Lightweight: low requirements on host performance.
-    - Open: support mainstream machine learning frameworks such as Pytorch and Tensorflow, and user can conveniently design their own horizontal federation models.
+    - Open: support mainstream machine learning frameworks such as Pytorch, Tensorflow, PaddlePaddle and Jax, and user can conveniently design their own horizontal federation models.
     - Easy to use: able to run in both docker environment and Conda environment.
 
 Function support
@@ -41,7 +41,7 @@ Function support
       Horizontal Federation                   ✅
        Vertical Federation                    ✅
              XGBoost                          ✅
-     Deep Learning Framework          Pytorch/Tensorflow
+     Deep Learning Framework          Pytorch/Tensorflow/PaddlePaddle/Jax
   Partial Homomorphic Encryption              ✅
    Fully Homomorphic Encryption               ✅
            One Time Pad                       ✅
@@ -74,9 +74,16 @@ PIR(Private Information Retrieval)            ✅
    ./algorithms/differential_privacy
    ./algorithms/algos/HorizontalLinearRegression
    ./algorithms/algos/HorizontalLogisticRegression
+   ./algorithms/algos/HorizontalPoissonRegression
    ./algorithms/algos/HorizontalResNet
+   ./algorithms/algos/HorizontalDenseNet
+   ./algorithms/algos/HorizontalVGG
+   ./algorithms/algos/HorizontalBert
    ./algorithms/algos/VerticalLogisticRegression
+   ./algorithms/algos/VerticalLinearRegression
+   ./algorithms/algos/VerticalPoissonRegression
    ./algorithms/algos/VerticalXgboost
+   ./algorithms/algos/VerticalXgboostDistributed
    ./algorithms/algos/VerticalBinningWoeIV
    ./algorithms/algos/VerticalFeatureSelection
    ./algorithms/algos/VerticalKMeans
@@ -86,6 +93,7 @@ PIR(Private Information Retrieval)            ✅
    ./algorithms/algos/LocalStandardScaler
    ./algorithms/algos/LocalDataSplit
    ./algorithms/algos/LocalFeaturePreprocess
+   ./algorithms/algos/LocalDataStatistic
 
 .. toctree::
    :maxdepth: 2
@@ -94,9 +102,9 @@ PIR(Private Information Retrieval)            ✅
    API <development/api.rst>
    Development Guide <development/algos_dev.rst>
 
-Indices and tables
-==================
+.. Indices and tables
+.. ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`

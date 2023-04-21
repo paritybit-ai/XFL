@@ -35,9 +35,7 @@ Each column denotes a feature, :math:`X_{.j} (j = 1, \dots , p)`
 
 We have :math:`y_i \in \mathcal{R}` for regression problem, and :math:`y_i \in \mathcal{Z}` for classification
 
-- Training/Validation dataset: in XFL, we mainly use two types of dataset, one for training and the other for validation.
-We use the superscript "train", "val" to identify them.
-For example, :math:`X^{train}`, :math:`X^{val}` denote training dataset, validation dataset respectively.
+- Training/Validation dataset: in XFL, we mainly use two types of dataset, one for training and the other for validation. We use the superscript "train", "val" to identify them. For example, :math:`X^{train}`, :math:`X^{val}` denote training dataset, validation dataset respectively.
 
 
 List of Algorithms
@@ -58,10 +56,13 @@ List of Algorithms
    ":doc:`Horizontal DenseNet <./algos/HorizontalDenseNet>`", "horizontal/Densenet", "two-party or multi-party horizontal DenseNet"
    ":doc:`Horizontal VGG <./algos/HorizontalVGG>`", "horizontal/Vgg", "two-party or multi-party horizontal VGG"
    ":doc:`Horizontal Bert <./algos/HorizontalBert>`", "horizontal/Bert", "two-party or multi-party horizontal Bert"
-   ":doc:`Vertical Feature Binning <./algos/VerticalBinningWoeIV>`", "vertical/binning_woe_iv", "calulate WoE and IV using equal-frequency binning or equal-width binning"
+   ":doc:`Vertical Binning Woe IV <./algos/VerticalBinningWoeIV>`", "vertical/binning_woe_iv", "calulate WoE and IV using equal-frequency binning or equal-width binning"
    ":doc:`Vertical Pearson <./algos/VerticalPearson>`", "vertical/pearson", "two-party or multi-party vertical Pearson correlation coefficient"
    ":doc:`Vertical Feature Selection <./algos/VerticalFeatureSelection>`", "vertical/feature_selection", "two-party or multi-party vertical feature selection"
    ":doc:`Vertical Logistic Regression <./algos/VerticalLogisticRegression>`", "vertical/logistic_regression", "two-party or multi-party vertical logistic regression"
+   ":doc:`Vertical Linear Regression <./algos/VerticalLinearRegression>`", "vertical/linear_regression", "two-party or multi-party vertical linear regression"
+   ":doc:`Vertical Poisson Regression <./algos/VerticalPoissonRegression>`", "vertical/poisson_regression", "two-party or multi-party vertical poisson regression"
    ":doc:`Vertical XGBoost <./algos/VerticalXgboost>`", "vertical/xgboost", "two-party or multi-party vertical xgboost"
+   ":doc:`Vertical XGBoostDistributed <./algos/VerticalXgboostDistributed>`", "vertical/xgboost_distributed", "distributed two-party or multi-party vertical xgboost."
    ":doc:`Vertical Kmeans <./algos/VerticalKMeans>` ", "vertical/kmeans", "two-party or multi-party vertical kmeans"
    ":doc:`Vertical Sampler <./algos/VerticalSampler>` ", "vertical/sampler", "two-party or multi-party vertical sampler"

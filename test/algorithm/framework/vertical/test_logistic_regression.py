@@ -23,8 +23,10 @@ import pandas as pd
 import pytest
 import tenseal as ts
 import torch
+from google.protobuf import json_format
 
 import service.fed_config
+import service.fed_control
 from algorithm.framework.vertical.logistic_regression.label_trainer import \
     VerticalLogisticRegressionLabelTrainer
 from algorithm.framework.vertical.logistic_regression.trainer import \
@@ -32,6 +34,7 @@ from algorithm.framework.vertical.logistic_regression.trainer import \
 from common.communication.gRPC.python.channel import BroadcastChannel
 from common.crypto.paillier.paillier import Paillier
 from common.communication.gRPC.python.commu import Commu
+from common.model.python.linear_model_pb2 import LinearModel
 
 
 def prepare_data():
@@ -152,6 +155,7 @@ class TestLogisticRegression:
     ])
     def test_label_trainer(self, get_label_trainer_conf, p, encryption_method, mocker):
         # label trainer 流程测试
+        mocker.patch("service.fed_control._send_progress")
         mocker.patch.object(
             BroadcastChannel, "broadcast", return_value=0
         )
@@ -208,7 +212,8 @@ class TestLogisticRegression:
             public_context = ts.context_from(serialized_public_context)
         elif encryption_method == "paillier":
             private_context = Paillier.context(
-                encryption_config[encryption_method]["key_bit_size"], djn_on=encryption_config[encryption_method]["djn_on"])
+                encryption_config[encryption_method]["key_bit_size"],
+                djn_on=encryption_config[encryption_method]["djn_on"])
             public_context = private_context.to_public().serialize()
             public_context = Paillier.context_from(public_context)
 
@@ -328,7 +333,8 @@ class TestLogisticRegression:
             num_cores = - \
                 1 if encryption_config[encryption_method]["parallelize_on"] else 1
             private_context = Paillier.context(
-                encryption_config[encryption_method]["key_bit_size"], djn_on=encryption_config[encryption_method]["djn_on"])
+                encryption_config[encryption_method]["key_bit_size"],
+                djn_on=encryption_config[encryption_method]["djn_on"])
 
         def mock_predict_residual(*args, **kwargs):
             if encryption_method == "ckks":
@@ -399,6 +405,7 @@ class TestLogisticRegression:
     @pytest.mark.parametrize("encryption_method", ["ckks"])
     def test_early_stopping(self, get_label_trainer_conf, get_trainer_conf, encryption_method, mocker):
         # 早停测试
+        mocker.patch("service.fed_control._send_progress")
         get_label_trainer_conf["train_info"]["train_params"]["early_stopping"]["patience"] = 1
         get_label_trainer_conf["train_info"]["train_params"]["early_stopping"]["delta"] = 1e-3
         mocker.patch.object(
@@ -517,6 +524,7 @@ class TestLogisticRegression:
     @pytest.mark.parametrize("encryption_method", ["ckks"])
     def test_save_frequency(self, get_label_trainer_conf, get_trainer_conf, encryption_method, mocker):
         # 测试模型留存频率参数是否生效
+        mocker.patch("service.fed_control._send_progress")
         get_label_trainer_conf["train_info"]["interaction_params"]["save_frequency"] = 1
         get_trainer_conf["train_info"]["interaction_params"] = {}
         get_trainer_conf["train_info"]["interaction_params"]["save_frequency"] = 1
@@ -549,14 +557,14 @@ class TestLogisticRegression:
         mocker.patch.object(
             BroadcastChannel, "scatter", return_value=0
         )
-        
+
         mocker.patch.object(
             service.fed_config.FedConfig, "get_label_trainer", return_value=["node-1"]
         )
         mocker.patch.object(
             service.fed_config.FedConfig, "get_trainer", return_value=["node-2"]
         )
-        
+
         lrt = VerticalLogisticRegressionLabelTrainer(get_label_trainer_conf)
         encryption_config = lrt.encryption_config
 
@@ -633,6 +641,7 @@ class TestLogisticRegression:
     @pytest.mark.parametrize("encryption_method", ["ckks"])
     def test_save_path(self, get_label_trainer_conf, encryption_method, mocker):
         # 假如留存目录不存在，是否会自动创建完成运行\
+        mocker.patch("service.fed_control._send_progress")
         mocker.patch.object(
             BroadcastChannel, "broadcast", return_value=0
         )
@@ -663,7 +672,7 @@ class TestLogisticRegression:
         mock_channel_collect = mocker.patch.object(
             BroadcastChannel, "collect", side_effect=mock_collect
         )
-        
+
         mocker.patch.object(
             service.fed_config.FedConfig, "get_label_trainer", return_value=["node-1"]
         )
@@ -703,7 +712,7 @@ class TestLogisticRegression:
         # 检查model_config.json的stage是否符合预期
         assert model_config[-1]["class_name"] == "VerticalLogisticRegression"
 
-        filename = "/opt/checkpoints/unit_test/" + model_config[0]["filename"]
+        filename = "/opt/checkpoints/unit_test/" + model_config[0]["filename"][:-5] +'.pmodel'
         dim = model_config[-1]["input_dim"]
         bias = model_config[-1]["bias"]
 
@@ -715,11 +724,17 @@ class TestLogisticRegression:
         # 检查是否写出了模型文件，模型文件是否合法
         assert os.path.exists(filename)
 
-        model = torch.load(filename)
+        with open(filename, 'rb') as f:
+            byte_str = f.read()
+        m = LinearModel()
+        m.ParseFromString(byte_str)
+        model = json_format.MessageToDict(m,
+                                          including_default_value_fields=True,
+                                          preserving_proto_field_name=True)
 
-        assert model["state_dict"]["linear.weight"].shape[1] == dim
+        assert len(model["state_dict"]["weight"]) == dim
 
         if bias:
-            assert "linear.bias" in model["state_dict"]
+            assert "bias" in model["state_dict"]
         else:
-            assert "linear.bias" not in model["state_dict"]
+            assert model["state_dict"].get("bias", 0.0) == 0.0

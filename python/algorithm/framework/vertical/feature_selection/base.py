@@ -21,6 +21,8 @@ import pandas as pd
 
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
+from common.model.python.feature_model_pb2 import WOEModel
+from google.protobuf import json_format
 from service.fed_job import FedJob
 from service.fed_node import FedNode
 
@@ -119,12 +121,19 @@ class VerticalFeatureSelectionBase(TrainConfigParser):
 			params = self.input.get("model")
 			path = params["path"].replace("[JOB_ID]", str(FedJob.job_id)).replace("[NODE_ID]", str(FedNode.node_id))
 			file_path = Path(path, params["name"])
-			with open(file_path, 'r') as f:
-				ori = json.load(f)
+			with open(file_path, 'rb') as f:
+				byte_str = f.read()
+			woe = WOEModel()
+			woe.ParseFromString(byte_str)
+			d = json_format.MessageToDict(woe,
+			                              including_default_value_fields=True,
+			                              preserving_proto_field_name=True)
 			ret = dict()
-			for k, v in ori.items():
-				if k in features:
+			for k, v in d["feature_binning"].items():
+				if v["feature"] in features:
 					ret[k] = v
-			with open(file_path, 'w') as f:
-				json.dump(ret, f)
+			woe = WOEModel()
+			json_format.ParseDict({"feature_binning": ret}, woe)
+			with open(file_path, "wb") as f:
+				f.write(woe.SerializeToString())
 			logger.info("rewrite model in {}.".format(file_path))

@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\rcontrol.proto\x12\x07\x63ontrol\"5\n\x0e\x43ontrolRequest\x12#\n\x07\x63ontrol\x18\x01 \x01(\x0e\x32\x12.control.Operation\"?\n\x0f\x43ontrolResponse\x12\r\n\x05jobId\x18\x01 \x01(\x05\x12\x0c\n\x04\x63ode\x18\x02 \x01(\x05\x12\x0f\n\x07message\x18\x03 \x01(\t*F\n\tOperation\x12\r\n\tOPERATION\x10\x00\x12\t\n\x05START\x10\x01\x12\x08\n\x04STOP\x10\x02\x12\t\n\x05PAUSE\x10\x03\x12\n\n\x06UPDATE\x10\x04\x62\x06proto3'
+  serialized_pb=b'\n\rcontrol.proto\x12\x07\x63ontrol\"5\n\x0e\x43ontrolRequest\x12#\n\x07\x63ontrol\x18\x01 \x01(\x0e\x32\x12.control.Operation\".\n\x0bNodeLogPath\x12\x0e\n\x06nodeId\x18\x01 \x01(\t\x12\x0f\n\x07logPath\x18\x02 \x01(\t\"D\n\x10StageNodeLogPath\x12\x0f\n\x07stageId\x18\x01 \x01(\x05\x12\x0e\n\x06nodeId\x18\x02 \x01(\t\x12\x0f\n\x07logPath\x18\x03 \x01(\t\"\xba\x01\n\x0f\x43ontrolResponse\x12\r\n\x05jobId\x18\x01 \x01(\x05\x12\x0c\n\x04\x63ode\x18\x02 \x01(\x05\x12\x0f\n\x07message\x18\x03 \x01(\t\x12\x19\n\x11\x64umpedTrainConfig\x18\x04 \x01(\t\x12)\n\x0bnodeLogPath\x18\x05 \x03(\x0b\x32\x14.control.NodeLogPath\x12\x33\n\x10stageNodeLogPath\x18\x06 \x03(\x0b\x32\x19.control.StageNodeLogPath*F\n\tOperation\x12\r\n\tOPERATION\x10\x00\x12\t\n\x05START\x10\x01\x12\x08\n\x04STOP\x10\x02\x12\t\n\x05PAUSE\x10\x03\x12\n\n\x06UPDATE\x10\x04\x62\x06proto3'
 )
 
 _OPERATION = _descriptor.EnumDescriptor(
@@ -58,8 +58,8 @@ _OPERATION = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=146,
-  serialized_end=216,
+  serialized_start=388,
+  serialized_end=458,
 )
 _sym_db.RegisterEnumDescriptor(_OPERATION)
 
@@ -104,6 +104,91 @@ _CONTROLREQUEST = _descriptor.Descriptor(
 )
 
 
+_NODELOGPATH = _descriptor.Descriptor(
+  name='NodeLogPath',
+  full_name='control.NodeLogPath',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='nodeId', full_name='control.NodeLogPath.nodeId', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='logPath', full_name='control.NodeLogPath.logPath', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=81,
+  serialized_end=127,
+)
+
+
+_STAGENODELOGPATH = _descriptor.Descriptor(
+  name='StageNodeLogPath',
+  full_name='control.StageNodeLogPath',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='stageId', full_name='control.StageNodeLogPath.stageId', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='nodeId', full_name='control.StageNodeLogPath.nodeId', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='logPath', full_name='control.StageNodeLogPath.logPath', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=129,
+  serialized_end=197,
+)
+
+
 _CONTROLRESPONSE = _descriptor.Descriptor(
   name='ControlResponse',
   full_name='control.ControlResponse',
@@ -133,6 +218,27 @@ _CONTROLRESPONSE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='dumpedTrainConfig', full_name='control.ControlResponse.dumpedTrainConfig', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='nodeLogPath', full_name='control.ControlResponse.nodeLogPath', index=4,
+      number=5, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='stageNodeLogPath', full_name='control.ControlResponse.stageNodeLogPath', index=5,
+      number=6, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -145,12 +251,16 @@ _CONTROLRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=81,
-  serialized_end=144,
+  serialized_start=200,
+  serialized_end=386,
 )
 
 _CONTROLREQUEST.fields_by_name['control'].enum_type = _OPERATION
+_CONTROLRESPONSE.fields_by_name['nodeLogPath'].message_type = _NODELOGPATH
+_CONTROLRESPONSE.fields_by_name['stageNodeLogPath'].message_type = _STAGENODELOGPATH
 DESCRIPTOR.message_types_by_name['ControlRequest'] = _CONTROLREQUEST
+DESCRIPTOR.message_types_by_name['NodeLogPath'] = _NODELOGPATH
+DESCRIPTOR.message_types_by_name['StageNodeLogPath'] = _STAGENODELOGPATH
 DESCRIPTOR.message_types_by_name['ControlResponse'] = _CONTROLRESPONSE
 DESCRIPTOR.enum_types_by_name['Operation'] = _OPERATION
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -161,6 +271,20 @@ ControlRequest = _reflection.GeneratedProtocolMessageType('ControlRequest', (_me
   # @@protoc_insertion_point(class_scope:control.ControlRequest)
   })
 _sym_db.RegisterMessage(ControlRequest)
+
+NodeLogPath = _reflection.GeneratedProtocolMessageType('NodeLogPath', (_message.Message,), {
+  'DESCRIPTOR' : _NODELOGPATH,
+  '__module__' : 'control_pb2'
+  # @@protoc_insertion_point(class_scope:control.NodeLogPath)
+  })
+_sym_db.RegisterMessage(NodeLogPath)
+
+StageNodeLogPath = _reflection.GeneratedProtocolMessageType('StageNodeLogPath', (_message.Message,), {
+  'DESCRIPTOR' : _STAGENODELOGPATH,
+  '__module__' : 'control_pb2'
+  # @@protoc_insertion_point(class_scope:control.StageNodeLogPath)
+  })
+_sym_db.RegisterMessage(StageNodeLogPath)
 
 ControlResponse = _reflection.GeneratedProtocolMessageType('ControlResponse', (_message.Message,), {
   'DESCRIPTOR' : _CONTROLRESPONSE,

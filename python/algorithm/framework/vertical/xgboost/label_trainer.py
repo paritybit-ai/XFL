@@ -40,6 +40,8 @@ from .base import VerticalXgboostBase
 from .decision_tree_label_trainer import VerticalDecisionTreeLabelTrainer
 from service.fed_job import FedJob
 from service.fed_node import FedNode
+from service.fed_control import _update_progress_finish
+from common.utils.model_io import ModelIO
 
 
 class VerticalXgboostLabelTrainer(VerticalXgboostBase):
@@ -55,7 +57,8 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         self.channels["individual_grad_hess"] = BroadcastChannel(
             name="individual_grad_hess")
         self.channels["tree_node"] = BroadcastChannel(name="tree_node")
-        self.channels["check_dataset_com"] = BroadcastChannel(name="check_dataset_com")
+        self.channels["check_dataset_com"] = BroadcastChannel(
+            name="check_dataset_com")
 
         summed_grad_hess_channs: Dict[str, DualChannel] = {}
         min_split_info_channs: Dict[str, DualChannel] = {}
@@ -117,9 +120,11 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         self.export_conf = [{
             "class_name": "VerticalXGBooster",
             "identity": self.identity,
-            "filename": self.output.get("model", {"name": "vertical_xgboost_guest.json"})["name"]
+            "filename": self.output.get("proto_model", {}).get("name", ''),
+            # "filename": self.output.get("proto_model", {"name": "vertical_xgboost_guest.pmodel"})["name"],
+            "version": '1.4.0'
         }]
-        
+
     def _sync_config(self, config):
         sync_rule = {
             "train_info": {
@@ -138,7 +143,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
                 }
             }
         }
-        
+
         config_to_sync = get_matched_config(config, sync_rule)
         self.channels["sync"].broadcast(config_to_sync)
 
@@ -150,11 +155,12 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         train_y_pred_primitive = np.zeros_like(self.train_label)
         val_y_pred_primitive = np.zeros_like(self.val_label)
 
-        loss_inst = get_xgb_loss_inst(list(self.xgb_config.loss_param.keys())[0])
+        loss_inst = get_xgb_loss_inst(
+            list(self.xgb_config.loss_param.keys())[0])
         train_y_pred, val_y_pred = loss_inst.predict(
             train_y_pred_primitive), loss_inst.predict(val_y_pred_primitive)
 
-        for tree_idx in range(self.xgb_config.num_trees):
+        for tree_idx in range(1, self.xgb_config.num_trees+1):
             logger.info("Tree {} start training.".format(tree_idx))
 
             # 0: no need to restart, 1: restart, 2: max number of try reached
@@ -245,7 +251,8 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
                 early_stop_flag, save_flag = False, True
 
             if save_flag:
-                self.best_round = tree_idx + 1
+                # self.best_round = tree_idx + 1
+                self.best_round = tree_idx
                 self.best_prediction_train = copy.deepcopy(train_y_pred)
                 self.best_prediction_val = copy.deepcopy(val_y_pred)
 
@@ -256,35 +263,66 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
                     "label trainer early stopped. best round: {}.".format(self.best_round))
                 break
 
-            if self.interaction_params.get("save_frequency") > 0 and (tree_idx + 1) % self.interaction_params.get("save_frequency") == 0:
-                self.save(boosting_tree, epoch=tree_idx+1)
+            # if self.interaction_params.get("save_frequency") > 0 and (tree_idx + 1) % self.interaction_params.get("save_frequency") == 0:
+            if self.interaction_params.get("save_frequency") > 0 and tree_idx % self.interaction_params.get("save_frequency") == 0:
+                # self.save(boosting_tree, epoch=tree_idx+1)
+                self.save(boosting_tree, epoch=tree_idx)
                 self._write_prediction(
-                    self.train_label, train_y_pred, self.train_ids, epoch=tree_idx + 1)
+                    # self.train_label, train_y_pred, self.train_ids, epoch=tree_idx + 1)
+                    self.train_label, train_y_pred, self.train_ids, epoch=tree_idx)
                 self._write_prediction(
-                    self.val_label, val_y_pred, self.val_ids, epoch=tree_idx + 1, stage='val')
+                    # self.val_label, val_y_pred, self.val_ids, epoch=tree_idx + 1, stage='val')
+                    self.val_label, val_y_pred, self.val_ids, epoch=tree_idx, stage='val')
+
+            # add metrics during training for plot
+            self._write_loss(train_loss, val_loss, tree_idx)
+
+        # update the progress of 100 to show the training is finished
+        _update_progress_finish()
 
         # model preserve
         if self.xgb_config.early_stopping_param["patience"] <= 0:
             self.best_round = len(boosting_tree)
             self.best_prediction_train = copy.deepcopy(train_y_pred)
             self.best_prediction_val = copy.deepcopy(val_y_pred)
-        logger.info("num trees: %d, best: %d" %
-                    (len(boosting_tree), self.best_round))
+        else:
+            logger.info("num trees: %d, best: %d" % (len(boosting_tree), self.best_round))
 
         if boosting_tree.trees:
-            self.save(boosting_tree, final=True)
+            logger.info("save")
+            # self.save(boosting_tree, final=True)
+            if self.best_round <= 0:
+                self.best_round = len(boosting_tree)
+            self.save(boosting_tree[:self.best_round], final=True)
+            logger.info('_write_prediction train')
             self._write_prediction(
                 self.train_label, train_y_pred, self.train_ids, final=True)
+            logger.info('_write_prediction val')
             self._write_prediction(
                 self.val_label, val_y_pred, self.val_ids, final=True, stage='val')
+            logger.info("Writing roc data...")
+            self._write_roc_data(
+                self.train_label, train_y_pred, self.val_label, val_y_pred)
+            logger.info("Writing ks data...")
+            self._write_ks_data(self.train_label, train_y_pred,
+                                self.val_label, val_y_pred)
+            logger.info("Writing lift and gain data...")
+            self._write_lift_gain_data(
+                self.train_label, train_y_pred, self.val_label, val_y_pred
+            )
+            logger.info("Writing pr curve data...")
+            self._write_pr_data(
+                self.train_label, train_y_pred, self.val_label, val_y_pred)
+            self._write_feature_importance()
         else:
-            logger.error("Model is none, ture off goss and subsample please.")
+            logger.error("Model is none, ture off run_goss (false) and downsampling (1) please.")
             raise SystemError(
-                "Model is none, ture off goss and subsample please.")
+                "Model is none, ture off run_goss (false) and downsampling (1) please.")
 
     def save(self, boosting_tree: BoostingTree, epoch: Optional[int] = None, final: bool = False):
         if final:
-            save_model_config(stage_model_config=self.export_conf, save_path=self.output.get("path"))
+            save_model_config(stage_model_config=self.export_conf,
+                              save_path=self.output.get("path"))
 
         save_dir = self.output.get("path")
         if not os.path.exists(save_dir):
@@ -292,32 +330,56 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
 
         # dump out ks plot
         suggest_threshold = 0.5
-        if "ks" in self.xgb_config.metrics or "auc_ks" in self.xgb_config.metrics:
-            # tc = ThresholdCutter(os.path.join(save_dir, "ks_plot_valid.csv"))
-            tc = ThresholdCutter(os.path.join(save_dir, self.output.get("ks_plot_val")["name"]))
-            tc.cut_by_value(self.val_label, self.best_prediction_val)
-            suggest_threshold = float(tc.bst_threshold)
-            tc.save()
-            if self.interaction_params.get("echo_training_metrics"):
-                tc = ThresholdCutter(os.path.join(save_dir, self.output.get("ks_plot_train")["name"]))
-                tc.cut_by_value(self.train_label, self.best_prediction_train)
-                tc.save()
+        # if "ks" in self.xgb_config.metrics or "auc_ks" in self.xgb_config.metrics:
+        #     # tc = ThresholdCutter(os.path.join(save_dir, "ks_plot_valid.csv"))
+        #     tc = ThresholdCutter(os.path.join(
+        #         save_dir, self.output.get("ks_plot_val")["name"]))
+        #     # tc.cut_by_value(self.val_label, self.best_prediction_val)
+        #     # suggest_threshold = float(tc.bst_threshold)
+        #     # tc.save()
+        #     if final:
+        #         self.val_ks_metrics = tc.metrics
+        #         self.val_ks_bst_threshold = tc.bst_threshold
+        #         self.val_ks_bst_score = tc.bst_score
+        #     if self.interaction_params.get("echo_training_metrics"):
+        #         tc = ThresholdCutter(os.path.join(
+        #             save_dir, self.output.get("ks_plot_train")["name"]))
+        #         # tc.cut_by_value(self.train_label, self.best_prediction_train)
+        #         # tc.save()
+        #         if final:
+        #             self.train_ks_metrics = tc.metrics
+        #             self.train_ks_bst_threshold = tc.bst_threshold
+        #             self.train_ks_bst_score = tc.bst_score
+        
+        model_name = self.output.get("model", {}).get("name")
+        proto_name = self.output.get("proto_model", {}).get("name")
+        
+        if model_name:
+            # model_dict = boosting_tree[:self.best_round].to_dict(
+            #     suggest_threshold, compute_group=True)
+            model_dict = boosting_tree.to_dict(suggest_threshold, compute_group=True)
+            ModelIO.save_json_model(model_dict, save_dir, model_name, epoch=epoch, version='1.4.0')
+        
+        if proto_name:
+            # TODO: temp
+            model_name_list = self.output.get("proto_model")["name"].split(".")
+            name_prefix, name_postfix = ".".join(
+                model_name_list[:-1]), model_name_list[-1]
+            if not final and epoch:
+                new_model_name = name_prefix + \
+                    "_epoch_{}".format(epoch) + "." + name_postfix
+            else:
+                new_model_name = name_prefix + "." + name_postfix
+            model_path = os.path.join(save_dir, new_model_name)
 
-        model_name_list = self.output.get("model")["name"].split(".")
-        name_prefix, name_postfix = ".".join(model_name_list[:-1]), model_name_list[-1]
-        if not final and epoch:
-            model_name = name_prefix + "_epoch_{}".format(epoch) + "." + name_postfix
-        else:
-            model_name = name_prefix + "." + name_postfix
-        model_path = os.path.join(save_dir, model_name)
-
-        xgb_output = boosting_tree[:self.best_round].to_dict(
-            suggest_threshold, compute_group=True)
-
-        with open(model_path, 'w') as f:
-            json.dump(xgb_output, f)
-        logger.info("model saved as: {}.".format(model_path))
-
+            # xgb_output = boosting_tree[:self.best_round].to_proto(
+            #     suggest_threshold, compute_group=True)
+            xgb_output = boosting_tree.to_proto(suggest_threshold, compute_group=True)
+            
+            with open(model_path, 'wb') as f:
+                f.write(xgb_output)
+            logger.info("model saved as: {}.".format(model_path))
+                
         self.make_readable_feature_importance(
             os.path.join(save_dir, self.output.get("feature_importance")["name"]))
 
@@ -339,7 +401,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
                     indicator[node_id] = np.isin(
                         data, node.split_info.left_cat)
                 else:
-                    indicator[node_id] = (data < node.split_info.split_point)
+                    indicator[node_id] = (data <= node.split_info.split_point)
         return indicator
 
     def _gen_prediction(self, tree: Tree, indicator: Dict[str, np.ndarray], feature: np.ndarray):
@@ -487,16 +549,22 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
 
     def load_model(self):
         pretrain_path = self.input.get("pretrained_model", {}).get("path", '')
-        # pretrain_path = pretrain_path.replace("[JOB_ID]", str(FedJob.job_id)).replace("[NODE_ID]", str(FedNode.node_id))
+        model_name = self.input.get("pretrained_model", {}).get("name", '')
+        
         model_path = Path(
-            pretrain_path,
-            self.input.get("pretrained_model", {}).get("name", '')
+            pretrain_path, model_name
         )
+        
+        suffix = model_name.split(".")[-1]
+        
+        if suffix != "pmodel":
+            model_dict = ModelIO.load_json_model(model_path)
+            boosting_tree = BoostingTree.from_dict(model_dict)
+        else:
+            with open(model_path, 'rb') as f:
+                byte_str = f.read()
 
-        with open(model_path, 'rb') as f:
-            json_dict = json.load(f)
-
-        boosting_tree = BoostingTree.from_dict(json_dict)
+            boosting_tree = BoostingTree.from_proto(byte_str)
         return boosting_tree
 
     def check_dataset(self):
@@ -506,30 +574,36 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
             n = len(self.train_features.columns)
             for d in shapes:
                 if d["train"][0] != m:
-                    raise ValueError("Lengths of the train set mismatched: %d, %d." % (d["train"][0], m))
+                    raise ValueError(
+                        "Lengths of the train set mismatched: %d, %d." % (d["train"][0], m))
                 n += d["train"][1]
             if n <= 0:
-                raise ValueError("Number of the feature is zero. Stop training.")
+                raise ValueError(
+                    "Number of the feature is zero. Stop training.")
 
         if self.val_dataset is not None:
             m = len(self.val_ids)
             n = len(self.val_features.columns)
             for d in shapes:
                 if d["valid"][0] != m:
-                    raise ValueError("Lengths of the valid set mismatched: %d, %d." % (d["valid"][0], m))
+                    raise ValueError(
+                        "Lengths of the valid set mismatched: %d, %d." % (d["valid"][0], m))
                 n += d["valid"][1]
             if n <= 0:
-                raise ValueError("Number of the feature is zero. Stop training.")
+                raise ValueError(
+                    "Number of the feature is zero. Stop training.")
 
         if self.test_dataset is not None:
             m = len(self.test_ids)
             n = len(self.test_features.columns)
             for d in shapes:
                 if d["test"][0] != m:
-                    raise ValueError("Lengths of the test set mismatched: %d, %d." % (d["test"][0], m))
+                    raise ValueError(
+                        "Lengths of the test set mismatched: %d, %d." % (d["test"][0], m))
                 n += d["test"][1]
                 if n <= 0:
-                    raise ValueError("Number of the feature is zero. Stop predicting.")
+                    raise ValueError(
+                        "Number of the feature is zero. Stop predicting.")
         else:
             if len(shapes) > 0 and "test" in shapes[0]:
                 m = shapes[0]["test"][0]
@@ -539,23 +613,39 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
                         raise ValueError("Lengths of the test set mismatched.")
                     n += d["test"][1]
                 if n <= 0:
-                    raise ValueError("Number of the feature is zero. Stop predicting.")
+                    raise ValueError(
+                        "Number of the feature is zero. Stop predicting.")
                 else:
-                    self.test_dataset = NdarrayIterator(np.zeros((m, 0)), self.bs)
+                    self.test_dataset = NdarrayIterator(
+                        np.zeros((m, 0)), self.bs)
                     self.test_ids = np.arange(m)
 
     def predict(self):
+        out_dict_list = self.channels["sync"].collect()
         self.check_dataset()
         boosting_tree = self.load_model()
         test_y_pred_primitive = self.predict_on_boosting_tree(boosting_tree=boosting_tree,
                                                               data_iterator=self.test_dataset)
         loss_inst = get_xgb_loss_inst(boosting_tree.loss_method)
         test_y_pred = loss_inst.predict(test_y_pred_primitive)
+        
+        output = {
+            "testset": test_y_pred
+        }
+        
+        for out_keys_dict in out_dict_list:
+            for key in out_keys_dict:
+                if key in output:
+                    out_keys_dict[key] = output["testset"]
+        self.channels["sync"].scatter(out_dict_list)
+        
         save_path = self.output.get("path", '')
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
-        save_path = Path(save_path, self.output.get("testset", {}).get("name", ''))
-        logger.info("predicted results saved at {}".format(save_path))
-        pd.DataFrame({"id": self.test_ids, "pred": test_y_pred}).to_csv(
-            save_path, float_format="%.6g", index=False, header=True
-        )
+        if save_path:
+            if not os.path.exists(save_path):
+                os.makedirs(save_path)
+            file_path = Path(save_path, self.output.get("testset", {}).get("name", ''))
+            if file_path:
+                logger.info("predicted results saved at {}".format(file_path))
+                pd.DataFrame({"id": self.test_ids, "pred": test_y_pred}).to_csv(
+                    file_path, float_format="%.6g", index=False, header=True
+                )

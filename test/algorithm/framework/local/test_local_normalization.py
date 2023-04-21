@@ -21,11 +21,12 @@ import shutil
 import numpy as np
 import pandas as pd
 import pytest
-import torch
 from scipy.linalg import norm
+from google.protobuf import json_format
 
 from algorithm.framework.local.normalization.label_trainer import \
 	LocalNormalizationLabelTrainer as LocalNormalization
+from common.model.python.feature_model_pb2 import NormalizationModel
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -71,7 +72,8 @@ def get_conf():
 
 
 class TestLocalNormalization:
-	def test_default(self, get_conf):
+	def test_default(self, get_conf, mocker):
+		mocker.patch("service.fed_control._send_progress")
 		ln = LocalNormalization(get_conf)
 		assert len(ln.train_data) == 800
 		assert len(ln.valid_data) == 200
@@ -84,10 +86,11 @@ class TestLocalNormalization:
 	@pytest.mark.parametrize('axis, norm_', [
 		(1, 'l1'), (1, 'l2'), (1, 'max'), (1, 'other'), (0, 'l1'), (0, 'l2'), (0, 'max'), (0, 'other2'), (2, 'l1')
 	])
-	def test_fit(self, get_conf, axis, norm_):
+	def test_fit(self, get_conf, axis, norm_, mocker):
 		conf = copy.deepcopy(get_conf)
 		conf["train_info"]["train_params"]["axis"] = axis
 		conf["train_info"]["train_params"]["norm"] = norm_
+		mocker.patch("service.fed_control._send_progress")
 		ln = LocalNormalization(conf)
 		check_output = True
 		if axis == 0:
@@ -136,18 +139,26 @@ class TestLocalNormalization:
 				assert exec_msg == "axis {} is invalid.".format(axis)
 			check_output = False
 		if check_output:
-			m = torch.load(conf["output"]["path"] + '/' + conf["output"]["model"]["name"])
-			assert m.get("axis") == axis
+			with open(conf["output"]["path"] + '/' + conf["output"]["proto_model"]["name"], 'rb') as f:
+				byte_str = f.read()
+			m = NormalizationModel()
+			m.ParseFromString(byte_str)
+			d = json_format.MessageToDict(m,
+			                              including_default_value_fields=True,
+			                              preserving_proto_field_name=True)
+
+			assert d.get("axis") == axis
 			if axis == 0:
-				assert len(m.get("normalizer")) == 3
+				assert len(d.get("normalizer")) == 3
 			elif axis == 1:
-				assert m.get("norm") == norm_
+				assert d.get("norm") == norm_
 
 	@pytest.mark.parametrize('feature_name', ['x0', 'myf'])
-	def test_feature_wise(self, get_conf, feature_name):
+	def test_feature_wise(self, get_conf, feature_name, mocker):
 		conf = copy.deepcopy(get_conf)
 		conf["train_info"]["train_params"]["norm"] = 'l2'
 		conf["train_info"]["train_params"]["feature_norm"] = {feature_name: {"norm": 'l1'}}
+		mocker.patch("service.fed_control._send_progress")
 		ln = LocalNormalization(conf)
 
 		if feature_name in ln.train_data.columns:

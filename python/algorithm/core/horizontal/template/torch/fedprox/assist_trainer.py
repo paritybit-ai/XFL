@@ -15,12 +15,14 @@
 
 from algorithm.core.horizontal.aggregation.aggregation_base import AggregationRootBase
 from ..base import BaseTrainer
+from service.fed_control import _one_layer_progress
 
 
 class FedProxAssistTrainer(BaseTrainer):
     def __init__(self, train_conf: dict):
         super().__init__(train_conf)
         
+        self.current_epoch = 0
         self.register_hook(place="before_local_epoch", rank=1,
                            func=self._broadcast_model, desc="broadcast global model")
         self.register_hook(place="after_local_epoch", rank=1,
@@ -36,3 +38,5 @@ class FedProxAssistTrainer(BaseTrainer):
         if self.device != "cpu":
             self._state_dict_to_device(new_state_dict, self.device, inline=True)
         self.model.load_state_dict(new_state_dict)
+        self.current_epoch += 1
+        _one_layer_progress(self.current_epoch, self.train_params.get("global_epoch", 0))

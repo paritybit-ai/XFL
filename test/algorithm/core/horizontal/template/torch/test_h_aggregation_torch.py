@@ -240,6 +240,6 @@ class TestAggregation:
 
         mocker.patch.object(label_trainer, "train_loop", side_effect=mock_train_loop)
         mocker.patch.object(assist_trainer, "train_loop", side_effect=mock_train_loop_a)
-
+        mocker.patch("service.fed_control._send_progress")
         lrt.fit()
         lrt_a.fit()

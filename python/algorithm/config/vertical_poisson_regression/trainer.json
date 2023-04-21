@@ -1,0 +1,38 @@
+{
+    "identity": "trainer",
+    "model_info": {
+        "name": "vertical_poisson_regression"
+    },
+    "input": {
+        "trainset": [
+            {
+                "type": "csv",
+                "path": "./dataset/bike_sharing_data_vertical/2party",
+                "name": "bike_sharing_data_vertical_1_train.csv",
+                "has_label": false,
+                "has_id": true
+            }
+        ],
+        "valset": [
+            {
+                "type": "csv",
+                "path": "./dataset/bike_sharing_data_vertical/2party",
+                "name": "bike_sharing_data_vertical_1_test.csv",
+                "has_label": false,
+                "has_id": true
+            }
+        ],
+        "pretrained_model": {
+            "path": "",
+            "name": ""
+        }
+    },
+    "output": {
+        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "model": {
+            "name": "vertical_poisson_regression_[STAGE_ID].pt"
+        }
+    },
+    "train_info": {
+    }
+}

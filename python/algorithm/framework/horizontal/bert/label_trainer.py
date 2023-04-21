@@ -19,7 +19,6 @@ from .common import Common
 from tqdm import tqdm
 import tensorflow as tf
 
-from python.service.fed_node import FedNode
 
 class HorizontalBertLabelTrainer(Common, FedAvgLabelTrainer):
     def __init__(self, train_conf: dict):
@@ -42,3 +41,4 @@ class HorizontalBertLabelTrainer(Common, FedAvgLabelTrainer):
         train_loss /= len(self.train_dataloader)
         self.context["train_loss"] = train_loss
         logger.info(f"Train loss: {train_loss}")
+        

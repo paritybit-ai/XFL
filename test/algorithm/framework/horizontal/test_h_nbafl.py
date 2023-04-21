@@ -202,6 +202,7 @@ class TestNbafl:
         mocker.patch.object(
             service.fed_config.FedConfig, "get_label_trainer", return_value=['node-1', 'node-2']
         )
+        mocker.patch("service.fed_control._send_progress")
         nbafl_at = HorizontalNbaflAssistTrainer(conf)
         model_state_dict = nbafl_at.model.state_dict()
         mocker.patch.object(

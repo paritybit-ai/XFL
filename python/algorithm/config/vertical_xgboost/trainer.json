@@ -41,6 +41,9 @@
         "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
         "model": {
             "name": "vertical_xgboost_[STAGE_ID].model"
+        },
+        "proto_model": {
+            "name": "vertical_xgboost_[STAGE_ID].pmodel"
         }
     },
     "train_info": {

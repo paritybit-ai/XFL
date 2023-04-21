@@ -25,6 +25,7 @@ import numpy as np
 import pytest
 
 import service.fed_config
+from algorithm.core.horizontal.aggregation import aggregation_base
 from algorithm.core.horizontal.aggregation.aggregation_otp import AggregationOTPRoot, AggregationOTPLeaf
 from algorithm.core.horizontal.aggregation.aggregation_plain import AggregationPlainRoot, AggregationPlainLeaf
 from algorithm.framework.horizontal.bert.assist_trainer import HorizontalBertAssistTrainer
@@ -91,6 +92,7 @@ def get_trainer_conf():
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     if not os.path.exists("/opt/dataset/unit_test"):
         os.makedirs("/opt/dataset/unit_test")
     if not os.path.exists("/opt/checkpoints/unit_test"):
@@ -107,6 +109,7 @@ class TestBert:
     #@pytest.mark.skip(reason="no reason")
     @pytest.mark.parametrize("encryption_method", ['plain']) # ['otp', 'plain'] otp too slow
     def test_trainer(self, get_trainer_conf, get_assist_trainer_conf, encryption_method, mocker):
+        mocker.patch.object(aggregation_base, "MAX_BLOCK_SIZE", 30000000)
         fed_method = None
         fed_assist_method = None
         mocker.patch.object(Commu, "node_id", "assist_trainer")
@@ -165,16 +168,16 @@ class TestBert:
         params_plain_recv = pickle.dumps(OrderedDict({i:w for i,w in enumerate(bert_a.model.get_weights())})) + EOV
         params_send = fed_method._calc_upload_value(
             OrderedDict({i:w for i,w in enumerate(bert.model.get_weights())}), len(bert.train_dataloader._input_dataset))
-        params_collect = pickle.dumps(params_send)
-        agg_otp = fed_assist_method._calc_aggregated_params(list(map(lambda x: pickle.loads(x), [params_collect,params_collect])))
-        del params_send, params_collect
+        params_collect = pickle.dumps(params_send) + EOV
+        #agg_otp = fed_assist_method._calc_aggregated_params(list(map(lambda x: pickle.loads(x), [params_collect,params_collect])))
 
         def mock_recv(*args, **kwargs):
-            if recv_mocker.call_count % 4 in [1,2]:
+            print("call count", recv_mocker.call_count)
+            if recv_mocker.call_count in [1,2]:
                 return params_plain_recv
-            elif recv_mocker.call_count % 4 in [0,3] :
+            elif recv_mocker.call_count > 2 :
                 return params_collect
-
+     
         recv_mocker = mocker.patch.object(
             DualChannel, "recv", side_effect=mock_recv
         )
@@ -184,12 +187,13 @@ class TestBert:
         mocker.patch.object(
             DualChannel, "send", return_value=None
         )
-        mocker.patch.object(
-            AggregationOTPRoot, "aggregate", side_effect=mock_agg
-        )
-        mocker.patch.object(
-            AggregationPlainRoot, "aggregate", side_effect=mock_agg
-        )
+        mocker.patch("service.fed_control._send_progress")
+        # mocker.patch.object(
+        #     AggregationOTPRoot, "aggregate", side_effect=mock_agg
+        # )
+        # mocker.patch.object(
+        #     AggregationPlainRoot, "aggregate", side_effect=mock_agg
+        # )
 
         bert.fit()
         bert_a.fit()

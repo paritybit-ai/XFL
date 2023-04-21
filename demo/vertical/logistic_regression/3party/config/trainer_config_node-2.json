@@ -35,14 +35,6 @@
             }
         },
         "train_info": {
-            "interaction_params": {
-                "save_frequency": 1,
-                "write_training_prediction": true,
-                "write_validation_prediction": true,
-                "echo_training_metrics": true
-            },
-            "train_params": {
-            }
         }
     }
 ]

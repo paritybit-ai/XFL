@@ -42,7 +42,7 @@ def umbed(a: np.ndarray, num: int, interval: int = (1 << 128), precison: int = 6
         a = (x - b) // interval
         
         res[-1] = b / (1 << precison)
-        for i in range(num -1):
+        for i in range(num - 1):
             # y, b = divmod(a, interval)
             b = a % interval
             if abs(b) > interval // 2:
@@ -57,3 +57,22 @@ def umbed(a: np.ndarray, num: int, interval: int = (1 << 128), precison: int = 6
         for j in range(num):
             out[j][i] = temp[j]
     return out
+
+
+def unpack(x: float, num: int, interval: int = (1 << 128), precison: int = 64) -> List[list]:
+    res = [0] * num
+    # a, b = divmod(x, interval)
+    b = x % interval
+    if abs(b) > interval // 2:
+        b = b - interval
+    a = (x - b) // interval
+    
+    res[-1] = float(b / (1 << precison))
+    for i in range(num - 1):
+        # y, b = divmod(a, interval)
+        b = a % interval
+        if abs(b) > interval // 2:
+            b = b - interval
+        a = (a - b) // interval
+        res[-i-2] = float(b / (1 << precison))
+    return res

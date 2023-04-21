@@ -13,9 +13,9 @@
 # limitations under the License.
 
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict, Any
 
-from common.utils.constants import CKKS, PAILLIER, PLAIN
+from common.utils.constants import CKKS, PAILLIER, PLAIN, OTP
 
 
 # used by xgboost
@@ -47,6 +47,19 @@ class CKKSParam(object):
         self.global_scale_bit_size = global_scale_bit_size
 
 
+class OTPParam(object):
+    def __init__(self,
+                 key_bitlength: int = 64,
+                 data_type: str = "torch.Tensor",
+                 key_exchange: Dict[str, Any] = None,
+                 csprng: Dict[str, Any] = None):
+        self.method = OTP
+        self.key_bitlength = key_bitlength
+        self.data_tyep = data_type
+        self.key_exchange = key_exchange
+        self.csprng = csprng
+
+
 class PlainParam(object):
     def __init__(self):
         self.method = PLAIN
@@ -59,6 +72,8 @@ def get_encryption_param(method: str, params: Optional[dict] = None) -> Union[Pl
         return PaillierParam(**params)
     elif method == CKKS:
         return CKKSParam(**params)
+    elif method == OTP:
+        return OTPParam(**params)
     else:
         raise ValueError(f"Encryption method {method} not supported.")
         

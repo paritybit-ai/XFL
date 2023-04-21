@@ -13,8 +13,23 @@ message ControlRequest {
     Operation control = 1;
 }
 
+message NodeLogPath {
+    string nodeId = 1;
+    string logPath = 2; 
+}
+
+message StageNodeLogPath {
+    int32 stageId = 1;
+    string nodeId = 2;
+    string logPath = 3;
+}
+
 message ControlResponse {
     int32 jobId = 1;
     int32 code = 2;
     string message = 3;
+    string dumpedTrainConfig = 4;
+    repeated NodeLogPath nodeLogPath = 5;
+    repeated StageNodeLogPath stageNodeLogPath = 6;
 }
+

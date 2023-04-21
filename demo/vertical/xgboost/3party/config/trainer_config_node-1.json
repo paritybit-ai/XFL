@@ -55,6 +55,27 @@
             },
             "feature_importance": {
                 "name": "xgb_feature_importance_[STAGE_ID].csv"
+            },
+            "plot_ks": {
+                "name": "xgb_plot_ks_[STAGE_ID].json"
+            },
+            "plot_roc": {
+                "name": "xgb_plot_roc_[STAGE_ID].json"
+            },
+            "plot_lift": {
+                "name": "xgb_plot_lift_[STAGE_ID].json"
+            },
+            "plot_gain": {
+                "name": "xgb_plot_gain_[STAGE_ID].json"
+            },
+            "plot_precision_recall": {
+                "name": "xgb_plot_precision_recall_[STAGE_ID].json"
+            },
+            "plot_feature_importance": {
+                "name": "xgb_plot_feature_importance_[STAGE_ID].json"
+            },
+            "plot_loss": {
+                "name": "xgb_plot_loss_[STAGE_ID].json"
             }
         },
         "train_info": {
@@ -87,7 +108,7 @@
                         "other_rate": 0.4
                     }
                 },
-                "category":{
+                "category": {
                     "cat_smooth": 1,
                     "cat_features": {
                         "col_index": "",
@@ -123,13 +144,8 @@
                         "parallelize_on": true
                     }
                 },
-                "advanced": {
-                    "col_batch": 64,
-                    "row_batch": 40000
-                },
                 "max_num_cores": 999,
                 "batch_size_val": 40960
-
             }
         }
     }

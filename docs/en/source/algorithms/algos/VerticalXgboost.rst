@@ -114,6 +114,7 @@ Parameters List
                 - **precision**: ``int`` Precison.
                 - **djn_on**: ``bool`` Whether to use djn method to generate key pair.
                 - **parallelize_on**: ``bool`` Whether to use multicore for computing.
+            - **plain**: ``map`` No encryption, an alternative to `paillier` encryption, please set to `"plain": {}`.
         - **max_num_cores**: ``int`` Max number of cpu cores for computing.
         - **batch_size_val**: ``int`` Batch size for validation.
         - **advanced**: ``map``

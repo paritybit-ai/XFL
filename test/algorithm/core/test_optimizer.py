@@ -15,7 +15,7 @@
 
 import torch
 
-from algorithm.core.optimizer import get_optimizer
+from algorithm.core.optimizer.torch_optimizer import get_optimizer
 
 
 def test_get_optimizer():

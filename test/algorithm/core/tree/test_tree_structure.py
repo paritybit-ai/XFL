@@ -126,6 +126,7 @@ def test_boosting_tree():
                         "linkage": None,
                         "split_info": {
                             "owner_id": "A",
+                            "feature_name": None,
                             "feature_idx": 5,
                             "is_category": False,
                             "split_point": 1.23,
@@ -142,6 +143,7 @@ def test_boosting_tree():
                         "linkage": 'left',
                         "split_info": {
                             "owner_id": "A",
+                            "feature_name": None,
                             "feature_idx": 1,
                             "is_category": True,
                             "split_point": None,
@@ -158,6 +160,7 @@ def test_boosting_tree():
                         "linkage": 'right',
                         "split_info": {
                             "owner_id": "B",
+                            "feature_name": None,
                             "feature_idx": None,
                             "is_category": None,
                             "split_point": None,
@@ -221,6 +224,7 @@ def test_boosting_tree():
                         "linkage": None,
                         "split_info": {
                             "owner_id": "B",
+                            "feature_name": None,
                             "feature_idx": 7,
                             "is_category": True,
                             "split_point": None,

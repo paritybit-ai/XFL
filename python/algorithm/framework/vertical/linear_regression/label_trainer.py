@@ -17,12 +17,14 @@ import copy
 import secrets
 from functools import reduce
 from pathlib import Path
+from common.checker.x_types import All
 
 import numpy as np
 import pandas as pd
 import tenseal as ts
 import torch
 
+from common.checker.matcher import get_matched_config
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
 from common.crypto.paillier.paillier import Paillier
 from common.utils.algo_utils import earlyStopping
@@ -31,6 +33,7 @@ from common.utils.model_preserver import ModelPreserver
 from common.utils.utils import save_model_config
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
+from service.fed_control import _two_layer_progress, _update_progress_finish
 from .base import VerticalLinearRegressionBase
 
 
@@ -43,6 +46,9 @@ class VerticalLinearRegressionLabelTrainer(VerticalLinearRegressionBase):
             *args:
             **kwargs:
         """
+        self.sync_channel = BroadcastChannel(name="sync")
+        self._sync_config(train_conf)
+
         super().__init__(train_conf, label=True, *args, **kwargs)
         self._init_model(bias=True)
         self.export_conf = [{
@@ -73,6 +79,13 @@ class VerticalLinearRegressionLabelTrainer(VerticalLinearRegressionBase):
         self.encryption_method = list(self.encryption_config.keys())[0].lower()
         self.dual_channels["gradients_loss"].send(self.encryption_config)
         self.dual_channels["gradients_loss"].send(self.encryption_method)
+
+    def _sync_config(self, config):
+        sync_rule = {
+            "train_info": All()
+        }
+        config_to_sync = get_matched_config(config, sync_rule)
+        self.sync_channel.broadcast(config_to_sync)
 
     def predict(self, input_data):
         pred_prob_epoch, y_epoch = [], []
@@ -319,6 +332,9 @@ class VerticalLinearRegressionLabelTrainer(VerticalLinearRegressionBase):
                 self.model.linear.weight -= (torch.FloatTensor(gradient_label_trainer_w) * self.optimizer_config["lr"])
                 self.model.linear.bias -= (gradient_label_trainer_b * self.optimizer_config["lr"])
 
+                # calculate and update the progress of the training
+                _two_layer_progress(batch_idx, len(self.train_dataloader), epoch-1, self.global_epoch)
+
             loss_epoch = loss_epoch * (1 / len(self.train))
             logger.info("Loss of {} epoch is {}".format(epoch, loss_epoch))
 
@@ -355,6 +371,8 @@ class VerticalLinearRegressionLabelTrainer(VerticalLinearRegressionBase):
                                     state_dict=self.model.state_dict(), epoch=epoch)
             # if early stopping, break
             if early_stop_flag:
+                # update the progress of 100 to show the training is finished
+                _update_progress_finish()
                 break
 
         # save model for infer
@@ -368,10 +386,10 @@ class VerticalLinearRegressionLabelTrainer(VerticalLinearRegressionBase):
 
     def _save_prob(self):
         if self.interaction_params.get("write_training_prediction"):
-            self._write_prediction(self.train_result[1], self.train_result[0], self.train_ids.tolist(),
+            self._write_prediction(self.train_result[1], self.train_result[0], self.train_ids,
                                    stage="train", final=True)
         if self.interaction_params.get("write_validation_prediction"):
-            self._write_prediction(self.val_result[1], self.val_result[0], self.val_ids.tolist(),
+            self._write_prediction(self.val_result[1], self.val_result[0], self.val_ids,
                                    stage="val", final=True)
 
     def check_data(self):
