@@ -18,8 +18,6 @@ Parameters List
 **model_info**:  
     - **name**: ``str`` Model name, should be `vertical_kmeans`.
 
-**computing_engine**: ``str`` The computing engine to run the algorithm, currently supported are `local` or `spark`.
-
 **input**:
     - **trainset**:
         - **type**: ``str`` Train dataset type, currently supported is `csv`.
@@ -37,7 +35,8 @@ Parameters List
         - **name**: ``str`` File name of summary.
 
 **train_info**:  
-    - **train_params**: ``map``
+    - **train_params**:
+        - **init**: ``str``  Initialization method, should be one of `random` and `kmeans++`.
         - **encryption**:
             - **otp**:
                 - **key_bitlength**: ``int`` Key length of one time pad encryption, support 64 and 128.

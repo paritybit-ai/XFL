@@ -102,7 +102,7 @@ class VerticalLinearRegressionBase(VerticalModelBase):
             data: CsvReader = self.__load_data(self.input_trainset)
             self.train = data.features()
             self.train_label = data.label()
-            self.train_ids = data.ids
+            self.train_ids = list(range(len(data.ids)))
         else:
             raise NotImplementedError("Trainset was not configured.")
         if self.label:
@@ -112,7 +112,7 @@ class VerticalLinearRegressionBase(VerticalModelBase):
             data: CsvReader = self.__load_data(self.input_valset)
             self.val = data.features()
             self.val_label = data.label()
-            self.val_ids = data.ids
+            self.val_ids = list(range(len(data.ids)))
         if self.label:
             assert len(self.val) == len(self.val_label)
 

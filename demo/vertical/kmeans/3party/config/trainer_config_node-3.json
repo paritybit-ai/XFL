@@ -28,26 +28,6 @@
             }
         },
         "train_info": {
-            "encryption": {
-                "otp": {
-                    "key_bitlength": 128,
-                    "data_type": "torch.Tensor",
-                    "key_exchange": {
-                        "key_bitlength": 3072,
-                        "optimized": true
-                    },
-                    "csprng": {
-                        "name": "hmac_drbg",
-                        "method": "sha512"
-                    }
-                }
-            },
-            "train_params": {
-                "k": 5,
-                "max_iter": 99,
-                "tol": 1e-3,
-                "random_seed": 50
-            }
         }
     }
 ]

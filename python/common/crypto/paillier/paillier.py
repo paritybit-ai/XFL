@@ -413,7 +413,7 @@ class Paillier(object):
                     warnings.warn(f"dtype {dtype} not supported.")
                     out = float(out)
         else:
-            raise TypeError(f"Unsupported data type {type(data)}, accepted types are 'np.ndarray', 'int', 'float'.")
+            raise TypeError(f"Unsupported data type {type(data)}, accepted types are 'np.ndarray', 'PaillierCiphertext'.")
         return out
     
     @classmethod

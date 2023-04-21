@@ -55,7 +55,7 @@ def get_assist_trainer_conf():
         conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
         conf["model_info"]["config"]["layers"] = "unit_test"
-        conf["train_info"]["params"]["batch_size"] = 4
+        conf["train_info"]["params"]["batch_size"] = 8
         conf["train_info"]["params"]["global_epoch"] = 2
     yield conf
 
@@ -69,7 +69,7 @@ def get_trainer_conf():
         conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
         conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
         conf["model_info"]["config"]["layers"] = "unit_test"
-        conf["train_info"]["params"]["batch_size"] = 4
+        conf["train_info"]["params"]["batch_size"] = 8
         conf["train_info"]["params"]["global_epoch"] = 2
     yield conf
 
@@ -175,5 +175,6 @@ class TestVgg:
         mocker.patch.object(
             AggregationPlainRoot, "aggregate", side_effect=mock_agg
         )
+        mocker.patch("service.fed_control._send_progress")
         rest.fit()
         rest_a.fit()

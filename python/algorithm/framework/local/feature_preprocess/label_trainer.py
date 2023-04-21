@@ -25,7 +25,7 @@ from algorithm.core.data_io import CsvReader
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
 from sklearn.impute import SimpleImputer
-
+from service.fed_control import _update_progress_finish
 from common.utils.utils import save_model_config
 
 
@@ -252,7 +252,7 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
         def onehot_series(col, flag):
             if flag == "train":
                 onehot = OneHotEncoder(handle_unknown='ignore')
-                onehot.fit(self.train[[col]])  # first transform the elements to string
+                onehot.fit(self.train[[col]])
                 new_data = pd.DataFrame(onehot.transform(self.train[[col]]).toarray())
                 onehot_list[col] = onehot
                 col_len = len(onehot.categories_[0])
@@ -319,3 +319,5 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
 
             self.val.to_csv(save_val_path, index=self.input["trainset"][0]["has_id"])
             logger.info("Preprocessed valset done")
+
+        _update_progress_finish()        

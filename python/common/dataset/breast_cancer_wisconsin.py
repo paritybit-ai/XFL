@@ -64,6 +64,7 @@ class WDBC(torch.utils.data.Dataset):
         splits = reallocate_dict['splits']
         reallocate_folder = f'{splits}party'
         test_ratio = reallocate_dict['test_ratio']
+        drop_ratio = reallocate_dict['drop_ratio']
         random_state = reallocate_dict["random_seed"]
         parties = reallocate_dict["parties"]
         np.random.seed(random_state)
@@ -96,25 +97,64 @@ class WDBC(torch.utils.data.Dataset):
             test_csv_path = os.path.join(
                 final_dir_path, f'{self.datadir}_test.csv')
             test_data.to_csv(test_csv_path, index=False)
-            rand_idx = np.random.permutation(range(len(train_data)))
-            indices = np.array_split(rand_idx, splits)
+            # rand_idx = np.random.permutation(range(len(train_data)))
+            # indices = np.array_split(rand_idx, splits)
+            indices = np.array_split(range(len(train_data)), splits)
             for i, party in enumerate(parties):
                 csv_path = os.path.join(
                     final_dir_path, f'{self.datadir}_{party}.csv')
                 data = train_data.loc[indices[i]]
                 data.to_csv(csv_path, index=False)
+
+        elif mode == "transfer":
+            all_train_data, all_test_data = pd_train_test_split(
+                self.data, test_ratio=test_ratio, random_state=random_state)
+            cols = [f"x{i:0>2d}" for i in range(30)]
+            split_cols = np.array_split(cols, splits)
+            index_dict = {}
+            
+            for i, span in enumerate(split_cols):
+                if "labeled" in parties[i]:
+                    train_data, _ = pd_train_test_split(
+                        all_train_data[["id", "y"]+list(span)], test_ratio=drop_ratio, random_state=random_state+1)
+                    test_data = all_test_data[["id", "y"]+list(span)]
+                else:
+                    train_data, _ = pd_train_test_split(
+                        all_train_data[["id"]+list(span)], test_ratio=drop_ratio, random_state=random_state+2)
+                    test_data = all_test_data[["id"]+list(span)]
+                index_dict[i] = train_data["id"].to_list()
+
+                train_csv_path = os.path.join(
+                    final_dir_path, f'{self.datadir}_{parties[i]}_train.csv')
+                test_csv_path = os.path.join(
+                    final_dir_path, f'{self.datadir}_{parties[i]}_test.csv')
+                train_data.to_csv(train_csv_path, index=False)
+                test_data.to_csv(test_csv_path, index=False)
+
+            overlap_index = index_dict[0]
+            for i in range(1, len(index_dict)):
+                overlap_index = self.intersection_list(overlap_index, index_dict[i])
+            np.save(os.path.join(final_dir_path, "overlap_index.npy"), np.array(overlap_index))
+
         os.remove(self.datapath)
+    
+    @staticmethod
+    def intersection_list(list1, list2):
+        list3 = [value for value in list1 if value in list2]
+        return list3
 
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", type=str, default="vertical",
-                        help="vertical or horizontal task")
+                        help="vertical, horizontal or transfer task")
     parser.add_argument("--splits", type=int, default=2,
                         help="number of parties")
     parser.add_argument("--test_ratio", type=float,
                         default=0.3, help="ratio of test data")
+    parser.add_argument("--drop_ratio", type=float,
+                        default=0.3, help="ratio of drop data")
     parser.add_argument("--random_seed", type=int,
                         default=0, help="random seed")
     parser.add_argument("--party", nargs="+", help="involved parties")
@@ -124,6 +164,7 @@ if __name__ == "__main__":
         "mode": args.mode,
         "splits": args.splits,
         "test_ratio": args.test_ratio,
+        "drop_ratio": args.drop_ratio,
         "random_seed": args.random_seed,
         "parties": args.party
     }

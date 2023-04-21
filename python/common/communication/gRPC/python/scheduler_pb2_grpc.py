@@ -2,6 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
+import checker_pb2 as checker__pb2
 import commu_pb2 as commu__pb2
 import control_pb2 as control__pb2
 import scheduler_pb2 as scheduler__pb2
@@ -42,10 +43,20 @@ class SchedulerStub(object):
                 request_serializer=scheduler__pb2.GetAlgorithmListRequest.SerializeToString,
                 response_deserializer=scheduler__pb2.GetAlgorithmListResponse.FromString,
                 )
+        self.recProgress = channel.unary_unary(
+                '/scheduler.Scheduler/recProgress',
+                request_serializer=scheduler__pb2.RecProgressRequest.SerializeToString,
+                response_deserializer=scheduler__pb2.RecProgressResponse.FromString,
+                )
         self.getStage = channel.unary_unary(
                 '/scheduler.Scheduler/getStage',
                 request_serializer=scheduler__pb2.GetStageRequest.SerializeToString,
                 response_deserializer=scheduler__pb2.GetStageResponse.FromString,
+                )
+        self.checkTaskConfig = channel.unary_unary(
+                '/scheduler.Scheduler/checkTaskConfig',
+                request_serializer=checker__pb2.CheckTaskConfigRequest.SerializeToString,
+                response_deserializer=checker__pb2.CheckTaskConfigResponse.FromString,
                 )
 
 
@@ -82,7 +93,19 @@ class SchedulerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def recProgress(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def getStage(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def checkTaskConfig(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -116,10 +139,20 @@ def add_SchedulerServicer_to_server(servicer, server):
                     request_deserializer=scheduler__pb2.GetAlgorithmListRequest.FromString,
                     response_serializer=scheduler__pb2.GetAlgorithmListResponse.SerializeToString,
             ),
+            'recProgress': grpc.unary_unary_rpc_method_handler(
+                    servicer.recProgress,
+                    request_deserializer=scheduler__pb2.RecProgressRequest.FromString,
+                    response_serializer=scheduler__pb2.RecProgressResponse.SerializeToString,
+            ),
             'getStage': grpc.unary_unary_rpc_method_handler(
                     servicer.getStage,
                     request_deserializer=scheduler__pb2.GetStageRequest.FromString,
                     response_serializer=scheduler__pb2.GetStageResponse.SerializeToString,
+            ),
+            'checkTaskConfig': grpc.unary_unary_rpc_method_handler(
+                    servicer.checkTaskConfig,
+                    request_deserializer=checker__pb2.CheckTaskConfigRequest.FromString,
+                    response_serializer=checker__pb2.CheckTaskConfigResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -217,6 +250,23 @@ class Scheduler(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
+    def recProgress(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/scheduler.Scheduler/recProgress',
+            scheduler__pb2.RecProgressRequest.SerializeToString,
+            scheduler__pb2.RecProgressResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
     def getStage(request,
             target,
             options=(),
@@ -230,5 +280,22 @@ class Scheduler(object):
         return grpc.experimental.unary_unary(request, target, '/scheduler.Scheduler/getStage',
             scheduler__pb2.GetStageRequest.SerializeToString,
             scheduler__pb2.GetStageResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def checkTaskConfig(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/scheduler.Scheduler/checkTaskConfig',
+            checker__pb2.CheckTaskConfigRequest.SerializeToString,
+            checker__pb2.CheckTaskConfigResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

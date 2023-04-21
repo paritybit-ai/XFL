@@ -23,6 +23,7 @@ from common.checker.matcher import get_matched_config
 from common.checker.x_types import All
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
+from service.fed_control import _update_progress_finish
 from .base import VerticalPearsonBase
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
 from common.utils.logger import logger
@@ -191,13 +192,16 @@ class VerticalPearsonLabelTrainer(VerticalPearsonBase):
 							self._summary["corr"][k] = []
 				else:
 					self._summary["corr"][k] = v
+
+        # update the progress of 100 to show the training is finished
+		_update_progress_finish()
 		self.save()
 
 	def save(self):
 		save_dir = str(Path(self.output.get("path")))
 		if not os.path.exists(save_dir):
 			os.makedirs(save_dir)
-		model_name = self.output.get("model")["name"]
+		model_name = self.output.get("corr")["name"]
 		model_path = Path(save_dir, model_name)
 		summary = self.merge_summary()
 		with open(model_path, 'wb') as f:

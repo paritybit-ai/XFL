@@ -26,7 +26,10 @@
     "output": {
         "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
         "model": {
-            "name": "local_normalization_[STAGE_ID].pt"
+            "name": "local_normalization_[STAGE_ID].model"
+        },
+        "proto_model": {
+            "name": "local_normalization_[STAGE_ID].pmodel"
         },
         "trainset": {
             "name": "temp/normalized_train_[STAGE_ID].csv"

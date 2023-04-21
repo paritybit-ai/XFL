@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from service.fed_control import _one_layer_progress
 from common.checker.matcher import get_matched_config
 from common.checker.x_types import All
 from common.communication.gRPC.python.channel import BroadcastChannel
@@ -119,13 +120,20 @@ class VerticalFeatureSelectionLabelTrainer(VerticalFeatureSelectionBase):
 
 	def fit(self):
 		logger.info("feature selection label trainer start.")
+
+		# iter_ is used to calculate the progress of the training
+		iter_ = 0
 		for k, v in self.filter.items():
+			iter_ += 1
 			if k == "common":
 				self._common_filter(v)
 			elif k == "correlation":
 				self._correlation_filter(v)
 			else:
 				raise NotImplementedError("method {} is not implemented.".format(k))
+			
+			# calculate and update the progress of the training
+			_one_layer_progress(iter_, len(self.filter.keys()))
 		self.channels["feature_id_com"].broadcast([_["feature_id"] for _ in self.feature_info])
 		self.save()
 		self.transform()

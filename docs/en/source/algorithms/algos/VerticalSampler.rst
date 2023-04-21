@@ -5,7 +5,7 @@ Vertical Sampler
 Introduction
 ------------
 
-Two sample methods are provided: random sample and stratified sample. “Downsample” and “upsample” are supported in both methods.
+Two sample methods are provided: random sample and stratified sample. Downsample and upsample are supported in both methods.
 
 Parameters List
 ---------------
@@ -25,19 +25,16 @@ Parameters List
 **output**:
     - **path**: ``str`` Folder path of output.
     - **sample_id**:
-        - **name**: ``str`` File name of output model.
+        - **name**: ``str`` File name of output id.
     - **dataset**:
-        - **name**: ``bool`` File name of output trainset.
+        - **name**: ``bool`` File name of output dataset.
 
 **train_info**:
     - **train_params**:
-        - **method**: ``str`` Sample method, support "random" or "stratify".
-        - **strategy**: ``str`` Sample strategy, support "downsample" or "upsample".
+        - **method**: ``str`` Sample method, support `random` or `stratify`.
+        - **strategy**: ``str`` Sample strategy, support `downsample` or `upsample`.
         - **random_seed**: ``int`` Random seed.
-        - **fraction**: support three keys: "percentage" or "number" or "labeled_percentage".
-            - **percentage**: ``float`` Threshold of "percentage" filter.
-            - **number**: ``int`` Threshold of "number" filter.
-            - **labeled_percentage**: ``list`` Threshold of "labeled_percentage" filter.
-        - **marketing_specified**:
-            - **threshold_method**: ``str`` Method of score filter, support "percentage" or "number" or "score".
-            - **threshold**: ``int`` or ``float`` Threshold of filter.
+        - **fraction**: support three keys: `percentage` or `number` or `labeled_percentage`.
+            - **percentage**: ``float`` Threshold of `percentage` filter.
+            - **number**: ``int`` Threshold of `number` filter.
+            - **labeled_percentage**: ``list`` Threshold of `labeled_percentage` filter.

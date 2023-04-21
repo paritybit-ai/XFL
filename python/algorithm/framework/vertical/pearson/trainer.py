@@ -193,7 +193,7 @@ class VerticalPearsonTrainer(VerticalPearsonBase):
 		save_dir = str(Path(self.output.get("path")))
 		if not os.path.exists(save_dir):
 			os.makedirs(save_dir)
-		model_name = self.output.get("model")["name"]
+		model_name = self.output.get("corr")["name"]
 		model_path = Path(save_dir, model_name)
 		with open(model_path, 'wb') as f:
 			pickle.dump(self._local_summary, f)

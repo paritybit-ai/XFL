@@ -18,12 +18,12 @@ from service.fed_config import FedConfig
 def _get_assist_trainer():
     aggregation_config = FedConfig.stage_config["train_info"]["params"]["aggregation_config"]
     type = aggregation_config.get("type")
-    from python.algorithm.core.horizontal.template.jax.fedavg.assist_trainer import FedAvgAssistTrainer
+    from algorithm.core.horizontal.template.jax.fedavg.assist_trainer import FedAvgAssistTrainer
     return FedAvgAssistTrainer
 
 
 def _get_label_trainer():
     aggregation_config = FedConfig.stage_config["train_info"]["params"]["aggregation_config"]
     type = aggregation_config.get("type")
-    from python.algorithm.core.horizontal.template.jax.fedavg.label_trainer import FedAvgLabelTrainer
+    from algorithm.core.horizontal.template.jax.fedavg.label_trainer import FedAvgLabelTrainer
     return FedAvgLabelTrainer

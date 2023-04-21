@@ -35,6 +35,7 @@ from common.crypto.paillier.utils import get_core_num
 from common.utils.constants import PAILLIER, PLAIN
 from common.utils.logger import logger
 from service.fed_config import FedConfig
+from service.fed_control import _three_layer_progress
 from .debug_params import EMBEDING
 
 
@@ -154,7 +155,7 @@ class VerticalDecisionTreeLabelTrainer(object):
         res_hist_list = []
         for col_name in big_feature.feature_columns:
             res_hist_list.append(big_feature.data.groupby([col_name])[['xfl_grad', 'xfl_hess']].agg({'sum'}))  # ({'count', 'sum'})
-            
+        
         # for categorial features, resort
         # cat column is count from the first col of cat feature
         for feature_idx in self.cat_columns:
@@ -226,7 +227,7 @@ class VerticalDecisionTreeLabelTrainer(object):
                 best_split_info.num_left_bin = len(best_split_info.left_sample_index)
                 best_split_info.num_right_bin = len(best_split_info.right_sample_index)
                 best_split_info.max_gain_index = max_gain_index  # only valid for continuous feature
-                    
+
         return best_split_info
 
     def _cal_remote_best_split(self) -> Dict[str, BestSplitInfo]:
@@ -333,7 +334,7 @@ class VerticalDecisionTreeLabelTrainer(object):
                         'num_right_sample': num_right_sample
                     }
                     gain_infos[party_id].append(info)
-                    
+                   
                 if not is_continue:
                     is_continue_flags[i] = is_continue
                     # No data will be send later, cal best_split_info
@@ -379,11 +380,11 @@ class VerticalDecisionTreeLabelTrainer(object):
                             # note this is not the final result of the left category
                             best_split_info.left_cat = [] if not cat_rank else cat_rank[:max_gain_index + 1]
                             best_split_info.is_category = is_category
-
             flag = np.any(is_continue_flags)
             if not flag:
                 break
         gc.collect()
+        
         return best_split_info_dict
 
     def get_feature_importance(self):
@@ -414,7 +415,10 @@ class VerticalDecisionTreeLabelTrainer(object):
             logger.info(f"Decision tree depth {depth} training start..")
             this_depth_nodes = tree.search_nodes(depth)
 
+            # node_id is used to calculate the progress of the training
+            node_id = 0
             for node in this_depth_nodes:
+                node_id += 1
                 logger.info(f"Depth {depth} - node {node.id} start training.")
                 self.tree_node_chann.broadcast(node, use_pickle=True)
                 best_split_info_dict: Dict[str, BestSplitInfo] = {}
@@ -437,6 +441,9 @@ class VerticalDecisionTreeLabelTrainer(object):
                         [best_split_info_dict[party_id].gain for party_id in party_ids])
                 ]
                 best_split_info = best_split_info_dict[best_split_party_id]
+
+                # calculate and update the progress of the training
+                _three_layer_progress(node_id-1, len(this_depth_nodes), depth, self.tree_param.max_depth, self.tree_index - 1, self.tree_param.num_trees)
 
                 if best_split_info.gain < self.tree_param.min_split_gain or \
                         min(best_split_info.num_left_bin,

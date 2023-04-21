@@ -15,12 +15,14 @@
 
 from algorithm.core.horizontal.aggregation.aggregation_base import AggregationRootBase
 from ..base import BaseTrainer
+from service.fed_control import _one_layer_progress
 
 
 class FedAvgAssistTrainer(BaseTrainer):
     def __init__(self, train_conf: dict):
         super().__init__(train_conf)
         
+        self.current_epoch = 0
         self.register_hook(place="before_local_epoch", rank=1,
                            func=self._broadcast_model, desc="broadcast global model")
         self.register_hook(place="after_local_epoch", rank=1,
@@ -34,4 +36,6 @@ class FedAvgAssistTrainer(BaseTrainer):
         aggregator: AggregationRootBase = self.aggregator
         self.state_dict = aggregator.aggregate()
         self.state_dict_to_state()
+        self.current_epoch += 1
+        _one_layer_progress(self.current_epoch, self.train_params.get("global_epoch", 0))
         

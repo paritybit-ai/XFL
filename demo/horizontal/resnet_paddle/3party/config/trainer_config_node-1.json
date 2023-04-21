@@ -30,7 +30,7 @@
             }
         },
         "train_info": {
-            "device": "cuda:0",
+            "device": "cpu",
             "interaction_params": {
                 "save_frequency": -1,
                 "save_probabilities": true,

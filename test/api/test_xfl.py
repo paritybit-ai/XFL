@@ -34,31 +34,38 @@ def test_add_args(mocker):
     mocker.spy(argparse.ArgumentParser,'add_argument')
     parser = xfl.add_args(argparse.ArgumentParser(description="XFL - BaseBit Federated Learning"))
     spy_add_mutually_exclusive_group.assert_called_once()
-    assert parser.parse_args(['-s']) == argparse.Namespace(scheduler=True, assist_trainer=False, trainer='trainer', client=None, config_path='/opt/config')
-    assert parser.parse_args(['-a']) == argparse.Namespace(scheduler=False, assist_trainer=True, trainer='trainer', client=None, config_path='/opt/config')
-    assert parser.parse_args(['-t']) == argparse.Namespace(scheduler=False, assist_trainer=False, trainer='trainer', client=None, config_path='/opt/config')
-    assert parser.parse_args(['-c', 'start']) == argparse.Namespace(scheduler=False, assist_trainer=False, trainer='trainer', client='start', config_path='/opt/config')
+    assert parser.parse_args(['-s']) == argparse.Namespace(scheduler=True, assist_trainer=False, trainer='trainer', client=None, bar=False, config_path='/opt/config')
+    assert parser.parse_args(['-a']) == argparse.Namespace(scheduler=False, assist_trainer=True, trainer='trainer', client=None, bar=False, config_path='/opt/config')
+    assert parser.parse_args(['-t']) == argparse.Namespace(scheduler=False, assist_trainer=False, trainer='trainer', client=None, bar=False, config_path='/opt/config')
+    assert parser.parse_args(['-c', 'start']) == argparse.Namespace(scheduler=False, assist_trainer=False, trainer='trainer', client='start', bar=False, config_path='/opt/config')
     
 
 
 def test_main(mocker):
-    mocker.patch('argparse.ArgumentParser.parse_args',return_value=argparse.Namespace(scheduler=True, assist_trainer=False, trainer='trainer', client=None, config_path='/opt/config'))
+    mocker.patch('argparse.ArgumentParser.parse_args',return_value=argparse.Namespace(
+        scheduler=True, assist_trainer=False, trainer='trainer', client=None, bar=False, config_path='/opt/config'
+    ))
     mocker.patch('scheduler_run.main')
     xfl.main()
-    scheduler_run.main.assert_called_once_with("/opt/config")
-    
+    scheduler_run.main.assert_called_once_with("/opt/config", False)
 
-    mocker.patch('argparse.ArgumentParser.parse_args',return_value=argparse.Namespace(scheduler=False, assist_trainer=False, trainer='trainer', client='start', config_path='/opt/config'))
+    mocker.patch('argparse.ArgumentParser.parse_args',return_value=argparse.Namespace(
+        scheduler=False, assist_trainer=False, trainer='trainer', client='start', bar=False, config_path='/opt/config'
+    ))
     mocker.patch('client.main')
     xfl.main()
     client.main.assert_called_once_with("start", "/opt/config")
 
-    mocker.patch('argparse.ArgumentParser.parse_args',return_value=argparse.Namespace(scheduler=False, assist_trainer=True, trainer='trainer', client=None, config_path='/opt/config'))
+    mocker.patch('argparse.ArgumentParser.parse_args',return_value=argparse.Namespace(
+        scheduler=False, assist_trainer=True, trainer='trainer', client=None, bar=False, config_path='/opt/config'
+    ))
     mocker.patch('trainer_run.main')
     xfl.main()
     trainer_run.main.assert_called_once_with("assist_trainer", "assist_trainer", config_path='/opt/config')
 
-    mocker.patch('argparse.ArgumentParser.parse_args',return_value=argparse.Namespace(scheduler=False, assist_trainer=False, trainer='trainer', client=None, config_path='/opt/config'))
+    mocker.patch('argparse.ArgumentParser.parse_args',return_value=argparse.Namespace(
+        scheduler=False, assist_trainer=False, trainer='trainer', client=None, bar=False, config_path='/opt/config'
+    ))
     mocker.patch('trainer_run.main')
     xfl.main()
     trainer_run.main.assert_called_once_with("trainer", "trainer", config_path='/opt/config')

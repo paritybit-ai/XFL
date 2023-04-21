@@ -18,6 +18,7 @@ import os
 from pathlib import Path
 from typing import Dict
 
+import pandas as pd
 import numpy as np
 import ray
 
@@ -34,6 +35,7 @@ from .base import VerticalXgboostBase
 from .decision_tree_trainer import VerticalDecisionTreeTrainer
 from service.fed_job import FedJob
 from service.fed_node import FedNode
+from common.utils.model_io import ModelIO
 
 
 class VerticalXgboostTrainer(VerticalXgboostBase):
@@ -77,7 +79,7 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
         self.export_conf = [{
             "class_name": "VerticalXGBooster",
             "identity": self.identity,
-            "filename": self.output.get("model", {"name": "vertical_xgboost_host.json"})["name"]
+            "filename": self.output.get("proto_model", {}).get("name", '')
         }]
 
         ray.init(num_cpus=get_core_num(self.xgb_config.max_num_cores),
@@ -92,7 +94,7 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
         # nodes_dict = {}
         node_dict = NodeDict()
 
-        for tree_idx in range(self.xgb_config.num_trees):
+        for tree_idx in range(1, self.xgb_config.num_trees+1):
             # training section
             logger.info("Tree {} start training.".format(tree_idx))
 
@@ -143,9 +145,13 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
                 break
             logger.info("Validation on tree {} done.".format(tree_idx))
 
-            if self.interaction_params.get("save_frequency") > 0 and (tree_idx + 1) % self.interaction_params.get(
+            # if self.interaction_params.get("save_frequency") > 0 and (tree_idx + 1) % self.interaction_params.get(
+            #         "save_frequency") == 0:
+            #     self.save(node_dict, epoch=tree_idx + 1)
+            
+            if self.interaction_params.get("save_frequency") > 0 and tree_idx % self.interaction_params.get(
                     "save_frequency") == 0:
-                self.save(node_dict, epoch=tree_idx + 1)
+                self.save(node_dict, epoch=tree_idx)
 
         # model preserve
         self.save(node_dict, final=True)
@@ -159,7 +165,7 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
             if node.split_info.is_category:
                 indicator[node_id] = np.isin(data, node.split_info.left_cat)
             else:
-                indicator[node_id] = (data < node.split_info.split_point)
+                indicator[node_id] = (data <= node.split_info.split_point)
         return indicator
 
     def predict_on_tree(self, nodes: Dict[str, Node], data_iterator: NdarrayIterator):
@@ -174,40 +180,53 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
     def save(self, node_dict: NodeDict, epoch: int = None, final: bool = False):
         if final:
             save_model_config(stage_model_config=self.export_conf, save_path=self.output.get("path"))
-
+        
         save_dir = self.output.get("path")
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
+            
+        model_name = self.output.get("model", {}).get("name")
+        proto_name = self.output.get("proto_model", {}).get("name")
+        
+        if model_name:
+            out_dict = node_dict.to_dict()
+            model_dict = {"nodes": out_dict}
+            ModelIO.save_json_model(model_dict, save_dir, model_name, epoch=epoch, version='1.4.0')
 
-        model_name_list = self.output.get("model")["name"].split(".")
-        name_prefix, name_postfix = ".".join(
-            model_name_list[:-1]), model_name_list[-1]
-        if not final and epoch:
-            model_name = name_prefix + "_epoch_{}".format(epoch) + "." + name_postfix
-        else:
-            model_name = name_prefix + "." + name_postfix
-        model_path = os.path.join(save_dir, model_name)
+        if proto_name:
+            model_name_list = self.output.get("proto_model")["name"].split(".")
+            name_prefix, name_postfix = ".".join(
+                model_name_list[:-1]), model_name_list[-1]
+            if not final and epoch:
+                model_name = name_prefix + "_epoch_{}".format(epoch) + "." + name_postfix
+            else:
+                model_name = name_prefix + "." + name_postfix
+            model_path = os.path.join(save_dir, model_name)
 
-        xgb_output = node_dict.to_dict()
-        xgb_output = {k: v for k, v in sorted(xgb_output.items())}
+            xgb_output = node_dict.to_proto()
 
-        with open(model_path, 'w') as f:
-            json.dump(xgb_output, f)
-        logger.info("model saved as: {}.".format(model_path))
+            with open(model_path, 'wb') as f:
+                f.write(xgb_output)
+            logger.info("model saved as: {}.".format(model_path))
 
     def load_model(self):
         pretrain_path = self.input.get("pretrained_model", {}).get("path", '')
-        # pretrain_path = pretrain_path.replace("[JOB_ID]", str(
-        #     FedJob.job_id)).replace("[NODE_ID]", str(FedNode.node_id))
+        model_name = self.input.get("pretrained_model", {}).get("name", '')
+        
         model_path = Path(
-            pretrain_path,
-            self.input.get("pretrained_model", {}).get("name", '')
+            pretrain_path, model_name
         )
+        suffix = model_name.split(".")[-1]
+        
+        if suffix != "pmodel":
+            model_dict = ModelIO.load_json_model(model_path)
+            node_dict = NodeDict.from_dict(model_dict["nodes"])
+        else:
+            with open(model_path, 'rb') as f:
+                byte_str = f.read()
 
-        with open(model_path, 'rb') as f:
-            json_dict = json.load(f)
+            node_dict = NodeDict.from_proto(byte_str)
 
-        node_dict = NodeDict.from_dict(json_dict)
         return node_dict
 
     def check_dataset(self):
@@ -221,7 +240,27 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
         self.channels["check_dataset_com"].send(d)
 
     def predict(self):
+        out_dict = {key: None for key, value in self.train_conf.get("output", {}).items() if key != "path" and value.get("name")}
+        self.channels["sync"].send(out_dict)
         self.check_dataset()
         node_dict = self.load_model()
+        
         self.predict_on_boosting_tree(nodes=node_dict.nodes,
                                       data_iterator=self.test_dataset)
+        
+        out_dict = self.channels["sync"].recv()
+        
+        save_path = self.output.get("path", '')
+        if save_path:
+            if not os.path.exists(save_path):
+                os.makedirs(save_path)
+            
+            for key in out_dict:
+                file_path = Path(save_path, self.output[key]["name"])
+                if key == "testset" and file_path:
+                    logger.info("predicted results saved at {}".format(file_path))
+                    pd.DataFrame({"id": self.test_ids, "pred": out_dict[key]}).to_csv(
+                        file_path, float_format="%.6g", index=False, header=True
+                    )
+
+        

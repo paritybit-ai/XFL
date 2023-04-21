@@ -62,7 +62,7 @@ class Goss(object):
         selected_idx = np.sort(np.concatenate([top_set_idx, rand_set_idx]))
         
         if len(selected_idx) == 0:
-            raise ValueError(f"Length of selected sample is 0.")
+            raise ValueError("Length of selected sample is 0.")
         return selected_idx
 
     def update_gradients(self, g: np.ndarray, h: np.ndarray) -> None:

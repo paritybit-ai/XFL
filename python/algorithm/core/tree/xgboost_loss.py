@@ -37,16 +37,16 @@ class XGBLoss(object):
         self.name = 'Loss'
         self.params = params
 
-    def cal_grad(y: np.ndarray, y_pred: np.ndarray, after_prediction: bool = True):
+    def cal_grad(self, y: np.ndarray, y_pred: np.ndarray, after_prediction: bool = True):
         raise NotImplementedError("Method cal_grad not implemented.")
 
-    def cal_hess(y: np.ndarray, y_pred: np.ndarray, after_prediction: bool = True):
+    def cal_hess(self, y: np.ndarray, y_pred: np.ndarray, after_prediction: bool = True):
         raise NotImplementedError("Method cal_hess not implemented.")
     
     # def predict(raw_value: np.ndarray):
     #     raise NotImplemented("Method predict not implemented.")
     
-    def cal_loss(y: np.ndarray, y_pred: np.ndarray, after_prediction: bool = False):
+    def cal_loss(self, y: np.ndarray, y_pred: np.ndarray, after_prediction: bool = False):
         raise NotImplementedError("Method cal_loss not implemented.")
 
 

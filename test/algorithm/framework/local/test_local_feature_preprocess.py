@@ -122,10 +122,11 @@ class TestLocalNormalization:
         ({"fill_value": 1, "missing_values": 'nan', "strategy": "constant"},
          {"outlier_features": {"x03": {"outlier_values": 999}, "x01": {}}, "outlier_values": 999})
     ])
-    def test_fit(self, get_conf, missing_params, outlier_params):
+    def test_fit(self, get_conf, missing_params, outlier_params, mocker):
         conf = copy.deepcopy(get_conf)
         conf["train_info"]["train_params"]["missing"] = missing_params
         conf["train_info"]["train_params"]["outlier"] = outlier_params
+        mocker.patch("service.fed_control._send_progress")
         lp = LocalPreprocess(conf)
         if missing_params == {}:
             if outlier_params == {}:

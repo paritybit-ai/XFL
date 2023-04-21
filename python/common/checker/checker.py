@@ -1,3 +1,18 @@
+# Copyright 2022 The XFL Authors. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import traceback
 
 import numpy as np
@@ -22,6 +37,17 @@ class Checked():
             res.update(
                 {
                     k.result() if isinstance(k, Checked) else k: v.result() if isinstance(v, Checked) else v for k, v in self.value.items()
+                    
+                    # if isinstance(k, Checked):
+                    #     k.result()
+                    # else:
+                    #     k
+                        
+                    #     for k, v in self.value.items():
+                    #         if isinstance(v, Checked):
+                    #             v.result()
+                    #         else:
+                    #             v
                 }
             )
         elif isinstance(self.value, list):
@@ -31,6 +57,125 @@ class Checked():
         else:
             res = '-'.join(['(' + str(self.value) + ')', is_match, self.reason])
         return res
+    
+    def breif_result(self):
+        is_match = "Match" if self.is_match else "Not Match"
+
+        if isinstance(self.value, dict):
+            precise_res = {}
+            if not self.is_match:
+                precise_res.update(
+                    {
+                        "__match__": ':'.join([is_match, self.reason])
+                    }
+                )
+            precise_res.update(
+                {
+                    k.breif_result() if isinstance(k, Checked) else k: v.breif_result() if isinstance(v, Checked) else v for k, v in self.value.items()
+                }
+            )
+
+        elif isinstance(self.value, list):
+            precise_res = [v.breif_result() if isinstance(v, Checked) else v for v in self.value]
+            if not self.is_match:
+                precise_res.insert(0, '__match__: ' + '-'.join([is_match, self.reason]))
+        elif isinstance(self.value, Checked):
+            precise_res = self.value.breif_result()
+        else:
+            if not self.is_match:
+                precise_res = '-'.join(['(' + str(self.value) + ')', is_match, self.reason])
+            else:
+                precise_res = self.value
+        return precise_res
+    
+    # def breif_result(self, path_histroy: list = []):
+    #     is_match = "Match" if self.is_match else "Not Match"
+
+    #     if isinstance(self.value, dict):
+    #         precise_res = {}
+    #         itemized_res = []
+    #         if not self.is_match:
+    #             precise_res.update(
+    #                 {
+    #                     "__match__": ':'.join([is_match, self.reason])
+    #                 }
+    #             )
+    #             itemized_res.append(path_histroy + [self.reason])
+    #         precise_res.update(
+    #             {
+    #                 k.breif_result() if isinstance(k, Checked) else k: v.breif_result() if isinstance(v, Checked) else v for k, v in self.value.items()
+    #             }
+    #         )
+            
+            
+    #         for k, v in self.value.items():
+    #             if isinstance(k, Checked):
+    #                 k.breif_result()
+    #             else:
+    #                 k
+                
+    #             if isinstance(v, Checked):
+    #                 v.breif_result()
+    #             else:
+    #                 v    
+
+    #     elif isinstance(self.value, list):
+    #         precise_res = [v.breif_result() if isinstance(v, Checked) else v for v in self.value]
+    #         if not self.is_match:
+    #             precise_res.insert(0, '__match__: ' + '-'.join([is_match, self.reason]))
+    #     elif isinstance(self.value, Checked):
+    #         precise_res = self.value.breif_result()
+    #     else:
+    #         if not self.is_match:
+    #             precise_res = '-'.join(['(' + str(self.value) + ')', is_match, self.reason])
+    #         else:
+    #             precise_res = self.value
+    #     return precise_res
+    
+    
+    # [{'type': 'dict', 'key': 'aaa'}, {'type': 'list', 'index': 1}, 'reason']
+    
+    def _get_real_value(self, value):
+        if isinstance(value, Checked):
+            return self._get_real_value(value.value)
+        else:
+            return value
+    
+    def get_unmatch_position(self, position_chain = []):
+        position = []
+        if isinstance(self.value, dict):
+            if not self.is_match:
+                position.append(position_chain + [self.reason])
+            
+            for k, v in self.value.items():
+                if isinstance(k, Checked):
+                    # r = k.get_unmatch_position(position_chain + [{'type': 'dict', 'key': k.value}])
+                    r = k.get_unmatch_position(position_chain)
+                    if r != []:
+                        position += r
+
+                if isinstance(v, Checked):
+                    r = v.get_unmatch_position(position_chain + [{'type': 'dict', 'key': self._get_real_value(k.value)}])
+                    if r != []:
+                        position += r
+
+        elif isinstance(self.value, list):
+            if not self.is_match:
+                position.append(position_chain + [self.reason])
+            
+            for i, v in enumerate(self.value):
+                if isinstance(v, Checked):
+                    r = v.get_unmatch_position(position_chain + [{'type': 'list', 'index': i}])
+                    if r != []:
+                        position += r
+        elif isinstance(self.value, Checked):
+            r = self.value.get_unmatch_position(position_chain)
+            if r != []:
+                position += r
+        else:
+            if not self.is_match:
+                position.append(position_chain + [self.reason])
+        return position
     
     
 def is_valid_match_num(item_to_match, num_matched):
@@ -179,10 +324,35 @@ def check(config, rule, ori_config=None) -> Checked:
             return Checked(config, False, f"Type {type(config)} not match dict")
         
         if rule.get("__rule__") is None:
-            rule["__rule__"] = list(rule.keys())
-        
-        if not isinstance(rule.get("__rule__"), list):
-            rule["__rule__"] = [rule["__rule__"]]
+            # rule["__rule__"] = list(rule.keys())
+            # required_keys = [k for k in rule.keys() if isinstance(k, (str, int)) and k != "__rule__"]
+            required_keys = [k for k in rule.keys() if isinstance(k, (Any, All)) or k != "__rule__"]
+            if len(required_keys) > 0:
+                # rule["__rule__"] = [Required(*required_keys)]
+                rule["__rule__"] = required_keys
+            else:
+                rule["__rule__"] = []
+        else:
+            if not isinstance(rule.get("__rule__"), list):
+                rule["__rule__"] = [rule["__rule__"]]
+            
+            required_flag = True
+            non_required_keys = []
+            for r in rule["__rule__"]:
+                if isinstance(r, (OneOf, SomeOf, RepeatableSomeOf, Optional)):
+                    for candidate in r.candidates:
+                        if isinstance(candidate, (str, int)):
+                            non_required_keys.append(candidate)
+                elif isinstance(r, Required):
+                    required_flag = False
+                    break
+            
+            if required_flag:
+                all_keys = [k for k in rule.keys() if isinstance(k, (str, int)) and k != "__rule__"]
+                required_keys = list(set(all_keys) - set(non_required_keys))
+                if len(required_keys) > 0:
+                    # rule["__rule__"].append(Required(*required_keys))
+                    rule["__rule__"] += required_keys
 
         checked_matrix = np.array([
             [check(k, r, ori_config) for r in rule["__rule__"]] for k in config
@@ -237,7 +407,7 @@ def check(config, rule, ori_config=None) -> Checked:
             return Checked(config, False, f"Type {type(config)} not match list")
         
         # SomeOf和RepeatableSomeOf在这里没有什么区别
-        if len(rule) == 1 and isinstance(rule[0], (OneOf, SomeOf, RepeatableSomeOf, Required, Optional, Any, All)):
+        if len(rule) == 1 and isinstance(rule[0], (OneOf, SomeOf, RepeatableSomeOf, Required, Optional, Any)):
             if isinstance(rule[0], Any):
                 if len(config) != 1:
                     return Checked(config, False, f"List length {len(config)} != 1")

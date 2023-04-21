@@ -17,6 +17,7 @@
 PLAIN = "plain"
 PAILLIER = "paillier"
 CKKS = "ckks"
+OTP = "otp"
 
 #
 BCEWithLogitsLoss = "BCEWithLogitsLoss"

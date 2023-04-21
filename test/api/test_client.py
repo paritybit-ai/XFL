@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import json
 import pytest
 
 import client
@@ -25,7 +26,7 @@ from service.fed_node import FedNode
 def test_start(mocker):
     mocker.patch.object(FedNode, "create_channel", return_value='55001')
     mocker.patch("client.scheduler_pb2_grpc.SchedulerStub.__init__", side_effect=lambda x:None)
-    mocker.patch("client.scheduler_pb2_grpc.SchedulerStub.control", create=True, return_value=control_pb2.ControlResponse(jobId=1,code=1, message='test'))
+    mocker.patch("client.scheduler_pb2_grpc.SchedulerStub.control", create=True, return_value=control_pb2.ControlResponse(jobId=1,code=1, message='test', nodeLogPath={}, stageNodeLogPath={}))
     client.start()
     client.scheduler_pb2_grpc.SchedulerStub.control.assert_called_once_with(control_pb2.ControlRequest(control = control_pb2.START))
 
@@ -57,7 +58,16 @@ def test_algo(mocker):
 def test_stage(mocker):
     mocker.patch.object(FedNode, "create_channel", return_value='55001')
     mocker.patch("client.scheduler_pb2_grpc.SchedulerStub.__init__", side_effect=lambda x:None)
-    mocker.patch("client.scheduler_pb2_grpc.SchedulerStub.getStage", create=True, return_value=scheduler_pb2.GetStageResponse(code=0,stageId="0-1",stageName="0"))
+    mocker.patch(
+        "client.scheduler_pb2_grpc.SchedulerStub.getStage", 
+        create=True, 
+        return_value=scheduler_pb2.GetStageResponse(
+            code=0,
+            currentStageId=0,
+            totalStageNum=1,
+            currentStageName="0"
+        )
+    )
     client.stage()
     client.scheduler_pb2_grpc.SchedulerStub.getStage.assert_called_once_with(scheduler_pb2.GetStageRequest())
 

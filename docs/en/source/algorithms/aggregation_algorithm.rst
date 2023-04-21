@@ -7,11 +7,15 @@ Introduction
 In each global epoch, the typical horizontal federated learning paradigm involves three stages:
 
 1. the server broadcasts the global model to every client.
-2. clients conduct model training with their local datasets.
+2. clients conduct model training with their local datasets, and send the model to the server after training.
 3. the server gathers the local models and aggregates them to obtain a global model.
 
-One of the standard aggregation methods is fedavg, which is widely used due to its simplicity and low communication. 
-Extensive experiments have proved the availability and stability of fedavg, but many problems also emerged:
+At the algorithm level, the third of the above three steps is the most critical part in federated 
+learning, because it determines the training efficiency and stability of the global model. There 
+are many aggregation algorithms that can aggregate the local models into a new global model.
+One of the standard aggregation methods is fedavg, which is widely used due to its simplicity and 
+low communication. Extensive experiments have proved the availability and stability of fedavg, 
+but many problems also emerged:
 
 1. convergence is not guaranteed for non-IID (heterogeneous) data.
 2. training is very unstable when there are Byzantine clients (i.e. clients who intentionally upload wrong parameters).
@@ -47,14 +51,16 @@ fedavg
 |   calculate the aggregation weight :math:`w^i`
 |   **return** :math:`m^i` and :math:`w^i` to the server
 
-In the prototype of **fedavg**, the **optimizer** is stochastic gradient descent(SGD), and the aggregation weight :math:`w^i` is equal to 
-the number of local batches. However, XFL admits arbitrary **optimizer** such as Adam, and users can freely change the definition of aggregation weights.
+In the prototype of **fedavg**, the **optimizer** is stochastic gradient descent(SGD), and the 
+aggregation weight :math:`w^i` is equal to the number of local batches. XFL provides a more 
+powerful and flexible configuration mode. XFL admits arbitrary **optimizer** such as Adam, and 
+users can freely change the definition of aggregation weights.
 
 fedprox
 -------
 **fedprox** [fedprox]_ is implemented based on **fedavg**, which may improve the training performance when the data is non-IID. 
 For arbitrary **loss function** :math:`L`, **fedprox** automatically adds a regularizer :math:`\frac{\mu}{2}||m^i-M^t||^2`. 
-Therefore, the actual **loss function** becomes :math:`L + \frac{\mu}{2}||m^i-M^t||^2`. :math:`\mu` is a superparameter needs to be given, just like
+Therefore, the actual **loss function** becomes :math:`L + \frac{\mu}{2}||m^i-M^t||^2`. :math:`\mu` is a hyperparameter needs to be given, just like
 
 ::
 

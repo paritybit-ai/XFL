@@ -101,10 +101,6 @@ class TestLogisticRegression:
         assist_conf = get_assist_trainer_conf
         conf["model_info"]["config"]["input_dim"] = 5
         assist_conf["model_info"]["config"]["input_dim"] = 5
-        conf["train_info"]["params"]["aggregation_config"]["type"] = "fedprox"
-        conf["train_info"]["params"]["aggregation_config"]["mu"] = 0.01
-        assist_conf["train_info"]["params"]["aggregation_config"]["type"] = "fedprox"
-        assist_conf["train_info"]["params"]["aggregation_config"]["mu"] = 0.01
         # if encryption_method == "otp":
         #     mocker.patch.object(DualChannel, "__init__", return_value=None)
         #     dc = DualChannel(name="otp_diffie_hellman", ids=['node-1', 'node-2'])
@@ -185,6 +181,7 @@ class TestLogisticRegression:
         mocker.patch.object(
             AggregationPlainRoot, "aggregate", side_effect=mock_agg
         )
+        mocker.patch("service.fed_control._send_progress")
         
         lrt.fit()
         lrt_a.fit()

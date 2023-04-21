@@ -100,7 +100,7 @@ class Common():
             
             labels.append(label.cpu().squeeze(-1).numpy())
             
-        val_loss /= len(dataloader.dataset)
+        val_loss /= len(dataloader)
         metric_output[loss_func_name] = val_loss
             
         val_predicts = np.concatenate(val_predicts, axis=0)

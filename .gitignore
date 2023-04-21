@@ -106,19 +106,27 @@ tmp/
 .DS_Store
 
 # dataset
+/dataset
 *.csv
 *.npz
-*.npy
-/dataset
+*.meta
+*.html
+.*
 
 # model
 *.pt
 checkpoints/
 .vscode/
+.ssh/
+.vscode-server/
+.ray/
+.cache/
+.bash_history
+.gitconfig
 cache/.DS_Store
 logs/
 examples/naive_horizontal_resnet/data/
 python/tree_structure
 python/tree_structure.png
-_book/
-node_modules/
+docs/zh_CN/build/
+docs/en/build/

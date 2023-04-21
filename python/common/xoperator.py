@@ -28,13 +28,14 @@ def get_operator(name: str, role: str) -> object:
     Returns:
         Operator find by name and role.
     """
+
     if role not in ["assist_trainer", "trainer", "label_trainer"]:
         raise ValueError(f"Identity {role} is not valid, need to be assist_trainer, trainer or label_trainer.")
     
     fed_type = name.split("_")[0]
     operator_dir = "_".join(name.split("_")[1:])
     
-    if fed_type not in ["horizontal", "vertical", "local"]:
+    if fed_type not in ["horizontal", "vertical", "transfer", "local"]:
         raise ValueError(f"Prefix of operator name {name} is not valid, need to be horizontal, vertical or local.")
         
     class_name = [fed_type] + operator_dir.split("_") + role.split("_")
@@ -46,7 +47,7 @@ def get_operator(name: str, role: str) -> object:
         operator = getattr(module, class_name)
     except ModuleNotFoundError:
         if class_name in xregister.registered_object:
-            operator = xregister(class_name)
+            operator = xregister(class_name) 
         else:
             raise ValueError(f"Operator name: {name}, role: {role} is not defined.")
     return operator

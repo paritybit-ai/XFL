@@ -21,6 +21,7 @@ import numpy as np
 import tenseal as ts
 import torch
 
+from common.utils.utils import update_dict
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
 from common.crypto.paillier.paillier import Paillier
 from common.utils.logger import logger
@@ -38,6 +39,10 @@ class VerticalLinearRegressionTrainer(VerticalLinearRegressionBase):
         Args:
             train_conf (dict): [description]
         """
+        self.sync_channel = BroadcastChannel(name="sync")
+        conf = self._sync_config()
+        update_dict(train_conf, conf)
+
         super().__init__(train_conf, label=False, *args, **kwargs)
         self._init_model()
         self.export_conf = [{
@@ -62,12 +67,16 @@ class VerticalLinearRegressionTrainer(VerticalLinearRegressionBase):
         }
 
     def predict(self, input_data):
-        for batch_idx, (x_batch, _) in enumerate(input_data):
+        for batch_idx, x_batch in enumerate(input_data):
             # calculate prediction of batch
-            pred_trainer = self.model(x_batch)
+            pred_trainer = self.model(x_batch[0])
             # send to label_trainer
             self.dual_channels["intermediate_label_trainer"].send(pred_trainer.numpy().astype(np.float32).flatten(),
                                                                   use_pickle=True)
+
+    def _sync_config(self):
+        config = self.sync_channel.recv()
+        return config
 
     def fit(self):
         """ train model
@@ -101,13 +110,13 @@ class VerticalLinearRegressionTrainer(VerticalLinearRegressionBase):
         rng = secrets.SystemRandom()
         # train
         for epoch in range(1, self.global_epoch + 1):
-            for batch_idx, (x_batch, _) in enumerate(self.train_dataloader):
+            for batch_idx, x_batch in enumerate(self.train_dataloader):
                 regular_loss_tmp = 0
                 regular_gradient_tmp = 0
                 enc_regular_gradient_tmp = 0
                 # calculate regular results
                 if self.optimizer_config['p'] == 1:
-                    regular_loss_tmp = torch.abs(self.model.linear.weight) * self.optimizer_config['alpha']
+                    regular_loss_tmp = torch.abs(self.model.linear.weight).sum() * self.optimizer_config['alpha']
                     regular_gradient_tmp = self.optimizer_config['alpha'] * (torch.abs(self.model.linear.weight)
                                                                              / self.model.linear.weight)
                 elif self.optimizer_config['p'] == 2:
@@ -117,7 +126,7 @@ class VerticalLinearRegressionTrainer(VerticalLinearRegressionBase):
                     pass
 
                 # compute theta_trainer * x_trainer and loss of x_trainer
-                pred_trainer = self.model(x_batch)
+                pred_trainer = self.model(x_batch[0])
                 square_tmp = (pred_trainer ** 2).sum() / 2
                 loss_trainer = square_tmp + regular_loss_tmp
 
@@ -192,15 +201,15 @@ class VerticalLinearRegressionTrainer(VerticalLinearRegressionBase):
                     enc_regular_gradient_tmp = regular_gradient_tmp.numpy().astype(np.float32).flatten()
 
                 if encryption_method == "ckks":
-                    gradient_trainer_w = enc_d.matmul(x_batch.numpy()) + enc_regular_gradient_tmp
+                    gradient_trainer_w = enc_d.matmul(x_batch[0].numpy()) + enc_regular_gradient_tmp
                 else:
-                    gradient_trainer_w = np.matmul(enc_d.reshape(1, len(enc_d)), x_batch.numpy()
+                    gradient_trainer_w = np.matmul(enc_d.reshape(1, len(enc_d)), x_batch[0].numpy()
                                                    ) + enc_regular_gradient_tmp
 
                 # add noise to encrypted gradients and send to assist_trainer
                 if encryption_method == "ckks":
                     logger.info("Calculate noised gradient for trainer.")
-                    noise = np.array([rng.randint(1 << 24, 1 << 26) - (1 << 25) for _ in range(x_batch.shape[1])],
+                    noise = np.array([rng.randint(1 << 24, 1 << 26) - (1 << 25) for _ in range(x_batch[0].shape[1])],
                                      dtype=np.float32)
                     noise /= 100000
                     noised_gradient_trainer_w = gradient_trainer_w + noise
@@ -212,7 +221,7 @@ class VerticalLinearRegressionTrainer(VerticalLinearRegressionBase):
                     gradient_trainer_w = noised_gradient_trainer_w - noise
                 elif encryption_method == "paillier":
                     logger.info("Calculate noised gradient for trainer.")
-                    noise = np.array([rng.randint(1 << 24, 1 << 26) - (1 << 25) for _ in range(x_batch.shape[1])],
+                    noise = np.array([rng.randint(1 << 24, 1 << 26) - (1 << 25) for _ in range(x_batch[0].shape[1])],
                                      dtype=np.float32)
                     noise /= 100000
                     noised_gradient_trainer_w = gradient_trainer_w + noise
@@ -226,7 +235,7 @@ class VerticalLinearRegressionTrainer(VerticalLinearRegressionBase):
                 # gradient_trainer_w = torch.FloatTensor(gradient_trainer_w).unsqueeze(-1)
 
                 # update w and b of trainer
-                gradient_trainer_w = gradient_trainer_w / x_batch.shape[0]
+                gradient_trainer_w = gradient_trainer_w / x_batch[0].shape[0]
                 logger.info("Update weights of trainer.")
                 self.model.linear.weight -= (torch.FloatTensor(gradient_trainer_w) * self.optimizer_config["lr"])
 

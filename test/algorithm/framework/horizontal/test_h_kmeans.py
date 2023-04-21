@@ -173,6 +173,7 @@ class TestHorizontalKMeans:
         mocker.patch.object(
             DualChannel, "send", return_value=None
         )
+        mocker.patch("service.fed_control._send_progress")
         # mocker.patch.object(
         #     AggregationOTPRoot, "aggregate", side_effect=mock_agg
         # )

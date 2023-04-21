@@ -13,10 +13,63 @@
 # limitations under the License.
 
 
-from common.communication.gRPC.python import control_pb2, status_pb2, trainer_pb2_grpc
+from common.communication.gRPC.python import (
+    control_pb2, status_pb2, trainer_pb2_grpc, scheduler_pb2, scheduler_pb2_grpc
+)
 from common.utils.logger import logger
-
+from service.fed_job import FedJob
 from service.fed_node import FedNode
+
+
+def _update_progress_finish():
+    '''
+        Update progress to scheduler. Progress is 100.
+    '''
+    _send_progress(100)
+    return
+
+def _three_layer_progress(iter_k, max_k, iter_j, max_j, iter_i, max_i):
+    '''
+        Update progress to scheduler. Progress is calculated by:
+        ((((iter_k + 1) / max_k) + iter_j) / max_j + iter_i) / max_i * 100
+    '''
+    tick_i = 1 / max_i * 100
+    tick_j = 1 / max_j
+    tick_k = (iter_k + 1) / max_k
+    p = int(((tick_k + iter_j) * tick_j + iter_i) * tick_i)
+    _send_progress(p)
+    return
+
+def _two_layer_progress(iter_j, max_j, iter_i, max_i):
+    '''
+        Update progress to scheduler. Progress is calculated by:
+        ((iter_j + 1) / max_j + iter_i) / max_i * 100
+    '''
+    tick_i = 1 / max_i * 100
+    tick_j = (iter_j + 1) / max_j
+    p = int((tick_j + iter_i) * tick_i)
+    _send_progress(p)
+    return
+
+def _one_layer_progress(iter_i, max_i):
+    '''
+        Update progress to scheduler. Progress is calculated by:
+        iter_i / max_i * 100
+    '''
+    tick_i = 1 / max_i * 100
+    p = int(iter_i * tick_i)
+    _send_progress(p)
+    return
+
+def _send_progress(progress):
+    progress = progress if progress <= 100 else 100
+    channel = FedNode.create_channel("scheduler")
+    stub = scheduler_pb2_grpc.SchedulerStub(channel)
+    request = scheduler_pb2.RecProgressRequest()
+    request.stageId = FedJob.current_stage
+    request.progress = progress
+    stub.recProgress(request)
+    return
 
 
 def trainer_control(control):

@@ -15,4 +15,4 @@
 
 pid=$(ps -ef | grep xfl | grep -v grep | awk '{print $2}')
 echo "XFL Process ${pid} killed"
-ps -ef | grep python  | grep -v grep | awk '{print $2}' | xargs kill -9;
+ps -ef | grep xfl  | grep -v grep | awk '{print $2}' | xargs kill -9;

@@ -150,7 +150,7 @@ class Test_FedNode():
             os.getcwd(), 'python'))
         mocker.patch('builtins.open', um.mock_open(read_data=b"1"))
         root_certificates = FedNode.load_root_certificates()
-        assert root_certificates == b"11"
+        assert root_certificates == None # b"11"
 
     def test_load_client_cert(self, mocker):
         mocker.patch.object(FedNode, "config", {

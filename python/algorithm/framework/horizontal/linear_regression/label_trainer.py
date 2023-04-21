@@ -37,7 +37,7 @@ class HorizontalLinearRegressionLabelTrainer(Common, _get_label_trainer()):
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
-        train_loss /= len(self.train_dataloader.dataset)
+        train_loss /= len(self.train_dataloader)
         
         if lr_scheduler:
             lr_scheduler.step()

@@ -14,16 +14,20 @@
 
 
 import os
-from pathlib import Path
-
+from collections import OrderedDict
 import pandas as pd
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, TensorDataset
 
+from torch.utils.data import DataLoader, TensorDataset
+from google.protobuf import json_format
 from algorithm.framework.vertical.vertical_model_base import VerticalModelBase
+from common.utils.model_io import ModelIO
 from common.utils.logger import logger
-from common.utils.model_preserver import ModelPreserver
+from common.model.python.linear_model_pb2 import LinearModel
+
+
+BLOCKCHAIN = False
 
 
 class VerticalLogisticRegression(nn.Module):
@@ -59,7 +63,8 @@ class VerticalLogisticRegressionBase(VerticalModelBase):
     def _parse_config(self) -> None:
         super()._parse_config()
         self.model_name = self.model_info.get("name")
-        self.save_model_name = self.output.get("model").get("name")
+        self.save_model_name = self.output.get("model", {}).get("name", "")
+        self.save_onnx_model_name = self.output.get("onnx_model", {}).get("name", "")
 
         self.evaluation_path = self.save_dir
 
@@ -69,7 +74,8 @@ class VerticalLogisticRegressionBase(VerticalModelBase):
         self.encryption_config = self.train_params.get("encryption")
         self.optimizer_config = self.train_params.get("optimizer")
 
-        self.pretrain_model_path = self.input.get("pretrained_model").get("path")
+        self.pretrain_model_path = self.input.get("pretrained_model", {}).get("path")
+        self.pretrain_model_name = self.input.get("pretrained_model", {}).get("name")
         self.random_seed = self.train_params.get("random_seed")
         self.early_stopping_config = self.train_params.get("early_stopping")
 
@@ -90,8 +96,16 @@ class VerticalLogisticRegressionBase(VerticalModelBase):
         self.model = VerticalLogisticRegression(input_dim=self.data_dim, bias=bias)
         # Load pretrained model if needed.
         if self.pretrain_model_path is not None and self.pretrain_model_path != "":
-            checkpoint = ModelPreserver.load(os.path.join(self.pretrain_model_path, self.input.get("pretrained_model").get("name")))
-            self.model.load_state_dict(checkpoint["state_dict"])
+            if self.pretrain_model_name.split(".")[-1] == "model":
+                model_dict = ModelIO.load_torch_model(os.path.join(self.pretrain_model_path, self.pretrain_model_name))
+                self.model.load_state_dict(model_dict["state_dict"])
+            # elif self.pretrain_model_name.split(".")[-1] == "pmodel":
+            #     checkpoint = self.load_from_proto(os.path.join(self.pretrain_model_path, self.pretrain_model_name))
+            #     self.model.load_state_dict(checkpoint)
+            else:
+                raise NotImplementedError(
+                    "Pretrained model {} does not support.".format(self.pretrain_model_name)
+                )
         logger.info("Init model completed.")
 
     def _init_dataloader(self) -> None:
@@ -134,6 +148,11 @@ class VerticalLogisticRegressionBase(VerticalModelBase):
                     "Dataset load method {} does not Implemented.".format(vs.get("type"))
                 )
         node_val_df = pd.concat(df_list)
+
+        if node_train_df.index.dtype == 'O':
+            node_train_df = node_train_df.reset_index(drop=True)
+        if node_val_df.index.dtype == 'O':
+            node_val_df = node_val_df.reset_index(drop=True)
 
         if self.label:
             # Check column y exists.
@@ -188,3 +207,57 @@ class VerticalLogisticRegressionBase(VerticalModelBase):
 
         logger.info("Init dataloader completed.")
 
+    # unused
+    @staticmethod
+    def load_from_proto(path: str):
+        with open(path, 'rb') as f:
+            b = f.read()
+        lr = LinearModel()
+        lr.ParseFromString(b)
+        d = json_format.MessageToDict(lr,
+                                      including_default_value_fields=True,
+                                      preserving_proto_field_name=True)
+        state_dict = OrderedDict()
+        for k, v in d.items():
+            state_dict[k] = torch.Tensor([v])
+        return state_dict
+
+    @staticmethod
+    def dump_as_proto(save_dir: str,
+                      model_name: str,
+                      state_dict: OrderedDict,
+                      epoch: int = None,
+                      final: bool = False,
+                      suggest_threshold: float = None
+                      ):
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        json_dict = dict()
+
+        for k, v in state_dict.items():
+            if isinstance(v, torch.Tensor):
+                json_dict[k.replace("linear.", "")] = v.tolist()[0]
+
+        model_info = {"state_dict": json_dict}
+        if suggest_threshold:
+            model_info["suggest_threshold"] = suggest_threshold
+
+        model_name_list = model_name.split(".")
+        name_prefix, name_postfix = ".".join(model_name_list[:-1]), model_name_list[-1]
+
+        if not final and epoch:
+            model_name = name_prefix + "_epoch_{}".format(epoch) + "." + name_postfix
+        else:
+            model_name = name_prefix + "." + name_postfix
+
+        model_path = os.path.join(save_dir, model_name)
+
+        lr = LinearModel()
+        json_format.ParseDict(model_info, lr)
+
+        with open(model_path, 'wb') as f:
+            f.write(lr.SerializeToString())
+
+        logger.info("model saved as: {}.".format(model_path))
+        return

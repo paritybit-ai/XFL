@@ -100,7 +100,7 @@ class TestLocalDataSplit:
                               (None, True, False, 1000),
                               (None, False, False, 1000),
                               (None, False, True, 1000)])
-    def test_fit(self, get_conf, shuffle_params, dataset_name, header, batchSize):
+    def test_fit(self, get_conf, shuffle_params, dataset_name, header, batchSize, mocker):
         conf = copy.deepcopy(get_conf)
         conf["train_info"]["train_params"]["shuffle"] = shuffle_params
         conf["input"]["dataset"][0]["name"] = dataset_name
@@ -109,6 +109,7 @@ class TestLocalDataSplit:
         output_train = Path(conf["output"]["path"], conf["output"]["trainset"]["name"])
         output_val = Path(conf["output"]["path"], conf["output"]["valset"]["name"])
         lds = LocalDataSplit(conf)
+        mocker.patch("service.fed_control._send_progress")
         if dataset_name == "dataset.csv":
             if not shuffle_params:
                 if header:

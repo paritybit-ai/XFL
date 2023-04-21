@@ -1,0 +1,13 @@
+syntax = "proto3";
+package model;
+
+
+message StateDict {
+    repeated double weight = 1;
+    double bias = 2;
+}
+
+message LinearModel {
+    StateDict state_dict = 1;
+    double suggest_threshold = 2;
+}

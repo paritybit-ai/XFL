@@ -20,7 +20,7 @@
     },
     "output": {
         "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-        "result": {
+        "iv": {
             "name": "woe_iv_result_[STAGE_ID].json"
         },
         "split_points": {

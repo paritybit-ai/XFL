@@ -25,4 +25,6 @@ message StatusResponse {
     Status jobStatus = 2;
     Status schedulerStatus = 3;
     map<string, Status> trainerStatus = 4;
+    int32 startTime = 5;
+    int32 endTime = 6;
 }

@@ -97,7 +97,7 @@ def download_and_extract_data(url: str, md5: str, data_path: str, data_folder: O
     print("Data finished downloading and extraction")
 
 
-def pd_train_test_split(df, test_ratio: float, shuffle: bool = True, random_state: int = None):
+def pd_train_test_split(df, test_ratio: float, shuffle: bool = False, random_state: int = None):
     if shuffle:
         df = sk_shuffle(df, random_state=random_state)
     train_df = df[int(len(df)*test_ratio):].reset_index(drop=True)

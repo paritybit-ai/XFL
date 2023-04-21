@@ -48,27 +48,21 @@ Parameter List
             - **type**: ``str`` Aggregation method, support "fedavg", "fedprox", and "scaffold"
             - **encryption**:
                 - **method**: ``str`` Encryption method, recommend "otp".
-                - **key_bitlength**: ``int`` Key length of one time pad encryption，support 64 and 128.
+                - **key_bitlength**: ``int`` Key length of one time pad encryption, support 64 and 128. 128 is recommended for better security.
                 - **data_type**: ``str`` Input data type, support `torch.Tensor` and `numpy.ndarray`, depending on model data type.
                 - **key_exchange**:
                     - **key_bitlength**: ``int`` Bit length of paillier key, recommend to be greater than or equal to 2048.
                     - **optimized**: ``bool`` Whether to use optimized method.
                 - **csprng**:
-                    - **name**: ``str``  Pseudo-random number generation method.
+                    - **name**: ``str`` Pseudo-random number generation method.
                     - **method**: ``str`` Corresponding hash method.
-        - **optimizer_config**: Support optimizers and their parameters defined in pytorch or registered by user. For example:
+        - **optimizer_config**: Support optimizers and their parameters defined in PyTorch or registered by user. For example:
             - **Adam**:
                 - **lr**: ``float`` Optimizer learning rate.
                 - **amsgrad**: ``bool`` Whether to use the AMSGrad variant.
-        - **lr_scheduler_config**: Support lr_scheduler and their parameters defined in pytorch or registered by user. For example:
+        - **lr_scheduler_config**: Support lr_scheduler and their parameters defined in PyTorch or registered by user. For example:
             - **StepLR**:
                 - **step_size**: ``int`` Period of learning rate decay.
                 - **gamma**: ``float`` Multiplicative factor of learning rate decay.
-        - **lossfunc_config**: Loss function configuration, support `BCEWithLogitsLoss`.
-        - **metric_config**: Support multiple metrics.
-            - **accuracy**: Accuracy.
-            - **precision**: Precision.
-            - **recall**: Recall.
-            - **f1_score**: F1 score.
-            - **auc**: Area Under Curve.
-            - **ks**: Kolmogorov-Smirnov (KS) Statistics.
+        - **lossfunc_config**: Loss function configuration, support `PoissonNLLLoss`.
+        - **metric_config**: Support `mean_poisson_deviance`

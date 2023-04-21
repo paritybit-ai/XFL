@@ -97,13 +97,13 @@ class Commu(object):
         return response.code
         
     @classmethod
-    def recv(cls, key: str, use_pickle: bool = True, wait: bool = True) -> Any:
+    def recv(cls, key: str, use_pickle: bool = True, wait: bool = True, default_value: any = None) -> Any:
         if wait:
             data = RedisConn.cut(key)
         else:
             data = RedisConn.cut_if_exist(key)
             if data is None:
-                return None
+                return default_value
                 
         if use_pickle:
             return pickle.loads(data)

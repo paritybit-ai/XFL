@@ -240,6 +240,7 @@ class TestVerticalPearsonTrainer:
             assert "feature_mapping" in model
 
     def test_label_trainer(self, get_label_trainer_conf, mocker):
+        mocker.patch("algorithm.framework.vertical.pearson.label_trainer._update_progress_finish")
         mocker.patch.object(
             DualChannel, "__init__", return_value=None
         )
@@ -301,6 +302,7 @@ class TestVerticalPearsonTrainer:
         conf["train_info"]["train_params"]["col_index"] = [2]
         conf["train_info"]["train_params"]["col_names"] = "x2"
 
+        mocker.patch("algorithm.framework.vertical.pearson.label_trainer._update_progress_finish")
         mocker.patch.object(
             DualChannel, "__init__", return_value=None
         )
@@ -363,6 +365,7 @@ class TestVerticalPearsonTrainer:
         conf["train_info"]["train_params"]["sample_size"] = sample_size
         conf["train_info"]["train_params"]["encryption"] = {"plain": {}}
 
+        mocker.patch("algorithm.framework.vertical.pearson.label_trainer._update_progress_finish")
         mocker.patch.object(
             DualChannel, "__init__", return_value=None
         )

@@ -20,11 +20,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pyspark.pandas as ps
 
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
-from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import LabelEncoder
 
 
@@ -161,32 +159,27 @@ class VerticalBinningWoeIvBase(TrainConfigParser):
         """
         logger.info("Start reading data.")
         if self.input_trainset[0].get("has_id", True):
-            index_col = self.input_trainset[0].get("index_col", 'id')
+            # index_col = self.input_trainset[0].get("index_col", 'id')
+            index_col = 0
         else:
             index_col = None
-        if self.input_trainset[0].get("has_label", False):
-            label_name = self.input_trainset[0].get("label_name", 'y')
-        else:
-            label_name = None
+
         if self.input_trainset[0]["type"] == "csv":
-            # self.df = pd.read_csv(self.input_trainset[0]["path"], index_col=0).reset_index(drop=True)
             file_path = str(
                 Path(self.input_trainset[0]["path"], self.input_trainset[0]["name"]))
             if self.computing_engine == "local":
                 self.df = pd.read_csv(file_path, index_col=index_col)
-        #     elif self.computing_engine == "spark":
-        #         self.df = ps.read_csv(file_path, index_col=index_col)
-        # else:
-        #     raise NotImplementedError(
-        #         "Load function {} does not Implemented.".format(self.input_trainset[0]["type"]))
+
         logger.info("Reading data successfully.")
 
-        if label_name:
-            self.y = self.df[label_name]
-            self.df = self.df.drop(label_name, axis=1)
+        if self.input_trainset[0].get("has_label", False):
+            # self.y = self.df[label_name]
+            # self.df = self.df.drop(label_name, axis=1)
+            self.df.columns = ["y"] + list(self.df.columns[1:])
+            self.y = self.df.iloc[:, 0]
+            self.df = self.df.iloc[:, 1:]
         else:
             self.y = None
-        index = self.df.index
 
         # read val for transform
         if len(self.input_valset) > 0:

@@ -77,10 +77,11 @@ class TestLocalStandardScaler:
 	@pytest.mark.parametrize('with_mean, with_std', [
 		(True, True), (True, False), (False, True), (False, False)
 	])
-	def test_fit(self, get_conf, with_mean, with_std):
+	def test_fit(self, get_conf, with_mean, with_std, mocker):
 		conf = copy.deepcopy(get_conf)
 		conf["train_info"]["train_params"]["with_mean"] = with_mean
 		conf["train_info"]["train_params"]["with_std"] = with_std
+		mocker.patch("service.fed_control._send_progress")
 		ln = LocalStandardScaler(conf)
 		ln.fit()
 		if with_mean:
@@ -89,13 +90,14 @@ class TestLocalStandardScaler:
 			assert (np.abs(ln.train_data[['x0', 'x2']].std() - 1.0) < 1e-6).all()
 
 	@pytest.mark.parametrize('feature_name', ['x0', 'myf'])
-	def test_feature_wise(self, get_conf, feature_name):
+	def test_feature_wise(self, get_conf, feature_name, mocker):
 		conf = copy.deepcopy(get_conf)
 		conf["train_info"]["train_params"]["with_mean"] = False
 		conf["train_info"]["train_params"]["with_std"] = False
 		conf["train_info"]["train_params"]["feature_standard"] = {
 			feature_name: {"with_mean": True, "with_std": True}
 		}
+		mocker.patch("service.fed_control._send_progress")
 		ln = LocalStandardScaler(conf)
 
 		if feature_name in ln.train_data.columns:

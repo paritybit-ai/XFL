@@ -171,5 +171,6 @@ class TestVgg:
         mocker.patch.object(
             AggregationPlainRoot, "aggregate", side_effect=mock_agg
         )
+        mocker.patch("service.fed_control._send_progress")
         rest.fit()
         rest_a.fit()

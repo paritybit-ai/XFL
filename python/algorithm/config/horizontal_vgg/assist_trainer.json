@@ -22,7 +22,7 @@
         "model": {
             "type": "file",
             "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "horizontal_vgg.pt"
+            "name": "horizontal_resnet.pt"
         },
         "metrics": {
             "type": "csv",
