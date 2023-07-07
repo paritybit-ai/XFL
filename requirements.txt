@@ -23,7 +23,7 @@ pyarrow>=1.0.0
 dill==0.3.4
 tqdm==4.62.3
 tensorflow==2.11.1
-transformers==4.29.2
+transformers>=4.30.0
 grpc-interceptor >= 0.15.0
 multiprocess==0.70.12.2
 rdkit==2022.9.2
