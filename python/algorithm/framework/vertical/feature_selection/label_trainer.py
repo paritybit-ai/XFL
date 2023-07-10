@@ -16,10 +16,9 @@
 import os
 import pickle
 from pathlib import Path
-
 import pandas as pd
 
-from service.fed_control import _one_layer_progress
+from service.fed_control import ProgressCalculator
 from common.checker.matcher import get_matched_config
 from common.checker.x_types import All
 from common.communication.gRPC.python.channel import BroadcastChannel
@@ -38,6 +37,7 @@ class VerticalFeatureSelectionLabelTrainer(VerticalFeatureSelectionBase):
 		self.sync_channel = BroadcastChannel(name="sync")
 		self._sync_config(train_conf)
 		super().__init__(train_conf, label=True)
+		self.progress_calculator = ProgressCalculator(len(self.filter))
 		self.channels = dict()
 		self.channels["feature_id_com"] = BroadcastChannel(name="feature_id_com")
 
@@ -133,10 +133,11 @@ class VerticalFeatureSelectionLabelTrainer(VerticalFeatureSelectionBase):
 				raise NotImplementedError("method {} is not implemented.".format(k))
 			
 			# calculate and update the progress of the training
-			_one_layer_progress(iter_, len(self.filter.keys()))
+			self.progress_calculator.cal_custom_progress(iter_)
 		self.channels["feature_id_com"].broadcast([_["feature_id"] for _ in self.feature_info])
 		self.save()
 		self.transform()
+		ProgressCalculator.finish_progress()
 
 	def transform(self):
 		if not self.transform_stages:

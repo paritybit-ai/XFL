@@ -14,9 +14,7 @@
 
 
 import os
-import pickle
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
 
@@ -25,6 +23,7 @@ from common.checker.x_types import All
 from common.communication.gRPC.python.channel import DualChannel
 from common.utils.logger import logger
 from common.utils.utils import update_dict
+from common.utils.model_io import ModelIO
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
 from .api import get_table_agg_trainer_inst
@@ -143,31 +142,30 @@ class VerticalKmeansTrainer(VerticalKmeansBase):
 
 	def save(self, epoch: int = None, final: bool = False):
 		"""
-
 		Args:
 			epoch:
 			final:
 
 		Returns:
-
 		"""
 		save_dir = str(Path(self.output.get("path")))
 		if not os.path.exists(save_dir):
 			os.makedirs(save_dir)
 
 		model_name = self.output.get("model", {}).get("name", "")
-		model_path = Path(save_dir, model_name)
-
+		cluster_centers = [list(i) for i in self.cluster_centers]
 		kmeans_output = {
 			"k": self.k,
 			"iter": epoch,
 			"is_converged": self.is_converged,
 			"tol": self.tol,
-			"cluster_centers": self.cluster_centers
+			"cluster_centers": cluster_centers,
 		}
-		with open(model_path, 'wb') as f:
-			pickle.dump(kmeans_output, f)
-		logger.info("model saved as: {}.".format(model_path))
+		ModelIO.save_json_model(
+			model_dict=kmeans_output,
+			save_dir=save_dir,
+			model_name=model_name,
+			)
 
 		result_dataframe = pd.DataFrame(
 			{

@@ -14,32 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ "$(uname)" = "Darwin" ]
-then
+if [ "$(uname)" = "Darwin" ]; then
   export PROJECT_HOME=$(greadlink -f ../../../../)
   echo "PROJECT_HOME:""$PROJECT_HOME"
-elif [ "$(uname -s)" == "Linux" ]
-then
+elif [ "$(uname -s)" = "Linux" ]; then
   export PROJECT_HOME=$(readlink -f ../../../../)
   echo "PROJECT_HOME:""$PROJECT_HOME"
 fi
 
-
-
-echo "PROJECT_HOME:""$PROJECT_HOME"
-# shellcheck disable=SC2034
-datapath="${PROJECT_HOME}/dataset"
-
 export PYTHONPATH=$PYTHONPATH:$PROJECT_HOME/python:$PROJECT_HOME/python/common/communication/gRPC/python
 
 datapath="${PROJECT_HOME}/dataset"
-if [ ! -d "${PROJECT_HOME}/dataset/horizontal_kmeans/2party" ]; then
-  if [ ! -f "${PROJECT_HOME}/python/xfl.py" ]; then
-    python "${PROJECT_HOME}/common/dataset/h_kmeans.py" --splits 2 
-  else
-    python "${PROJECT_HOME}/python/common/dataset/h_kmeans.py" --splits 2
-  fi
-fi
 
 type="horizontal"
 operator="kmeans"

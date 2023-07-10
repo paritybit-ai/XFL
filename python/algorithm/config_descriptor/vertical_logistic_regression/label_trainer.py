@@ -73,25 +73,25 @@ vertical_logistic_regression_label_trainer_rule = {
             "name": String("lr_feature_importance_[STAGE_ID].csv")
         },
         "plot_ks": {
-            "name": "lr_plot_ks_[STAGE_ID].json"
+            "name": String("lr_plot_ks_[STAGE_ID].json")
         },
         "plot_roc": {
-            "name": "lr_plot_roc_[STAGE_ID].json"
+            "name": String("lr_plot_roc_[STAGE_ID].json")
         },
         "plot_lift": {
-            "name": "lr_plot_lift_[STAGE_ID].json"
+            "name": String("lr_plot_lift_[STAGE_ID].json")
         },
         "plot_gain": {
-            "name": "lr_plot_gain_[STAGE_ID].json"
+            "name": String("lr_plot_gain_[STAGE_ID].json")
         },
         "plot_precision_recall": {
-            "name": "lr_plot_precision_recall_[STAGE_ID].json"
+            "name": String("lr_plot_precision_recall_[STAGE_ID].json")
         },
         "plot_feature_importance": {
-            "name": "lr_plot_feature_importance_[STAGE_ID].json"
+            "name": String("lr_plot_feature_importance_[STAGE_ID].json")
         },
         "plot_loss": {
-            "name": "lr_plot_loss_[STAGE_ID].json"
+            "name": String("lr_plot_loss_[STAGE_ID].json")
         }
     },
     "train_info": {

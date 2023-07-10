@@ -106,7 +106,8 @@ tmp/
 .DS_Store
 
 # dataset
-/dataset
+/dataset/*
+!/dataset/poetry_small
 *.csv
 *.npz
 *.meta

@@ -25,7 +25,7 @@ vertical_sampler_trainer_rule = {
             "name": String("sampled_id_[STAGE_ID].json")
         },
         "dataset": {
-            "name": String("sampled_data_[STAGE_ID].pkl")
+            "name": String("sampled_data_[STAGE_ID].csv")
         }
     },
     "train_info": {

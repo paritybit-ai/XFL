@@ -16,6 +16,7 @@
 import copy
 import secrets
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import tenseal as ts
@@ -25,9 +26,9 @@ from common.utils.utils import update_dict
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
 from common.crypto.paillier.paillier import Paillier
 from common.utils.logger import logger
+from common.utils.model_io import ModelIO
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
-from common.utils.model_preserver import ModelPreserver
 from common.utils.utils import save_model_config
 from .base import VerticalLinearRegressionBase
 
@@ -48,7 +49,7 @@ class VerticalLinearRegressionTrainer(VerticalLinearRegressionBase):
         self.export_conf = [{
             "class_name": "VerticalLinearRegression",
             "identity": self.identity,
-            "filename": self.save_model_name,
+            "filename": self.save_onnx_model_name,
             "input_dim": self.data_dim,
             "bias": False
         }]
@@ -253,21 +254,42 @@ class VerticalLinearRegressionTrainer(VerticalLinearRegressionBase):
                 self.best_model = copy.deepcopy(self.model)
             # if need to save results by epoch
             if self.save_frequency > 0 and epoch % self.save_frequency == 0:
-                ModelPreserver.save(save_dir=self.save_dir,
-                                    model_name=self.save_model_name,
-                                    state_dict=self.model.state_dict(),
-                                    epoch=epoch)
+                # ModelPreserver.save(save_dir=self.save_dir,
+                #                     model_name=self.save_model_name,
+                #                     state_dict=self.model.state_dict(),
+                #                     epoch=epoch)
+                self.save_model(epoch=epoch)
             # if early stopping, break
             if early_stop_flag:
                 break
 
         # save model for infer
-        save_model_config(stage_model_config=self.export_conf, save_path=Path(self.save_dir))
         # if not early stopping, save model
-        ModelPreserver.save(save_dir=self.save_dir, model_name=self.save_model_name,
-                            state_dict=self.best_model.state_dict(), final=True)
+        self.save_model(epoch=None)
         # send w to label trainer
         self._save_feature_importance(self.dual_channels["intermediate_label_trainer"])
+        
+    def save_model(self, epoch: Optional[int] = None):
+        if not epoch:
+            save_model_config(stage_model_config=self.export_conf,
+                              save_path=Path(self.save_dir))
+
+        if self.save_model_name:
+            ModelIO.save_torch_model(
+                state_dict=self.best_model.state_dict(),
+                save_dir=self.save_dir,
+                model_name=self.save_model_name,
+                meta_dict={},
+                epoch=epoch
+            )
+        if self.save_onnx_model_name:
+            ModelIO.save_torch_onnx(
+                model=self.best_model,
+                input_dim=(self.data_dim,),
+                save_dir=self.save_dir,
+                model_name=self.save_onnx_model_name,
+                epoch=epoch
+            )
 
     def _save_feature_importance(self, channel):
         channel.send((FedNode.node_id, self.best_model.state_dict()["linear.weight"][0]))

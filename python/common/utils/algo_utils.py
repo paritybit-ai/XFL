@@ -214,3 +214,83 @@ class earlyStopping:
             self.best_score, save_flag = val_score, True
             self.counter = 0
         return self.early_stop, save_flag
+
+
+class _earlyStopping:
+    """Early stops the training if validation metric doesn't increase or decrease after a given patience."""
+
+    def __init__(self, key: str, patience: int = 10, delta: float = 0, maxmize: bool = True):
+        """
+        Args:
+            key (str): The key of metric to monitor.
+            patience (int): How long to wait after last time validation loss improved.
+                            Default: 10
+            delta (float): Minimum change in the monitored quantity to qualify as an improvement.
+                            Default: 0
+            maxmize (bool): If True, we try to maxmize the metric. Otherwise, we try to minimize the metric.
+        """
+        self.patience = patience
+        self.key = key
+        self.counter = 0
+        self.best_score = None
+        self.best_epoch = None
+        self.early_stop = False
+        self.maxmize = 1 if maxmize else -1
+        self.delta = delta * maxmize
+
+    def __call__(self, metric: dict, epoch: int) -> bool:
+        '''
+        Args:
+            metric (dict): The metric dict.
+            epoch (int): The current epoch.
+        '''
+        if self.key not in metric:
+            raise KeyError("Key {} cannot found in metrics.".format(self.key))
+        val_score = metric[self.key]
+        
+        if self.best_score is None:
+            # update best score and best epoch
+            self.best_score = val_score
+            self.best_epoch = epoch
+
+        elif (val_score * self.maxmize) < ((self.best_score + self.delta) * self.maxmize):
+            self.counter += 1
+            logger.info(
+                f'EarlyStopping counter: {self.counter} out of {self.patience}. '
+                f'Epoch {epoch} score {val_score}, '
+                f'best epoch {self.best_epoch} best score {self.best_score}.')
+            if (val_score * self.maxmize) < (self.best_score * self.maxmize):
+                # update best score and best epoch
+                self.best_score = val_score
+                self.best_epoch = epoch
+            if self.counter >= self.patience:
+                self.early_stop = True
+        
+        else:
+            self.best_score = val_score
+            self.best_epoch = epoch
+            self.counter = 0
+        
+        return self.early_stop
+
+
+class earlyStoppingH(_earlyStopping):
+    """Early stops the training if validation metric doesn't increase after a given patience."""
+
+    def __init__(self, key: str, patience: int = 10, delta: float = 0):
+        """
+        Args:
+            key (str): The key of metric to monitor.
+            patience (int): How long to wait after last time validation loss improved.
+                            Default: 10
+            delta (float): Minimum change in the monitored quantity to qualify as an improvement.
+                            Default: 0
+        """
+        maxmize = None
+        if key in ["acc", "precision", "recall", "f1_score", "auc", "ks"]:
+            maxmize = True
+        elif key in ["mae", "mse", "mape", "rmse"]:
+            maxmize = False
+        else:
+            raise ValueError("Key {} cannot be monitored.".format(key))
+        super().__init__(key, patience, delta, maxmize=maxmize)

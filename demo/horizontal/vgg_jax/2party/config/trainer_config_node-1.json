@@ -72,7 +72,7 @@
                     }
                 },
                 "metric_config": {
-                    "accuracy": {},
+                    "acc": {},
                     "f1_score": {"average":"micro"},
                     "precision": {"average":"micro"},
                     "recall": {"average":"micro"}

@@ -52,8 +52,10 @@ class VerticalPoissonRegressionTrainer(VerticalPoissonRegressionBase):
             "input_dim": self.data_dim,
             "bias": False
         }]
-        if self.random_seed:
-            self.set_seed(self.random_seed)
+        if self.random_seed is None:
+            self.random_seed = self.sync_channel.recv()
+            
+        self.set_seed(self.random_seed)
         self.best_model = None
         self.node_id = FedConfig.node_id
         self.broadcast_channel = BroadcastChannel(name="Public keys", root_id=FedConfig.get_assist_trainer())

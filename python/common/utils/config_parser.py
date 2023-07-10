@@ -54,27 +54,68 @@ class TrainConfigParser(object):
         self.fed_config = config.get("fed_info")
         self.model_info = config.get("model_info")
         
-        self.train_info = config.get("train_info")
+        self.train_info = config.get("train_info", {})
         self.extra_info = config.get("extra_info")
         self.computing_engine = config.get("computing_engine", "local")
         self.device = self.train_info.get("device", "cpu")
 
-        if self.train_info:
-            self.train_params = self.train_info.get("params") or self.train_info.get("train_params")
-            self.interaction_params = self.train_info.get("interaction_params", {})
-        else:
-            self.train_params = None
-            self.interaction_params = None
+        self.train_params = self.train_info.get("params") or self.train_info.get("train_params")
+        self.interaction_params = self.train_info.get("interaction_params", {})
+        self.save_frequency = self.interaction_params.get("save_frequency", -1)
+        self.write_training_prediction = \
+            self.interaction_params.get("write_training_prediction", False)
+        self.write_validation_prediction = \
+            self.interaction_params.get("write_validation_prediction", False)
         
-        self.input = config.get("input")
-        if self.input:
-            self.input_trainset = self.input.get("trainset", [])
-            self.input_valset = self.input.get("valset", [])
-            self.input_testset = self.input.get("testset", [])
-        else:
-            self.input_trainset = []
-            self.input_valset = []
-            self.input_testset = []
+        self.input = config.get("input", {})
+        self.input_trainset = self.input.get("trainset", [])
+        self.input_valset = self.input.get("valset", [])
+        self.input_testset = self.input.get("testset", [])
 
         self.output = config.get("output")
 
+
+class CommonConfigParser:
+    # Parse the original config.json to extract common config fields
+    def __init__(self, config: dict) -> None:
+        self.config = config
+        
+        self.identity = config.get("identity")
+        self.model_info = config.get("model_info", {})
+        self.model_conf = self.model_info.get("config", {})
+
+        self.input = config.get("input", {})
+        self.input_trainset = self.input.get("trainset", [])
+        self.input_valset = self.input.get("valset", [])
+        self.input_testset = self.input.get("testset", [])
+        self.pretrain_model = self.input.get("pretrain_model", {})
+        self.pretrain_model_path = self.pretrain_model.get("path", "")
+        self.pretrain_model_name = self.pretrain_model.get("name", "")
+
+        self.output = config.get("output", {})
+        self.output_dir = self.output.get("path", "")
+        self.output_model_name = self.output.get("model", {}).get("name", "")
+        self.output_onnx_model_name = self.output.get("onnx_model", {}).get("name", "")
+        
+        self.train_info = config.get("train_info", {})
+        self.device = self.train_info.get("device", "cpu")
+
+        self.interaction_params = self.train_info.get("interaction_params", {})
+        self.save_frequency = self.interaction_params.get("save_frequency", -1)
+        self.echo_training_metrics = self.interaction_params.get("echo_training_metrics", False)
+        self.write_training_prediction = \
+            self.interaction_params.get("write_training_prediction", False)
+        self.write_validation_prediction = \
+            self.interaction_params.get("write_validation_prediction", False)
+        
+        self.train_params = self.train_info.get("train_params", {})
+        self.aggregation = self.train_params.get("aggregation", {})
+        self.encryption = self.train_params.get("encryption", {"plain": {}})
+
+        self.optimizer = self.train_params.get("optimizer", {})
+        self.lr_scheduler = self.train_params.get("lr_scheduler", {})
+        self.lossfunc = self.train_params.get("lossfunc", {})
+        self.metric = self.train_params.get("metric", {})
+        self.early_stopping = self.train_params.get("early_stopping", {})
+
+        self.random_seed = self.train_params.get("random_seed", None)

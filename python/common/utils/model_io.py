@@ -14,6 +14,7 @@
 
 
 import os
+import shutil
 import json
 from typing import Optional
 from pathlib import Path
@@ -24,7 +25,11 @@ from common.utils.logger import logger
 
 class ModelIO:
     @staticmethod
-    def _gen_model_path(save_dir: str, model_name: str, epoch: Optional[int] = None):
+    def _gen_model_path(
+        save_dir: str, 
+        model_name: str, 
+        epoch: Optional[int] = None, 
+    ) -> Path:
         split_name = model_name.split(".")
         if epoch is None:
             model_name = '.'.join(split_name[:-1]) + '.' + split_name[-1]
@@ -52,9 +57,25 @@ class ModelIO:
         logger.info("Model saved as: {}".format(model_path))
         
     @staticmethod
-    def load_torch_model(model_path: str):
-        model_dict = torch.load(model_path)
-        logger.info("Model loaded from: {}".format(model_path))
+    def copy_best_model(
+        save_dir: str, 
+        model_name: str, 
+        epoch: Optional[int] = None
+    ):
+        model_path = ModelIO._gen_model_path(save_dir, model_name, epoch)
+        best_model_path = ModelIO._gen_model_path(save_dir, model_name)
+        shutil.copy(model_path, best_model_path)
+        logger.info("Best model saved as: {}".format(best_model_path))
+        
+    @staticmethod
+    def load_torch_model(model_path: str, device: str = "cpu"):
+        if device == "cpu":
+                model_dict = torch.load(model_path, map_location=lambda storage, loc: storage)
+        elif "cuda" in device:
+                model_dict = torch.load(model_path, map_location=lambda storage, loc: storage.cuda(0))
+        else:
+            raise ValueError(f"Device {device} not support.")
+        logger.info("Pretrain model loaded from: {}".format(model_path))
         return model_dict
     
     @staticmethod
@@ -107,6 +128,4 @@ class ModelIO:
     @staticmethod
     def load_json_proto(model_path: str):
         pass
-
-
 

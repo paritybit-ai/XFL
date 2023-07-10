@@ -15,7 +15,7 @@
 
 import inspect
 import os
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -76,6 +76,72 @@ def cumulative_gain_curve(y_true, y_score, pos_label=None):
     percentages = np.insert(percentages, 0, [0])
 
     return percentages, gains
+
+
+class CommonMetrics:
+
+    @staticmethod
+    def to_str(metrics_dict: dict, presicion: int = 6):
+        return {k: format(v, f".{presicion}f") for k, v in metrics_dict.items()}
+    
+    @staticmethod
+    def _calc_metrics(
+            metrics: dict,
+            labels: list, 
+            val_predicts: list, 
+            lossfunc_name: str = None,
+            loss: float = None,
+            dataset_type: str = "val",
+        ) -> dict:
+        metrics_output = {}
+        metrics_str = {}
+        if lossfunc_name is not None:
+            metrics_output[lossfunc_name] = loss
+        for method in metrics.keys():
+            metrics_output[method] = metrics[method](labels, val_predicts)
+        
+        metrics_str = CommonMetrics.to_str(metrics_output)
+        logger.info(f"Metrics on {dataset_type} dataset: {metrics_str}")
+        return metrics_output
+
+    @staticmethod
+    def save_metric_csv(
+            metrics_output: dict,
+            output_config: dict,
+            global_epoch: int,
+            local_epoch: int = None, 
+            dataset_type: str = "val",
+        ) -> None:
+        metrics_str = CommonMetrics.to_str(metrics_output)
+        metric_dir = output_config.get("path", "")
+        if not os.path.exists(metric_dir):
+            os.makedirs(metric_dir)
+        file_name = output_config.get("metric_" + dataset_type)["name"]
+        output_file = os.path.join(metric_dir, file_name)
+
+        if local_epoch:
+            epoch = f"{local_epoch}/{global_epoch}"
+        else:
+            epoch = f"{global_epoch}"
+
+        if os.path.exists(output_file):
+            with open(output_file, 'a') as f:
+                features = []
+                for k, v in metrics_str.items():
+                    features.append(v)
+                f.write("%s,%s\n" % (epoch, ','.join(features)))
+        else:
+            with open(output_file, 'w') as f:
+                if local_epoch:
+                    f.write("%s,%s\n" % ("local_epoch/global_epoch", ','.join(
+                        [_ for _ in metrics_str.keys()])))
+                else:
+                    f.write("%s,%s\n" % ("global_epoch", ','.join(
+                        [_ for _ in metrics_str.keys()])))
+                features = []
+                for k, v in metrics_str.items():
+                    features.append(v)
+                f.write("%s,%s\n" % (epoch, ','.join(features)))
 
 
 class BiClsMetric:

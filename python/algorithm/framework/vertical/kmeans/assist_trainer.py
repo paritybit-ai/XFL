@@ -14,15 +14,14 @@
 
 
 from typing import Dict
-
 import numpy as np
 
-from common.communication.gRPC.python.channel import DualChannel, BroadcastChannel
+from common.communication.gRPC.python.channel import DualChannel
 from common.evaluation.metrics import ClusteringMetric
 from common.utils.logger import logger
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
-from service.fed_control import _one_layer_progress, _update_progress_finish
+from service.fed_control import ProgressCalculator
 from .api import get_table_agg_scheduler_inst
 from .base import VerticalKmeansBase
 
@@ -48,6 +47,7 @@ class VerticalKmeansAssistTrainer(VerticalKmeansBase):
         train_conf.update(conf)
 
         super().__init__(train_conf, label=True, *args, **kwargs)
+        self.progress_calculator = ProgressCalculator(self.max_iter)
 
         self.DBI = None
         self.dist_sum = None
@@ -171,12 +171,12 @@ class VerticalKmeansAssistTrainer(VerticalKmeansBase):
             self._calc_metrics(self.dist_sum, cluster_result, iter_)
             
             # calculate and update the progress of the training
-            _one_layer_progress(iter_ + 1, self.max_iter)
+            self.progress_calculator.cal_custom_progress(iter_ + 1)
             
             if self.is_converged:
                 if iter_ + 1 < self.max_iter:
                     # update the progress of 100 to show the training is finished
-                    _update_progress_finish()
+                    ProgressCalculator.finish_progress()
                 break
 
     def _calc_metrics(self, dist_sum, cluster_result, epoch):

@@ -23,7 +23,7 @@
             "model": {
                 "type": "file",
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "horizontal_densenet.pt"
+                "name": "horizontal_resnet.pt"
             },
             "metrics": {
                 "type": "csv",
@@ -70,7 +70,7 @@
                     "CrossEntropyLoss": {}
                 },
                 "metric_config": {
-                    "accuracy": {},
+                    "acc": {},
                     "f1_score": {"average":"micro"},
                     "precision": {"average":"micro"},
                     "recall": {"average":"micro"}

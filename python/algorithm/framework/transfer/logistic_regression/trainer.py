@@ -13,29 +13,18 @@
 # limitations under the License.
 
 
-import numpy as np
 import torch
 
 from common.communication.gRPC.python.channel import DualChannel
 from common.utils.logger import logger
 from service.fed_config import FedConfig
-from .base import TransferLogisticRegressionBase
-from algorithm.core.optimizer.torch_optimizer import get_optimizer
-from algorithm.core.lr_scheduler.torch_lr_scheduler import get_lr_scheduler
-from common.utils.model_preserver import ModelPreserver
+from .common import Common
+from common.utils.model_io import ModelIO
 
 
-class TransferLogisticRegressionTrainer(TransferLogisticRegressionBase):
-    def __init__(self, train_conf: dict, *args, **kwargs):
-        super().__init__(train_conf, label=False, *args, **kwargs)
-        self.set_seed(self.random_seed)
-        self._init_model()
-        self.export_conf = [{
-            "class_name": "TransferLogisticRegression",
-            "identity": self.identity,
-            "filename": self.save_model_name,
-            "num_classes": 2,
-        }]
+class TransferLogisticRegressionTrainer(Common):
+    def __init__(self, train_conf: dict):
+        super().__init__(train_conf, label=False)
 
     def cal_ub(self, dataloader):
         ub = []
@@ -73,26 +62,19 @@ class TransferLogisticRegressionTrainer(TransferLogisticRegressionBase):
             ids=FedConfig.get_label_trainer()+[FedConfig.node_id]
             )
 
-        optimizer_conf = self.train_params.get("optimizer", {})
-        for k, v in optimizer_conf.items():
-            optimizer = get_optimizer(k)(self.model.parameters(), **v)
-
-        lr_scheduler = None
-        lr_scheduler_conf = self.train_params.get("lr_scheduler", {})
-        for k, v in lr_scheduler_conf.items():
-            lr_scheduler = get_lr_scheduler(k)(optimizer, **v)
+        optimizer = list(self.optimizer.values())[0]
+        lr_scheduler = list(self.lr_scheduler.values())[0] if self.lr_scheduler.values() else None
 
         for epoch in range(1, self.global_epoch + 1):
             self.model.train()
             logger.info(f"trainer's global epoch {epoch}/{self.global_epoch} start...")
             self.train_loop(optimizer, lr_scheduler, dual_channel)
             self.val_loop(dual_channel)
-    
-        state_dict = self.model.state_dict()
 
-        ModelPreserver.save(
-            save_dir=self.save_dir, model_name=self.save_model_name,
-            state_dict=state_dict, final=True
+        ModelIO.save_torch_model(
+            state_dict=self.model.state_dict(), 
+            save_dir=self.save_dir, 
+            model_name=self.save_model_name
         )
 
     def train_loop(self, optimizer, lr_scheduler, dual_channel):

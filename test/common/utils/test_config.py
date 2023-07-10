@@ -50,8 +50,8 @@ def test_parse_config(mocker):
     )
 
     config = parse_config(json_str)
-    assert config == {'scheduler': {'node_id': 'label_trainer', 'host': 'localhost', 'port': '55001', 'use_tls': False}, 'trainer': {'trainer': {
-        'host': 'localhost', 'port': '56002', 'use_tls': True}, 'assist_trainer': {'host': 'localhost', 'port': '56001', 'use_tls': False}}}
+    assert config == {'scheduler': {'node_id': 'label_trainer', 'host': 'localhost', 'port': '55001', 'use_tls': False, 'name': 'master'}, 'trainer': {'trainer': {
+        'host': 'localhost', 'port': '56002', 'use_tls': True, 'name': 'follower'}, 'assist_trainer': {'host': 'localhost', 'port': '56001', 'use_tls': False, 'name': 'master'}}}
 
 
 def test_refill_config():

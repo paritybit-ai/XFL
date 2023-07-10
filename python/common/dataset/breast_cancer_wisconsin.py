@@ -114,13 +114,17 @@ class WDBC(torch.utils.data.Dataset):
             index_dict = {}
             
             for i, span in enumerate(split_cols):
-                if "labeled" in parties[i]:
+                if parties[i] == "labeled":
                     train_data, _ = pd_train_test_split(
-                        all_train_data[["id", "y"]+list(span)], test_ratio=drop_ratio, random_state=random_state+1)
+                        all_train_data[["id", "y"]+list(span)], test_ratio=drop_ratio, 
+                        shuffle=True, random_state=random_state+100
+                    )
                     test_data = all_test_data[["id", "y"]+list(span)]
                 else:
                     train_data, _ = pd_train_test_split(
-                        all_train_data[["id"]+list(span)], test_ratio=drop_ratio, random_state=random_state+2)
+                        all_train_data[["id"]+list(span)], test_ratio=drop_ratio, 
+                        shuffle=True, random_state=random_state+200
+                    )
                     test_data = all_test_data[["id"]+list(span)]
                 index_dict[i] = train_data["id"].to_list()
 

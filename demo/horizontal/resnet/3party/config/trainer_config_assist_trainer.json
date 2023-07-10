@@ -47,8 +47,8 @@
                 "echo_training_metrics": true
             },
             "params": {
-                "global_epoch": 15,
-                "local_epoch": 2,
+                "global_epoch": 200,
+                "local_epoch": 1,
                 "batch_size": 128,
                 "aggregation_config": {
                     "type": "fedavg",
@@ -70,7 +70,7 @@
                     "CrossEntropyLoss": {}
                 },
                 "metric_config": {
-                    "accuracy": {},
+                    "acc": {},
                     "f1_score": {"average":"micro"},
                     "precision": {"average":"micro"},
                     "recall": {"average":"micro"}

@@ -19,7 +19,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from service.fed_control import _update_progress_finish
+from service.fed_control import ProgressCalculator
 from algorithm.core.data_io import CsvReader
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
@@ -169,4 +169,4 @@ class LocalDataStatisticLabelTrainer:
             with open(self.output_path_name, "w") as wf:
                 json.dump(self.summary_dict, wf)
         
-        _update_progress_finish()
+        ProgressCalculator.finish_progress()

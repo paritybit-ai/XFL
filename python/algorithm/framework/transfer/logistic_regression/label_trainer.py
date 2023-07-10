@@ -19,24 +19,14 @@ import torch
 from common.communication.gRPC.python.channel import DualChannel
 from common.utils.logger import logger
 from service.fed_config import FedConfig
-from .base import TransferLogisticRegressionBase
-from algorithm.core.optimizer.torch_optimizer import get_optimizer
-from algorithm.core.lr_scheduler.torch_lr_scheduler import get_lr_scheduler
-from common.utils.model_preserver import ModelPreserver
+from .common import Common
+from common.utils.model_io import ModelIO
+from common.evaluation.metrics import CommonMetrics
 
 
-class TransferLogisticRegressionLabelTrainer(TransferLogisticRegressionBase):
-    def __init__(self, train_conf: dict, *args, **kwargs):
-        super().__init__(train_conf, label=True, *args, **kwargs)
-        self.set_seed(self.random_seed)
-        self._init_model()
-        self.metrics = self._set_metrics()
-        self.export_conf = [{
-            "class_name": "TransferLogisticRegression",
-            "identity": self.identity,
-            "filename": self.save_model_name,
-            "num_classes": 2,
-        }]
+class TransferLogisticRegressionLabelTrainer(Common):
+    def __init__(self, train_conf: dict):
+        super().__init__(train_conf, label=True)
 
     def cal_phi_and_ua(self, dataloader):
         phi = None  # [1, hidden_features]  Φ_A
@@ -115,23 +105,34 @@ class TransferLogisticRegressionLabelTrainer(TransferLogisticRegressionBase):
         loss_sum /= self.local_epoch
         logger.info(f"loss: {loss_sum}")
 
-    def val_loop(self, dual_channel):
+    def val_loop(self, dual_channel, global_epoch: int = 0):
         logger.info("val_loop start")
         self.model.eval()
         labels = []
-        metric_output = {}
         for batch_idx, [y_batch] in enumerate(self.val_dataloader):
             labels.append(y_batch.numpy())
-        labels = np.concatenate(labels, axis=0)
         ub = dual_channel.recv()
         predict_score = torch.matmul(ub, self.phi.T)
-        predicts = torch.sigmoid(predict_score)
-        val_predicts = np.array(predicts > 0.5, dtype=np.int32)
+        val_predicts = torch.sigmoid(predict_score)
+        labels: np.ndarray = np.concatenate(labels, axis=0)
+        val_predicts = np.array(val_predicts > 0.5, dtype=np.int32)
 
-        metrics_conf: dict = self.train_params["metric"]
-        for method in self.metrics:
-            metric_output[method] = self.metrics[method](labels, val_predicts, **metrics_conf[method])
-        logger.info(f"Metrics on validation set: {metric_output}")
+        metrics_output = CommonMetrics._calc_metrics(
+            metrics=self.metrics,
+            labels=labels,
+            val_predicts=val_predicts,
+            lossfunc_name=None,
+            loss=None,
+            dataset_type="val",
+        )
+
+        CommonMetrics.save_metric_csv(
+            metrics_output=metrics_output, 
+            output_config=self.common_config.output, 
+            global_epoch=global_epoch, 
+            local_epoch=None, 
+            dataset_type="val",
+        )
 
     def fit(self):
         logger.info("Transfer logistic regression training start")
@@ -140,26 +141,18 @@ class TransferLogisticRegressionLabelTrainer(TransferLogisticRegressionBase):
             ids=FedConfig.get_trainer()+[FedConfig.node_id]
         )
 
-        optimizer_conf = self.train_params.get("optimizer", {})
-        for k, v in optimizer_conf.items():
-            optimizer = get_optimizer(k)(self.model.parameters(), **v
-        )
-
-        lr_scheduler = None
-        lr_scheduler_conf = self.train_params.get("lr_scheduler", {})
-        for k, v in lr_scheduler_conf.items():
-            lr_scheduler = get_lr_scheduler(k)(optimizer, **v)
+        optimizer = list(self.optimizer.values())[0]
+        lr_scheduler = list(self.lr_scheduler.values())[0] if self.lr_scheduler.values() else None
 
         for epoch in range(1, self.global_epoch + 1):
             self.model.train()
             logger.info(f"trainer's global epoch {epoch}/{self.global_epoch} start...")
             self.train_loop(optimizer, lr_scheduler, dual_channel)
-            self.val_loop(dual_channel)
+            self.val_loop(dual_channel, global_epoch=epoch)
 
-        state_dict = self.model.state_dict()
-        state_dict["phi"] = self.phi
-
-        ModelPreserver.save(
-            save_dir=self.save_dir, model_name=self.save_model_name,
-            state_dict=state_dict, final=True
+        ModelIO.save_torch_model(
+            state_dict=self.model.state_dict(), 
+            save_dir=self.save_dir, 
+            model_name=self.save_model_name,
+            meta_dict={"phi": self.phi}
         )

@@ -2,53 +2,28 @@
     {
         "identity": "label_trainer",
         "model_info": {
-            "name": "horizontal_kmeans",
-            "config": {
-                "input_dim": 2,
-                "num_clusters": 3
-            }
+            "name": "horizontal_kmeans"
         },
         "input": {
             "trainset": [
                 {
-                    "path": "./dataset/horizontal_kmeans/2party",
+                    "path": "./dataset/horizontal_kmeans",
                     "type": "csv",
-                    "name": "blob_1.csv",
+                    "name": "blob1.csv",
                     "has_label": true,
                     "has_id": false
                 }
             ]
         },
-        "output": {},
+        "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "metric_train": {
+                "name": "kmeans_metric_train_[STAGE_ID].csv"
+            }
+        },
         "train_info": {
-            "interaction_params": {
-                "save_frequency": -1,
-                "save_probabilities": true,
-                "save_probabilities_bins_number": 10,
-                "write_training_prediction": true,
-                "write_validation_prediction": false,
-                "echo_training_metrics": true
-            },
-            "params": {
-                "global_epoch": 10,
-                "local_epoch": 1,
-                "aggregation_config": {
-                    "type": "fedavg",
-                    "encryption": {
-                        "method": "otp",
-                        "key_bitlength": 64,
-                        "data_type": "torch.Tensor",
-                        "key_exchange": {
-                            "key_bitlength": 3072,
-                            "optimized": true
-                        },
-                        "csprng": {
-                            "name": "hmac_drbg",
-                            "method": "sha512"
-                        }
-                    }
-                },
-                "extra_config": {}
+            "train_params": {
+                "local_epoch": 1
             }
         }
     }

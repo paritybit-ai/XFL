@@ -22,7 +22,7 @@ from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
 from common.utils.utils import save_model_config
 from common.model.python.feature_model_pb2 import StandardizationModel
-from service.fed_control import _update_progress_finish
+from service.fed_control import ProgressCalculator
 from common.utils.model_io import ModelIO
 
 
@@ -50,7 +50,8 @@ class LocalStandardScalerLabelTrainer(TrainConfigParser):
         self._init_data()
         self.export_conf = [{
             "class_name": "LocalStandardScaler",
-            "filename": self.save_pmodel_name
+            "filename": self.save_pmodel_name,
+            "input_schema": ','.join([_ for _ in self.train_data.columns if _ not in set(["y", "id"])]),
         }]
 
     def _parse_config(self) -> None:
@@ -168,7 +169,7 @@ class LocalStandardScalerLabelTrainer(TrainConfigParser):
             standard_scaler[idx] = {"feature": f, "u": u, "s": s}
         scaler_dict["standard_scaler"] = standard_scaler
         self.save(scaler_dict)
-        _update_progress_finish()
+        ProgressCalculator.finish_progress()
 
     def save(self, scaler_dict):
         if self.save_dir:

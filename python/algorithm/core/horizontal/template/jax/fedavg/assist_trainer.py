@@ -15,7 +15,6 @@
 
 from algorithm.core.horizontal.aggregation.aggregation_base import AggregationRootBase
 from ..base import BaseTrainer
-from service.fed_control import _one_layer_progress
 
 
 class FedAvgAssistTrainer(BaseTrainer):
@@ -37,5 +36,4 @@ class FedAvgAssistTrainer(BaseTrainer):
         self.state_dict = aggregator.aggregate()
         self.state_dict_to_state()
         self.current_epoch += 1
-        _one_layer_progress(self.current_epoch, self.train_params.get("global_epoch", 0))
         

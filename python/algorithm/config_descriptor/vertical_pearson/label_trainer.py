@@ -28,7 +28,7 @@ vertical_pearson_label_trainer_rule = {
     },
     "train_info": {
         "train_params": {
-            "col_index": Integer(-1),
+            "col_index": OneOf(-1, [RepeatableSomeOf(Integer())]),
             "col_names": String(""),
             "encryption": {
                 "paillier": {

@@ -62,11 +62,10 @@ def start_server(config_path, is_bar):
                 FedConfig.converted_trainer_config = trainer_config
                 
                 FedJob.init_progress(len(FedConfig.trainer_config))
-                
+
                 for stage in range(FedJob.total_stage_num):
                     logger.info(f"Stage {stage} Start...")
                     FedJob.current_stage = stage
-                    
                     ###
                     stage_response = scheduler_pb2.GetStageResponse()
                     try:
@@ -84,16 +83,15 @@ def start_server(config_path, is_bar):
                     stage_response.currentStageId = FedJob.current_stage
                     stage_response.totalStageNum = FedJob.total_stage_num
                     stage_response.currentStageName = stage_name
-                    
+
                     bar_response = scheduler_pb2.ProgressBar()
                     for stage, progress in enumerate(FedJob.progress):
                         bar_response.stageId = stage
                         bar_response.stageProgress = progress
                         stage_response.progressBar.append(bar_response)
-                        
+
                     RedisConn.set("XFL_JOB_STAGE_" + str(FedJob.job_id), json_format.MessageToJson(stage_response))
                     ###
-                    
                     trainer_control(control_pb2.START)
                     
                     trainer_status = {}

@@ -23,7 +23,7 @@ from common.checker.matcher import get_matched_config
 from common.checker.x_types import All
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
-from service.fed_control import _update_progress_finish
+from service.fed_control import ProgressCalculator
 from .base import VerticalPearsonBase
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
 from common.utils.logger import logger
@@ -194,7 +194,7 @@ class VerticalPearsonLabelTrainer(VerticalPearsonBase):
 					self._summary["corr"][k] = v
 
         # update the progress of 100 to show the training is finished
-		_update_progress_finish()
+		ProgressCalculator.finish_progress()
 		self.save()
 
 	def save(self):

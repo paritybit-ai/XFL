@@ -15,28 +15,53 @@
 
 from algorithm.core.horizontal.aggregation.aggregation_base import AggregationRootBase
 from ..base import BaseTrainer
-from service.fed_control import _one_layer_progress
+from service.fed_control import ProgressCalculator
 
 
-class FedProxAssistTrainer(BaseTrainer):
-    def __init__(self, train_conf: dict):
-        super().__init__(train_conf)
+class FedProxAssistTrainer:
+    def __init__(self, trainer: BaseTrainer):
+        self.trainer = trainer
+        self.progress_calculator = ProgressCalculator(trainer.context["global_epoch_num"])
         
-        self.current_epoch = 0
-        self.register_hook(place="before_local_epoch", rank=1,
-                           func=self._broadcast_model, desc="broadcast global model")
-        self.register_hook(place="after_local_epoch", rank=1,
-                           func=self._aggregate_model, desc="aggregate local models")
+    def register(self):
+        self.trainer.register_hook(
+            place="before_global_epoch", rank=-1,
+            func=self.trainer._load_model, desc="load pretrain model"
+        )
+        self.trainer.register_hook(
+            place="after_local_epoch", rank=-2,
+            func=self._aggregate_model, desc="aggregate local models"
+        )
+        self.trainer.register_hook(
+            place="before_local_epoch", rank=-2,
+            func=self._sync_early_stop_flag, desc="update progress bar"
+        )
+        self.trainer.register_hook(
+            place="before_local_epoch", rank=-1,
+            func=self._broadcast_model, desc="broadcast global model"
+        )
+        self.trainer.register_hook(
+            place="after_local_epoch", rank=-1,
+            func=self.progress_calculator.cal_horizontal_progress, 
+            desc="update progress bar"
+        )
+        self.trainer.register_hook(
+            place="after_global_epoch", rank=-1,
+            func=self.progress_calculator.finish_progress, desc="update progress bar"
+        )
+
+    def _sync_early_stop_flag(self, context: dict):
+        aggregator: AggregationRootBase = self.trainer.aggregator
+        aggregator.broadcast(context["early_stop_flag"])
+        return context["early_stop_flag"]
         
     def _broadcast_model(self, context: dict):
-        aggregator: AggregationRootBase = self.aggregator
-        aggregator.broadcast(self.model.state_dict())
+        aggregator: AggregationRootBase = self.trainer.aggregator
+        aggregator.broadcast(self.trainer.model.state_dict())
         
     def _aggregate_model(self, context: dict):
-        aggregator: AggregationRootBase = self.aggregator
+        aggregator: AggregationRootBase = self.trainer.aggregator
         new_state_dict = aggregator.aggregate()
-        if self.device != "cpu":
-            self._state_dict_to_device(new_state_dict, self.device, inline=True)
-        self.model.load_state_dict(new_state_dict)
-        self.current_epoch += 1
-        _one_layer_progress(self.current_epoch, self.train_params.get("global_epoch", 0))
+        if self.trainer.device != "cpu":
+            self.trainer._state_dict_to_device(new_state_dict, self.trainer.device, inline=True)
+        self.trainer.model.load_state_dict(new_state_dict)

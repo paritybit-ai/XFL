@@ -17,8 +17,8 @@
         "valset": [
             {
                 "type": "csv",
-                "path": "./dataset/hiv/2party",
-                "name": "hiv_test.csv",
+                "path": "/opt/dataset/unit_test",
+                "name": "test_data.csv",
                 "has_label": true,
                 "has_id": false
             }
@@ -26,40 +26,26 @@
         "pretrain_model": {}
     },
     "output": {
+        "path": "/opt/checkpoints/unit_test",
         "model": {
-            "type": "file",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "horizontal_resnet.pt"
+            "name": "horizontal_gcn_mol_[STAGE_ID].model"
         },
-        "metrics": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "header": true
-        },
-        "evaluation": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "header": true
+        "metric_val": {
+            "name": "gcn_val_metric_val_[STAGE_ID].csv"
         }
     },
     "train_info": {
         "device": "cpu",
-        "interaction_params": {
-            "save_frequency": 2,
-            "save_probabilities": true,
-            "save_probabilities_bins_number": 10,
-            "write_training_prediction": true,
-            "write_validation_prediction": true,
-            "echo_training_metrics": true
-        },
-        "params": {
-            "global_epoch": 5,
-            "local_epoch": 1,
-            "batch_size": 128,
-            "aggregation_config": {
-                "type": "fedavg",
-                "encryption": {
-                    "method": "otp",
+        "train_params": {
+            "global_epoch": 2,
+            "val_batch_size": 16,
+            "aggregation": {
+                "method": {
+                    "fedavg": {}
+                }
+            },
+            "encryption": {
+                "otp": {
                     "key_bitlength": 64,
                     "data_type": "torch.Tensor",
                     "key_exchange": {
@@ -72,19 +58,29 @@
                     }
                 }
             },
-            "lossfunc_config": {
+            "optimizer": {
+                "Adam": {
+                    "lr": 0.0005,
+                    "weight_decay": 0.001
+                }
+            },
+            "lr_scheduler": {
+                "CosineAnnealingLR": {
+                    "T_max": 200
+                }
+            },
+            "lossfunc": {
                 "BCEWithLogitsLoss": {}
             },
-            "metric_config": {
-                "accuracy": {},
+            "metric": {
+                "acc": {},
                 "roc_auc_score": {}
             },
             "early_stopping": {
                 "key": "acc",
                 "patience": 2,
                 "delta": 0
-            },
-            "extra_config": {}
+            }
         }
     }
 }

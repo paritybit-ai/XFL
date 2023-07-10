@@ -40,8 +40,8 @@
                 "echo_training_metrics": true
             },
             "params": {
-                "global_epoch": 15,
-                "local_epoch": 2,
+                "global_epoch": 200,
+                "local_epoch": 1,
                 "batch_size": 128,
                 "aggregation_config": {
                     "type": "fedavg",
@@ -60,17 +60,22 @@
                     }
                 },
                 "optimizer_config": {
-                    "Adam": {
-                        "lr": 0.001,
-                        "amsgrad": true,
-                        "weight_decay": 0.001
+                    "SGD": {
+                        "lr": 0.1,
+                        "momentum": 0.9,
+                        "weight_decay": 5e-4
                     }
                 },
                 "lossfunc_config": {
                     "CrossEntropyLoss": {}
                 },
+                "lr_scheduler_config": {
+                    "CosineAnnealingLR": {
+                    "T_max":200
+                    }
+                },
                 "metric_config": {
-                    "accuracy": {},
+                    "acc": {},
                     "f1_score": {"average":"micro"},
                     "precision": {"average":"micro"},
                     "recall": {"average":"micro"}

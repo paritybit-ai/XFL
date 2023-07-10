@@ -18,15 +18,17 @@ import os
 import shutil
 from random import SystemRandom
 import pickle
-
 import numpy as np
 import pandas as pd
 import pytest
 
-import service.fed_config
+from service.fed_config import FedConfig
+from service.fed_node import FedNode
+from algorithm.framework.horizontal.linear_regression.assist_trainer import HorizontalLinearRegressionAssistTrainer
+from algorithm.framework.horizontal.linear_regression.label_trainer import HorizontalLinearRegressionLabelTrainer
 from algorithm.core.horizontal.aggregation.aggregation_otp import AggregationOTPRoot, AggregationOTPLeaf
 from algorithm.core.horizontal.aggregation.aggregation_plain import AggregationPlainRoot, AggregationPlainLeaf
-from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
+from common.communication.gRPC.python.channel import DualChannel
 from common.communication.gRPC.python.commu import Commu
 from common.crypto.key_agreement.contants import primes_hex
 from gmpy2 import powmod
@@ -56,11 +58,6 @@ def prepare_data():
 def get_assist_trainer_conf():
     with open("python/algorithm/config/horizontal_linear_regression/assist_trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
-        conf["input"]["valset"][0]["name"] = "test_data.csv"
-        conf["output"]["model"]["path"] = "/opt/checkpoints/unit_test"
-        conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
-        conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
     yield conf
 
 
@@ -68,10 +65,6 @@ def get_assist_trainer_conf():
 def get_trainer_conf():
     with open("python/algorithm/config/horizontal_linear_regression/trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
-        conf["input"]["trainset"][0]["name"] = "train_data.csv"
-        conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
-        conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
     yield conf
 
 
@@ -99,38 +92,21 @@ class TestLogisticRegression:
         Commu.scheduler_id = 'assist_trainer'
         conf = get_trainer_conf
         assist_conf = get_assist_trainer_conf
-        conf["model_info"]["config"]["input_dim"] = 5
-        assist_conf["model_info"]["config"]["input_dim"] = 5
-        # if encryption_method == "otp":
-        #     mocker.patch.object(DualChannel, "__init__", return_value=None)
-        #     dc = DualChannel(name="otp_diffie_hellman", ids=['node-1', 'node-2'])
-        #     # dc.remote_id = "node-1"
         mocker.patch.object(
-            service.fed_config.FedConfig, "get_label_trainer", return_value=['node-1', 'node-2']
+            FedConfig, "get_label_trainer", return_value=['node-1', 'node-2']
         )
         mocker.patch.object(
-            service.fed_config.FedConfig, "get_assist_trainer", return_value='assist_trainer'
+            FedConfig, "get_assist_trainer", return_value='assist_trainer'
         )
-        mocker.patch.object(
-            service.fed_config.FedConfig, "node_id", 'node-1'
-        )
+        mocker.patch.object(FedConfig, "node_id", 'node-1')
+        mocker.patch.object(FedNode, "node_id", "node-1")
+
         if encryption_method == "plain":
-            conf["train_info"]["params"]["aggregation_config"]["encryption"] = {"method": "plain"}
-            assist_conf["train_info"]["params"]["aggregation_config"]["encryption"] = {"method": "plain"}
+            assist_conf["train_info"]["train_params"]["encryption"] = {"plain": {}}
 
-        sec_conf = conf["train_info"]["params"]["aggregation_config"]["encryption"]
-
-        def mock_recv(*args, **kwargs):
-            return params_plain_recv
-
-        def mock_collect(*args, **kwargs):
-            return params_collect
-
-        def mock_agg(*args, **kwargs):
-            return agg_otp
-
-        # def mock_send(*args, **kwargs):
-        #     return params_send
+            sec_conf = assist_conf["train_info"]["train_params"]["encryption"]["plain"]
+        else:
+            sec_conf = assist_conf["train_info"]["train_params"]["encryption"]["otp"]
 
         if encryption_method == "plain":
             fed_method = AggregationPlainLeaf(sec_conf)
@@ -153,11 +129,22 @@ class TestLogisticRegression:
             fed_method = AggregationOTPLeaf(sec_conf)
             fed_assist_method = AggregationOTPRoot(sec_conf)
 
-        service.fed_config.FedConfig.stage_config = conf
-        from algorithm.framework.horizontal.linear_regression.assist_trainer import HorizontalLinearRegressionAssistTrainer
-        from algorithm.framework.horizontal.linear_regression.label_trainer import HorizontalLinearRegressionLabelTrainer
+        mocker.patch.object(
+            DualChannel, "__init__", return_value=None
+        )
+        mocker.patch.object(
+            DualChannel, "send", return_value=None
+        )
+        recv_mocker = mocker.patch.object(
+            DualChannel, "recv", 
+            return_value = {
+                "model_info":assist_conf["model_info"], "train_info": assist_conf["train_info"]
+            }
+        )
+
         lrt = HorizontalLinearRegressionLabelTrainer(conf)
         lrt_a = HorizontalLinearRegressionAssistTrainer(assist_conf)
+        esflag_recv = pickle.dumps(False) + EOV
         params_plain_recv = pickle.dumps(lrt_a.model.state_dict()) + EOV
         params_send = fed_method._calc_upload_value(
             lrt.model.state_dict(), len(lrt.train_dataloader.dataset))
@@ -165,17 +152,16 @@ class TestLogisticRegression:
         agg_otp = fed_assist_method._calc_aggregated_params(list(map(lambda x: pickle.loads(x), [params_collect,params_collect])))
         
         def mock_recv(*args, **kwargs):
-            return params_plain_recv
-
+            if recv_mocker.call_count % 2 == 1:
+                return esflag_recv
+            else:
+                return params_plain_recv
+        
+        def mock_agg(*args, **kwargs):
+            return agg_otp
 
         recv_mocker = mocker.patch.object(
             DualChannel, "recv", side_effect=mock_recv
-        )
-        mocker.patch.object(
-            DualChannel, "__init__", return_value=None
-        )
-        mocker.patch.object(
-            DualChannel, "send", return_value=None
         )
         mocker.patch.object(
             AggregationOTPRoot, "aggregate", side_effect=mock_agg

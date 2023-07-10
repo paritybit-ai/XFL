@@ -35,7 +35,7 @@ from common.utils.logger import logger
 from common.utils.model_io import ModelIO
 from common.utils.utils import save_model_config
 from service.fed_node import FedNode
-from service.fed_control import _two_layer_progress, _update_progress_finish
+from service.fed_control import ProgressCalculator
 from .base import VerticalLogisticRegressionBase
 from .base import BLOCKCHAIN
 
@@ -45,15 +45,6 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
         self.sync_channel = BroadcastChannel(name="sync")
         self._sync_config(train_conf)
         super().__init__(train_conf, label=True, *args, **kwargs)
-        self._init_model(bias=True)
-        self.export_conf = [{
-            "class_name": "VerticalLogisticRegression",
-            "identity": self.identity,
-            "filename": self.save_onnx_model_name,
-            "input_dim": self.data_dim,
-            "bias": True,
-            "version": "1.4.0"
-        }]
         if self.random_seed is None:
             self.random_seed = random.randint(-(1 << 32), 1 << 32)
             self.sync_channel.broadcast(self.random_seed)
@@ -61,6 +52,19 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
                 logger.debug(
                     f"Broadcast random seed, SHA256: {hashlib.sha256(pickle.dumps(self.random_seed)).hexdigest()}")
         self.set_seed(self.random_seed)
+
+        self.progress_calculator = ProgressCalculator(self.global_epoch, len(self.train_dataloader))
+        self._init_model(bias=True)
+        self.export_conf = [{
+            "class_name": "VerticalLogisticRegression",
+            "identity": self.identity,
+            "filename": self.save_onnx_model_name,
+            "input_dim": self.data_dim,
+            "bias": True,
+            "version": "1.4.0",
+            "input_schema": self.schema,
+        }]
+
         self.es = earlyStopping(key=self.early_stopping_config["key"],
                                 patience=self.early_stopping_config["patience"],
                                 delta=self.early_stopping_config["delta"])
@@ -267,8 +271,7 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
                 logger.debug("Weights update completed.")
 
                 # calculate and update the progress of the training
-                _two_layer_progress(batch_idx, len(
-                    self.train_dataloader), epoch-1, self.global_epoch)
+                self.progress_calculator.cal_custom_progress(epoch, batch_idx+1)
 
             train_loss = loss_func(
                 torch.tensor(training_pred_prob_list, dtype=torch.float32),
@@ -310,10 +313,10 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
             ).detach().item()
 
             try:
-                loss_file = self.train_conf['output']['plot_loss']['name']
+                # loss_file = self.train_conf['output']['plot_loss']['name']
                 logger.info(f"Writing loss for epoch {epoch}")
                 self._write_loss(train_loss, val_loss, epoch)
-            except:
+            except Exception:
                 pass
 
             if self.early_stopping_config["patience"] > 0:
@@ -411,7 +414,7 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
         logger.info("Self importances: {}".format(self.feature_importances_))
         self._write_feature_importance()
 
-        _update_progress_finish()
+        ProgressCalculator.finish_progress()
 
     def save(self, y_list, training_y_list=None):
         save_model_config(stage_model_config=self.export_conf,
@@ -466,14 +469,18 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
         if BLOCKCHAIN:
             logger.debug(
                 f"Collect weight list, SHA256: {hashlib.sha256(pickle.dumps(other_weight_list)).hexdigest()}")
-        for (owner_id, weights) in other_weight_list:
+        for (owner_id, weights, f_names) in other_weight_list:
             for fid, weight in enumerate(weights):
                 res["owner_id"].append(owner_id)
-                res["fid"].append(fid)
+                # res["fid"].append(fid)
+                res["fid"].append(f_names[fid])
                 res["importance"].append(float(weight))
         for fid, weight in enumerate(self.best_model.state_dict()["linear.weight"][0]):
-            res["owner_id"].append(FedNode.node_id)
-            res["fid"].append(fid)
+            # res["owner_id"].append(FedNode.node_id)
+            res["owner_id"].append(FedNode.node_name)
+            # res["fid"].append(fid)
+            f_name = self.train_f_names[fid]
+            res["fid"].append(f_name)
             res["importance"].append(float(weight))
         res = pd.DataFrame(res).sort_values(
             by="importance", key=lambda col: np.abs(col), ascending=False)
@@ -486,8 +493,8 @@ class VerticalLogisticRegressionLabelTrainer(VerticalLogisticRegressionBase):
         # prepare feature_importances_ attribute
         feature_importances_ = {}
         for _, row in res.iterrows():
-            feature_importances_[
-                (row['owner_id'], row['fid'])] = row['importance']
+            feature_importances_[(row['owner_id'], row['fid'])] = row['importance']
+                
         self.feature_importances_ = feature_importances_
 
     def _save_prob(self, best_model, channel):

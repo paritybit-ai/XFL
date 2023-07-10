@@ -15,13 +15,14 @@
 
 import os
 import shutil
+import multiprocessing
 from pathlib import Path
 
 import numpy as np
 
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
-from service.fed_control import _two_layer_progress
+from service.fed_control import ProgressCalculator
 import glob
 import time
 
@@ -142,6 +143,7 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
         else:
             logger.info("Shuffle is not needed")
         self.worker_num = self.train_params.get("max_num_cores", 4)
+        self.worker_num = min(max(1, self.worker_num), multiprocessing.cpu_count())
         if self.shuffle:
             self.batch_size = self.train_params.get("batch_size", 100000)
         self.train_weight = self.train_params.get("train_weight", 8)
@@ -158,9 +160,7 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
 
     def generator(self):
         batch, k = [], 0
-        index = 0
         for j in self.files:
-            index += 1
             header = self.header
             with open(j) as f:
                 for line in f:
@@ -168,13 +168,12 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
                         self.header_data = line
                         header = False
                         continue
-                    batch.append(line)
+                    batch.append(line.rstrip("\n")+"\n")
                     self.line_num += 1
                     if len(batch) == self.batch_size:
                         yield batch, k
                         batch = []
                         k += 1
-                _two_layer_progress(index-1, len(self.files), 0, 2)
         if batch:
             yield batch, k
 
@@ -210,13 +209,10 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
                             F = open(self.save_valset_name, "w")
                             if self.header:
                                 F.write(self.header_data)
-                _two_layer_progress(i, self.batch_size, 1, 2)
             shutil.rmtree(temp_path, ignore_errors=True)  # del temp path
         else:
             # count line num
-            index = 0
             for j in self.files:
-                index += 1
                 header = self.header
                 with open(j) as f:
                     for line in f:
@@ -225,7 +221,6 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
                             header = False
                             continue
                         self.line_num += 1
-                    _two_layer_progress(index-1, len(self.files), 0, 2)
             # train and val line num
             trainset_num = int(self.line_num * self.train_ratio)
             # read and write directly
@@ -233,9 +228,7 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
             if self.header:
                 F.write(self.header_data)
             n = 0
-            index = 0
             for i in self.files:
-                index += 1
                 header = self.header
                 with open(i) as f:
                     for text in f:
@@ -249,7 +242,6 @@ class LocalDataSplitLabelTrainer(TrainConfigParser):
                             F = open(self.save_valset_name, "w")
                             if self.header:
                                 F.write(self.header_data)
-                    _two_layer_progress(index-1, len(self.files), 1, 2)
-
+        ProgressCalculator.finish_progress()
         end_time = time.time()
         logger.info("Time cost: %ss" % (end_time - start_time))

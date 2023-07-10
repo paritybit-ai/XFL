@@ -35,7 +35,7 @@ class ConfigSynchronizer:
         all_trainers = assist_trainer + label_trainers + trainers
         self.coordinator = all_trainers[0]
         self.is_coordinator = FedNode.node_id == self.coordinator
-
+        
         if self.is_coordinator:
             self.sync_chann: Dict[str, DualChannel] = {}
             for party_id in [id for id in all_trainers if id != self.coordinator]:

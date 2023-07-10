@@ -70,6 +70,8 @@ def prepare_data():
     case_df[['x3', 'x4']].tail(20).to_csv(
         "/opt/dataset/unit_test/test_host.csv", index=True
     )
+    FedNode.node_id = "node-1"
+    FedNode.node_name = "node-1"
 
 
 def prepare_test_data():
@@ -445,8 +447,7 @@ class TestVerticalXgboost:
         if not embed:
             mocker.patch.object(decision_tree_label_trainer, "EMBEDING", False)
 
-        mocker.patch("algorithm.framework.vertical.xgboost.label_trainer._update_progress_finish")
-        mocker.patch("algorithm.framework.vertical.xgboost.decision_tree_label_trainer._three_layer_progress")
+        mocker.patch("service.fed_control._send_progress")
         mocker.patch.object(FedConfig, "get_trainer", return_value=["node-2"])
         mocker.patch.object(FedNode, "node_id", "node-1")
         mocker.patch.object(Commu, "node_id", "node-1")
@@ -476,9 +477,17 @@ class TestVerticalXgboost:
         mocker.patch.object(
             service.fed_config.FedConfig, "get_trainer", return_value=["node-2"]
         )
+        
+        mocker.patch.object(
+            FedNode, "config",  return_value={"trainer": {"node-2": []}}
+        )
 
         xgb_label_trainer = VerticalXgboostLabelTrainer(
             get_label_trainer_conf)
+        
+        mocker.patch.object(
+            xgb_label_trainer.channels["sync"], "collect",  return_value=[{"node-2": [1, 2]}, {"node-3": [1, 2]}]
+        )
 
         xgb_label_trainer.fit()
 

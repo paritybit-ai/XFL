@@ -51,21 +51,21 @@ class VerticalXgboostBase(VerticalModelBase):
 
         if self.input_trainset:
             _ = self.__load_data(self.input_trainset)
-            self.train_features, self.train_label, self.train_ids = _
+            self.train_features, self.train_label, self.train_ids, self.train_names = _
             self.train_dataset = NdarrayIterator(self.train_features.to_numpy(), self.bs)
         else:
             self.train_dataset = None
 
         if self.input_valset:
             _ = self.__load_data(self.input_valset)
-            self.val_features, self.val_label, self.val_ids = _
+            self.val_features, self.val_label, self.val_ids, self.val_names = _
             self.val_dataset = NdarrayIterator(self.val_features.to_numpy(), self.bs)
         else:
             self.val_dataset = None
 
         if self.input_testset:
             _ = self.__load_data(self.input_testset)
-            self.test_features, self.test_label, self.test_ids = _
+            self.test_features, self.test_label, self.test_ids, self.test_names = _
             self.test_dataset = NdarrayIterator(self.test_features.to_numpy(), self.bs)
         else:
             self.test_dataset = None
@@ -94,7 +94,7 @@ class VerticalXgboostBase(VerticalModelBase):
                     values = value_counts.index.to_list()
                     list_unique = values[:self.xgb_config.num_bins - 1]
                     list_group = values[self.xgb_config.num_bins - 1:]
-                    uniques = np.array(list_unique + [list_group], dtype=np.object)
+                    uniques = np.array(list_unique + [list_group], dtype=object)
                     value_map = {v: i for i, v in enumerate(list_unique)}
                     value_map.update({v: len(list_unique) for v in list_group})
                     codes = self.train_features[x].map(value_map)
@@ -138,7 +138,7 @@ class VerticalXgboostBase(VerticalModelBase):
             logger.warning("More than one dataset is not supported.")
             
         if not config:
-            return None, None, None
+            return None, None, None, None
             
         config = config[0]
         if config["type"] == "csv":
@@ -149,13 +149,14 @@ class VerticalXgboostBase(VerticalModelBase):
             features = data_reader.features(type="pandas.dataframe")
             features.replace({np.nan: 0, self.xgb_config.missing_value: 0}, inplace=True)
             ids = data_reader.ids
+            names = data_reader.feature_names()
             if self.is_label_trainer:
                 labels = data_reader.label()
             else:
                 labels = None
         else:
             raise NotImplementedError("Dataset type {} is not supported.".format(config["type"]))
-        return features, labels, ids
+        return features, labels, ids, names
     
     def col_sample(self) -> tuple[Any, dict]:
         col_size = self.train_features.shape[1]

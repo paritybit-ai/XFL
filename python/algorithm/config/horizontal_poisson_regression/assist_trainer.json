@@ -3,7 +3,7 @@
     "model_info": {
         "name": "horizontal_poisson_regression",
         "config": {
-            "input_dim": 3,
+            "input_dim": 5,
             "bias": true
         }
     },
@@ -11,8 +11,8 @@
         "valset": [
             {
                 "type": "csv",
-                "path": "../dataset/arizona_card_hos",
-                "name": "ari_card_hos_test.csv",
+                "path": "/opt/dataset/unit_test",
+                "name": "test_data.csv",
                 "has_label": true,
                 "has_id": false
             }
@@ -20,40 +20,27 @@
         "pretrain_model": {}
     },
     "output": {
+        "path": "/opt/checkpoints/unit_test",
         "model": {
-            "type": "file",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "horizontal_poisson_regression.pt"
+            "name": "horizontal_poisson_regression_[STAGE_ID].model"
         },
-        "metrics": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "header": true
-        },
-        "evaluation": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "header": true
+        "metric_val": {
+            "name": "pr_metric_val_[STAGE_ID].csv"
         }
     },
     "train_info": {
         "device": "cpu",
-        "interaction_params": {
-            "save_frequency": -1,
-            "save_probabilities": true,
-            "save_probabilities_bins_number": 10,
-            "write_training_prediction": true,
-            "write_validation_prediction": true,
-            "echo_training_metrics": true
-        },
-        "params": {
-            "global_epoch": 3,
-            "local_epoch": 1,
-            "batch_size": 32,
-            "aggregation_config": {
-                "type": "fedavg",
-                "encryption": {
-                    "method": "otp",
+        "interaction_params": {},
+        "train_params": {
+            "global_epoch": 30,
+            "val_batch_size": 32,
+            "aggregation": {
+                "method": {
+                    "fedavg": {}
+                }
+            },
+            "encryption": {
+                "otp": {
                     "key_bitlength": 64,
                     "data_type": "torch.Tensor",
                     "key_exchange": {
@@ -66,15 +53,27 @@
                     }
                 }
             },
-            "lossfunc_config": {
+            "optimizer": {
+                "Adam": {
+                    "lr": 0.01,
+                    "amsgrad": true
+                }
+            },
+            "lr_scheduler": {
+                "StepLR": {
+                    "step_size": 10,
+                    "gamma": 0.1
+                }
+            },
+            "lossfunc": {
                 "PoissonNLLLoss": {
                     "log_input": false
                 }
             },
-            "metric_config": {
+            "metric": {
                 "mean_poisson_deviance": {}
             },
-            "extra_config": {}
+            "early_stopping": {}
         }
     }
 }

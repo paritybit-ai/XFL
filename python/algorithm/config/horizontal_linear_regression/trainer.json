@@ -1,92 +1,33 @@
-  {
-        "identity": "label_trainer",
-        "model_info": {
-            "name": "horizontal_linear_regression",
-            "config": {
-                "input_dim": 13,
-                "bias": true
-            }
-        },
-        "input": {
-            "trainset": [
-                {
-                    "type": "csv",
-                    "path": "../dataset/horizontal_house_price",
-                    "name": "house_price_guest.csv",
-                    "has_label": true,
-                    "has_id": true
-                }
-            ]
-        },
-        "output": {
-            "metrics": {
+{
+    "identity": "label_trainer",
+    "model_info": {
+        "name": "horizontal_linear_regression"
+    },
+    "input": {
+        "trainset": [
+            {
                 "type": "csv",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "header": true
-            },
-            "evaluation": {
-                "type": "csv",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "header": true
+                "path": "/opt/dataset/unit_test",
+                "name": "train_data.csv",
+                "has_label": true,
+                "has_id": true
             }
+        ]
+    },
+    "output": {
+        "path": "/opt/checkpoints/unit_test",
+        "model": {
+            "name": "horizontal_linear_regression_[STAGE_ID].model"
         },
-        "train_info": {
-            "device": "cpu",
-            "interaction_params": {
-                "save_frequency": -1,
-                "save_probabilities": true,
-                "save_probabilities_bins_number": 10,
-                "write_training_prediction": true,
-                "write_validation_prediction": false,
-                "echo_training_metrics": true
-            },
-            "params": {
-                "global_epoch": 100,
-                "local_epoch": 2,
-                "batch_size": 256,
-                "aggregation_config": {
-                    "type": "fedavg",
-                    "encryption": {
-                        "method": "otp",
-                        "key_bitlength": 64,
-                        "data_type": "torch.Tensor",
-                        "key_exchange": {
-                            "key_bitlength": 3072,
-                            "optimized": true
-                        },
-                        "csprng": {
-                            "name": "hmac_drbg",
-                            "method": "sha512"
-                        }
-                    }
-                },
-                "optimizer_config": {
-                    "Adam": {
-                        "lr":0.01,
-                        "amsgrad": true
-                    }
-                },
-                "lr_scheduler_config": {
-                    "StepLR": {
-                        "step_size": 10,
-                        "gamma": 0.1
-                    }
-                },
-                "lossfunc_config": {
-                    "L1Loss": {}
-                },
-                "metric_config": {
-                    "mae": {},
-                    "mse": {},
-                    "mape": {}
-                },
-                "early_stopping": {
-                    "key": "acc",
-                    "patience": -1,
-                    "delta": 0
-                },
-                "extra_config": {
-                }
-            }
+        "metric_train": {
+            "name": "lr_metric_train_[STAGE_ID].csv"
+        }
+    },
+    "train_info": {
+        "device": "cpu",
+        "train_params": {
+            "local_epoch": 2,
+            "train_batch_size": 64
         }
     }
+}

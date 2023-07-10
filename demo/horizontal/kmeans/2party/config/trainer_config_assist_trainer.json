@@ -11,9 +11,9 @@
         "input": {
             "valset": [
                 {
-                    "path": "./dataset/horizontal_kmeans/2party",
+                    "path": "./dataset/horizontal_kmeans",
                     "type": "csv",
-                    "name": "blob_assist_trainer.csv",
+                    "name": "blob3.csv",
                     "has_label": true,
                     "has_id": false
                 }
@@ -21,28 +21,24 @@
             "pretrain_model": {}
         },
         "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "model": {
-                "type": "file",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "horizontal_kmeans.pt"
+                "name": "horizontal_kmeans_[STAGE_ID].model"
+            },
+            "metric_val": {
+                "name": "kmeans_metric_val_[STAGE_ID].csv"
             }
         },
         "train_info": {
-            "interaction_params": {
-                "save_frequency": -1,
-                "save_probabilities": true,
-                "save_probabilities_bins_number": 10,
-                "write_training_prediction": true,
-                "write_validation_prediction": true,
-                "echo_training_metrics": true
-            },
-            "params": {
+            "train_params": {
                 "global_epoch": 10,
-                "local_epoch": 1,
-                "aggregation_config": {
-                    "type": "fedavg",
-                    "encryption": {
-                        "method": "otp",
+                "aggregation": {
+                    "method": {
+                        "fedavg": {}
+                    }
+                },
+                "encryption": {
+                    "otp": {
                         "key_bitlength": 64,
                         "data_type": "torch.Tensor",
                         "key_exchange": {
@@ -54,8 +50,7 @@
                             "method": "sha512"
                         }
                     }
-                },
-                "extra_config": {}
+                }
             }
         }
     }

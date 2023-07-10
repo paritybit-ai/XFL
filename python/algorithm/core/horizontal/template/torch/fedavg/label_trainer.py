@@ -17,28 +17,44 @@ from algorithm.core.horizontal.aggregation.aggregation_base import AggregationLe
 from ..base import BaseTrainer
 
 
-class FedAvgLabelTrainer(BaseTrainer):
-    def __init__(self, train_conf: dict):
-        super().__init__(train_conf)
-        
-        self.register_hook(place="before_local_epoch", rank=1,
-                           func=self._download_model, desc="download global model")
-        self.register_hook(place="after_local_epoch", rank=1,
-                           func=self._upload_model, desc="upload local model")
-        
+class FedAvgLabelTrainer:
+    def __init__(self, trainer: BaseTrainer):
+        self.trainer = trainer
+    
+    def register(self):
+        self.trainer.register_hook(
+            place="before_local_epoch", rank=-2,
+            func=self._sync_early_stop_flag, desc="sync early stop flag"
+        )
+        self.trainer.register_hook(
+            place="before_local_epoch", rank=-1,
+            func=self._download_model, desc="download global model"
+        )
+        self.trainer.register_hook(
+            place="after_local_epoch", rank=-1,
+            func=self._upload_model, desc="upload local model"
+        )
+
+    # if get True, means the training is finished
+    def _sync_early_stop_flag(self, context: dict):
+        aggregator: AggregationLeafBase = self.trainer.aggregator
+        early_stop_flag = aggregator.download()
+        assert isinstance(early_stop_flag, bool)
+        return early_stop_flag
+
     def _download_model(self, context: dict):
-        aggregator: AggregationLeafBase = self.aggregator
+        aggregator: AggregationLeafBase = self.trainer.aggregator
         new_state_dict = aggregator.download()
         
-        self._state_dict_to_device(new_state_dict, self.device, inline=True)
-        self.model.load_state_dict(new_state_dict)
+        self.trainer._state_dict_to_device(new_state_dict, self.trainer.device, inline=True)
+        self.trainer.model.load_state_dict(new_state_dict)
         
     def _upload_model(self, context: dict):
-        aggregator: AggregationLeafBase = self.aggregator
-        if self.device != "cpu":
-            state_dict = self._state_dict_to_device(self.model.state_dict(), "cpu", inline=False)
+        aggregator: AggregationLeafBase = self.trainer.aggregator
+        if self.trainer.device != "cpu":
+            state_dict = self.trainer._state_dict_to_device(self.trainer.model.state_dict(), "cpu", inline=False)
         else:
-            state_dict = self.model.state_dict()
-        aggregation_config = self.train_params["aggregation_config"]
-        weight = aggregation_config.get("weight") or len(self.train_dataloader.dataset)
+            state_dict = self.trainer.model.state_dict()
+        weight = self.trainer.common_config.aggregation.get("weight") or \
+            len(self.trainer.train_dataloader)
         aggregator.upload(state_dict, weight)

@@ -22,12 +22,14 @@ import pytest
 import torch
 
 from service.fed_config import FedConfig
+from service.fed_node import FedNode
 from algorithm.framework.transfer.logistic_regression.label_trainer import \
     TransferLogisticRegressionLabelTrainer
 from algorithm.framework.transfer.logistic_regression.trainer import \
     TransferLogisticRegressionTrainer
 from common.communication.gRPC.python.channel import DualChannel
 from common.communication.gRPC.python.commu import Commu
+from common.utils.config_sync import ConfigSynchronizer
 
 
 def prepare_data():
@@ -65,24 +67,12 @@ def prepare_data():
 def get_label_trainer_conf():
     with open("python/algorithm/config/transfer_logistic_regression/label_trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
-        conf["input"]["trainset"][0]["name"] = "train_labeled.csv"
-        conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
-        conf["input"]["valset"][0]["name"] = "test_labeled.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
-        conf["output"]["model"]["name"] = "transfer_logitstic_regression_0.model"
     yield conf
 
 @pytest.fixture()
 def get_trainer_conf():
     with open("python/algorithm/config/transfer_logistic_regression/trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
-        conf["input"]["trainset"][0]["name"] = "train_1.csv"
-        conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
-        conf["input"]["valset"][0]["name"] = "test_1.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
-        conf["output"]["model"]["name"] = "transfer_logitstic_regression_0.model"
     yield conf
 
 @pytest.fixture(scope="module", autouse=True)
@@ -101,20 +91,21 @@ def env():
 
 class TestTransferLogisticRegression:
     @pytest.mark.parametrize("encryption_method", ["plain"])
-    def test_label_trainer(self, get_label_trainer_conf, encryption_method, mocker):
+    def test_label_trainer(self, get_label_trainer_conf, get_trainer_conf, encryption_method, mocker):
         # label trainer 流程测试
+        conf = get_label_trainer_conf
+        Commu.node_id = "node-1"
         Commu.trainer_ids = ['node-1', 'node-2']
         Commu.scheduler_id = 'node-1'
-        mocker.patch.object(Commu, "node_id", "node-1")
         mocker.patch.object(
-            FedConfig, "get_trainer", return_value=['node-1', 'node-2']
+            FedConfig, "get_label_trainer", return_value=["node-1"]
         )
         mocker.patch.object(
-            FedConfig, "node_id", 'node-1'
+            FedConfig, "get_trainer", return_value=["node-2"]
         )
-        mocker.patch.object(
-            DualChannel, "send", return_value=0
-        )
+        mocker.patch.object(FedConfig, "node_id", 'node-1')
+        mocker.patch.object(FedNode, "node_id", "node-1")
+        mocker.patch.object(DualChannel, "send", return_value=0)
 
         def mock_recv():
             if mock_channel_recv.call_count <= lrlt.global_epoch * lrlt.local_epoch:
@@ -125,17 +116,25 @@ class TestTransferLogisticRegression:
         mock_channel_recv = mocker.patch.object(
             DualChannel, "recv", side_effect=mock_recv
         )
-        lrlt = TransferLogisticRegressionLabelTrainer(get_label_trainer_conf)
+        mocker.patch.object(
+            ConfigSynchronizer, "__init__", return_value=None
+        )
+        mocker.patch.object(
+            ConfigSynchronizer, "sync", return_value=conf
+        )
+        lrlt = TransferLogisticRegressionLabelTrainer(conf)
         lrlt.fit()
 
         # load pretrained model
         lrlt.pretrain_model_path = "/opt/checkpoints/unit_test"
-        lrlt.input["pretrained_model"]["name"] = "transfer_logitstic_regression_0.model"
-        lrlt._init_model()
+        lrlt.pretrain_model_name = "transfer_logitstic_regression_0.model"
+        lrlt._set_model()
 
     @pytest.mark.parametrize("encryption_method", ["plain"])
-    def test_trainer(self, get_trainer_conf, encryption_method, mocker):
+    def test_trainer(self, get_trainer_conf, get_label_trainer_conf, encryption_method, mocker):
         # trainer 流程测试
+        conf = get_trainer_conf
+        conf_l = get_label_trainer_conf
         Commu.trainer_ids = ['node-1', 'node-2']
         Commu.scheduler_id = 'node-1'
         mocker.patch.object(Commu, "node_id", "node-1")
@@ -146,15 +145,27 @@ class TestTransferLogisticRegression:
             FedConfig, "node_id", 'node-1'
         )
         mocker.patch.object(
+            DualChannel, "__init__", return_value=None
+        )
+        mocker.patch.object(
+            DualChannel, "send", return_value=None
+        )
+        recv_mocker = mocker.patch.object(
+            DualChannel, "recv", 
+            return_value = {
+                "model_info":conf_l["model_info"], "train_info": conf_l["train_info"]
+            }
+        )
+        lrt = TransferLogisticRegressionTrainer(conf)
+        mocker.patch.object(
             DualChannel, "send", return_value=0
         )
         mocker.patch.object(
             DualChannel, "recv", return_value=(torch.rand(40, 5, 5), torch.rand(40, 5), torch.rand(40, 1))
         )
-        lrt = TransferLogisticRegressionTrainer(get_trainer_conf)
         lrt.fit()
 
         # load pretrained model
         lrt.pretrain_model_path = "/opt/checkpoints/unit_test"
-        lrt.input["pretrained_model"]["name"] = "transfer_logitstic_regression_0.model"
-        lrt._init_model()
+        lrt.pretrain_model_name = "transfer_logitstic_regression_0.model"
+        lrt._set_model()

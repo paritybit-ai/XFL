@@ -16,11 +16,10 @@
 import json
 import math
 import time
-
 import numpy as np
 import pandas as pd
 
-from service.fed_control import _two_layer_progress
+from service.fed_control import ProgressCalculator
 from common.checker.matcher import get_matched_config
 from common.checker.x_types import All
 from common.communication.gRPC.python.channel import BroadcastChannel
@@ -97,10 +96,7 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
         feedback_list = self.broadcast_channel.collect()
         assert len(self.broadcast_channel.remote_ids) == len(feedback_list)
 
-        # epoch is used to calculate the progress of the training
-        epoch = 0
         for uid, feedback in zip(self.broadcast_channel.remote_ids, feedback_list):
-            epoch += 1
             client_woe_dict, client_iv_dict = {}, {}
             if encryption_method == "paillier":
                 logger.info(f"Decrypting woe_feedback using {encryption_method} method.")
@@ -117,10 +113,7 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
             logger.info("Start calculate woe for trainer")
             time_s = time.time()
 
-            # batch_idx is used to calculate the progress of the training
-            batch_idx = 0
             for k, v in woe_feedback_list.items():
-                batch_idx += 1
                 # featName = "{}_{}".format(uid, k)
 
                 client_woe_dict[k], client_iv_dict[k] = {}, 0
@@ -145,8 +138,6 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
                 client_woe_dict[k] = woe.to_dict()
                 client_iv_dict[k] += float("%.6f" % np.sum((pos_prob - neg_prob) * woe))
 
-                # calculate and update the progress of the training
-                _two_layer_progress(batch_idx-1, len(woe_feedback_list.keys()), epoch-1, len(feedback_list))
             logger.info("Trainer woe cost:" + str(time.time() - time_s))
 
             logger.info("Calculate host IV with WOE values completed.")
@@ -161,6 +152,8 @@ class VerticalBinningWoeIvLabelTrainer(VerticalBinningWoeIvBase):
                            "count_pos": self.pos_bin_count, "ratio_pos": self.pos_bin_ratio,
                            "ratio_neg": self.neg_bin_ratio}, wf)
             logger.info("Host {} WOE & IV values saved as {}.".format(uid, guest_file_path))
+        
+        ProgressCalculator.finish_progress()
 
     def label_trainer_woe_iv(self):
         logger.info("Start calculate Guest IV with WOE values.")

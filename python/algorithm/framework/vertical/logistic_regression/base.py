@@ -14,6 +14,8 @@
 
 
 import os
+from typing import Optional
+from pathlib import Path
 from collections import OrderedDict
 import pandas as pd
 import torch
@@ -53,6 +55,7 @@ class VerticalLogisticRegressionBase(VerticalModelBase):
         self.train_conf = train_conf
         self.model_conf = train_conf["model_info"].get("config")
         self.label = label
+        self.schema = None
         self.data_dim = None
         self.model = None
         self.train_dataloader, self.eval_dataloader = None, None
@@ -148,6 +151,7 @@ class VerticalLogisticRegressionBase(VerticalModelBase):
                     "Dataset load method {} does not Implemented.".format(vs.get("type"))
                 )
         node_val_df = pd.concat(df_list)
+        self.schema = ','.join([_ for _ in node_train_df.columns if _ not in set(["y", "id"])])
 
         if node_train_df.index.dtype == 'O':
             node_train_df = node_train_df.reset_index(drop=True)
@@ -177,6 +181,8 @@ class VerticalLogisticRegressionBase(VerticalModelBase):
                                       torch.unsqueeze(torch.tensor(node_train_id), dim=-1)),
                 batch_size=self.batch_size, shuffle=True
             )
+            self.train_f_names = node_val_df.columns.tolist()[1:]
+
             self.val_dataloader = DataLoader(
                 dataset=TensorDataset(torch.tensor(node_val_data, dtype=torch.float32),
                                       torch.unsqueeze(torch.tensor(node_val_label), dim=-1),
@@ -197,6 +203,8 @@ class VerticalLogisticRegressionBase(VerticalModelBase):
                                       torch.unsqueeze(torch.tensor(node_train_id), dim=-1)),
                 batch_size=self.batch_size, shuffle=True
             )
+            self.train_f_names = node_val_df.columns.tolist()
+            
             self.val_dataloader = DataLoader(
                 dataset=TensorDataset(torch.tensor(node_val_data, dtype=torch.float32),
                                       torch.unsqueeze(torch.tensor(node_val_id), dim=-1)),

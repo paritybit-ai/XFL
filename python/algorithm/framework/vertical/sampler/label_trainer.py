@@ -21,7 +21,7 @@ from sklearn.utils import resample
 
 from algorithm.framework.vertical.sampler.base import VerticalSamplerBase
 from common.utils.logger import logger
-from service.fed_control import _update_progress_finish
+from service.fed_control import ProgressCalculator
 
 
 class VerticalSamplerLabelTrainer(VerticalSamplerBase):
@@ -175,4 +175,4 @@ class VerticalSamplerLabelTrainer(VerticalSamplerBase):
         # send ids to trainer
         self.broadcast_channel.broadcast(self.sample_ids)
         # update the progress of 100 to show the training is finished
-        _update_progress_finish()
+        ProgressCalculator.finish_progress()

@@ -13,26 +13,34 @@
 # limitations under the License.
 
 
-from algorithm.core.horizontal.template.torch.fedtype import _get_label_trainer
+from algorithm.core.horizontal.template.agg_type import \
+    register_agg_type_for_label_trainer
 from common.utils.logger import logger
 from .common import Common
+from functools import partial
 
 
-class HorizontalVggLabelTrainer(Common, _get_label_trainer()):
+class HorizontalVggLabelTrainer(Common):
     def __init__(self, train_conf: dict):
-        _get_label_trainer().__init__(self, train_conf)
+        super().__init__(train_conf)
+        agg_type = list(self.common_config.aggregation["method"].keys())[0]
+        self.register_hook(
+            place="after_train_loop", rank=1,
+            func=partial(self.val_loop, "train"), desc="validation on trainset"
+        )
+        register_agg_type_for_label_trainer(self, 'torch', agg_type)
         
     def train_loop(self):
         self.model.train()
         train_loss = 0
     
-        loss_func = list(self.loss_func.values())[0]
+        lossfunc = list(self.lossfunc.values())[0]
         optimizer = list(self.optimizer.values())[0]
         lr_scheduler = list(self.lr_scheduler.values())[0] if self.lr_scheduler.values() else None
         
         for batch, (feature, label) in enumerate(self.train_dataloader):
             pred = self.model(feature)
-            loss = loss_func(pred, label)
+            loss = lossfunc(pred, label)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

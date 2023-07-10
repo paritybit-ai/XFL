@@ -21,24 +21,30 @@
             "pretrain_model": {}
         },
         "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "model": {
-                "type": "file",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "horizontal_logistic_regression.pt"
+                "name": "horizontal_logitstic_regression_[STAGE_ID].model"
             },
-            "metrics": {}
+            "metric_val": {
+                "name": "lr_metric_val_[STAGE_ID].csv"
+            }
         },
         "train_info": {
             "device": "cpu",
-            "interaction_params": {},
-            "params": {
-                "global_epoch": 20,
-                "local_epoch": 2,
-                "batch_size": 16,
-                "aggregation_config": {
-                    "type": "fedavg",
-                    "encryption": {
-                        "method": "otp",
+            "interaction_params": {
+            },
+            "train_params": {
+                "global_epoch": 3,
+                "val_batch_size": 16,
+                "aggregation": {
+                    "method": {
+                        "fedprox": {
+                            "mu": 0.1
+                        }
+                    }
+                },
+                "encryption": {
+                    "otp": {
                         "key_bitlength": 64,
                         "data_type": "torch.Tensor",
                         "key_exchange": {
@@ -50,20 +56,35 @@
                             "method": "sha512"
                         }
                     }
+                }, 
+                "optimizer": {
+                    "Adam": {
+                        "lr": 0.001,
+                        "amsgrad": true
+                    }
                 },
-                "lossfunc_config": {
+                "lr_scheduler": {
+                    "StepLR": {
+                        "step_size": 10,
+                        "gamma": 0.1
+                    }
+                },
+                "lossfunc": {
                     "BCELoss": {}
                 },
-                "metric_config": {
-                    "accuracy": {},
+                "metric": {
+                    "acc": {},
                     "precision": {},
                     "recall": {},
                     "f1_score": {},
                     "auc": {},
                     "ks": {}
                 },
-                "early_stopping": {},
-                "extra_config": {}
+                "early_stopping": {
+                    "key": "acc",
+                    "patience": -1,
+                    "delta": 0.001
+                }
             }
         }
     }

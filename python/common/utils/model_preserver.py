@@ -20,7 +20,7 @@ import torch
 
 from common.utils.logger import logger
 
-
+# TODO: 逐渐替代这个，以后会删除
 class ModelPreserver(object):
     @staticmethod
     def save(save_dir: str,

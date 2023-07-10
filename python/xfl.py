@@ -71,5 +71,5 @@ def check_version():
 
 
 if __name__ == "__main__":
-    check_version()
+    # check_version()
     main()

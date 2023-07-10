@@ -18,7 +18,7 @@
     "output": {
         "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
         "model": {
-            "name": "vertical_kmeans_[STAGE_ID].pkl"
+            "name": "vertical_kmeans_[STAGE_ID].model"
         },
         "result": {
             "name": "cluster_result_[STAGE_ID].csv"

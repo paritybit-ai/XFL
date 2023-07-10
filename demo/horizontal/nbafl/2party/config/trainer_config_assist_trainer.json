@@ -29,45 +29,51 @@
             "pretrain_model": {}
         },
         "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "model": {
-                "type": "file",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "horizontal_nbafl"
+                "name": "horizontal_nbafl_[STAGE_ID].model"
             },
-            "metrics": {}
+            "metric_val": {
+                "name": "nbafl_metric_val_[STAGE_ID].csv"
+            }
         },
         "train_info": {
             "device": "cpu",
             "interaction_params": {},
-            "params": {
+            "train_params": {
                 "num_client": 2,
                 "global_epoch": 5,
-                "local_epoch": 20,
-                "batch_size": 32,
-                "input_dim": 30,
+                "val_batch_size": 32,
                 "mu": 0.5,
                 "epsilon": 1,
                 "delta": 0.1,
                 "C": 5,
-                "aggregation_config": {
-                    "type": "fedavg",
-                    "encryption": {
-                        "method": "plain"
+                "aggregation": {
+                    "method": {
+                        "fedavg": {}
                     }
                 },
-                "lossfunc_config": {
+                "encryption": {
+                    "plain": {}
+                },
+                "optimizer": {
+                    "Adam": {
+                        "lr": 0.01,
+                        "amsgrad": true
+                    }
+                },
+                "lossfunc": {
                     "BCELoss": {}
                 },
-                "metric_config": {
-                    "accuracy": {},
+                "metric": {
+                    "acc": {},
                     "precision": {},
                     "recall": {},
                     "f1_score": {},
                     "auc": {},
                     "ks": {}
                 },
-                "early_stopping": {},
-                "extra_config": {}
+                "early_stopping": {}
             }
         }
     }

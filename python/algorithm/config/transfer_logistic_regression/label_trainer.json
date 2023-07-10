@@ -5,15 +5,16 @@
         "config": {
             "num_features": 15,
             "hidden_features": 5,
-            "alpha": 0.05
+            "alpha": 0.05,
+            "bias": false
         }
     },
     "input": {
         "trainset": [
             {
                 "type": "csv",
-                "path": "./dataset/breast_cancer_wisconsin_transfer/2party",
-                "name": "breast_cancer_wisconsin_transfer_labeled_train.csv",
+                "path": "/opt/dataset/unit_test",
+                "name": "train_labeled.csv",
                 "overlap_index_name": "overlap_index.npy",
                 "has_label": true,
                 "has_id": true
@@ -22,26 +23,21 @@
         "valset": [
             {
                 "type": "csv",
-                "path": "./dataset/breast_cancer_wisconsin_transfer/2party",
-                "name": "breast_cancer_wisconsin_transfer_labeled_test.csv",
+                "path": "/opt/dataset/unit_test",
+                "name": "test_labeled.csv",
                 "has_label": true,
                 "has_id": true
             }
         ],
-        "pretrained_model": {
-            "path": "",
-            "name": ""
-        }
+        "pretrained_model": {}
     },
     "output": {
-        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "path": "/opt/checkpoints/unit_test",
         "model": {
-            "name": "transfer_logitstic_regression_[STAGE_ID].model"
+            "name": "transfer_logitstic_regression_0.model"
         },
-        "metrics": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "header": true
+        "metric_val": {
+            "name": "lr_metric_val_[STAGE_ID].csv"
         }
     },
     "train_info": {
@@ -55,7 +51,8 @@
         "train_params": {
             "global_epoch": 1,
             "local_epoch": 1,
-            "batch_size": 64,
+            "train_batch_size": 64,
+            "val_batch_size": 64,
             "optimizer": {
                 "Adam": {
                     "lr": 0.002,
@@ -64,9 +61,8 @@
             },
             "lr_scheduler": {},
             "metric": {
-                "acc": {}
+                
             },
-            "shuffle_seed": 123,
             "random_seed": 50
         }
     }

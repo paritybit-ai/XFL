@@ -13,33 +13,24 @@
 # limitations under the License.
 
 
-import os
-import numpy as np
 import torch
 from torch import nn
-from pathlib import Path
-
+from sklearn.cluster import KMeans
+from algorithm.core.horizontal.template.agg_type import register_agg_type_for_label_trainer
+from common.utils.logger import logger
+from .common import Common
 from functools import partial
 
-from algorithm.core.data_io import CsvReader
-from common.utils.logger import logger
 
-from algorithm.model.horizontal_k_means import HorizontalKMeans
-
-from common.utils.config_parser import TrainConfigParser
-from common.utils.logger import logger
-
-from sklearn.metrics import davies_bouldin_score
-from sklearn.cluster import KMeans
-from .common import Common
-
-from algorithm.core.horizontal.template.torch.fedavg.label_trainer import FedAvgLabelTrainer
-
-
-class HorizontalKmeansLabelTrainer(Common, FedAvgLabelTrainer):
+class HorizontalKmeansLabelTrainer(Common):
     def __init__(self, train_conf: dict):
-        FedAvgLabelTrainer.__init__(self, train_conf=train_conf)
-        logger.info("Label trainer initialized")
+        super().__init__(train_conf)
+        self.register_hook(
+            place="after_train_loop", rank=1,
+            func=partial(self.val_loop, "train"), desc="validation on trainset"
+        )
+        register_agg_type_for_label_trainer(self, "torch", "fedavg")
+        # logger.info("Label trainer initialized")
 
     def train_loop(self):
 

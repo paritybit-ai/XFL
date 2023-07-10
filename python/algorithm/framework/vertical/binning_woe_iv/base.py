@@ -141,14 +141,15 @@ class VerticalBinningWoeIvBase(TrainConfigParser):
             self.save_model = False
         self.save_dir = Path(self.output.get("path"))
         self.transform_switch = False
+        self._init_data()
         if self.save_model:
             self.save_model_name = self.output.get("model").get("name")
             self.export_conf = [{
                 "class_name": "VerticalBinningWoeIv",
                 "filename": self.save_model_name,
-                "bins": self.train_params["binning"]["bins"]
+                "bins": self.train_params["binning"]["bins"],
+                "input_schema": ','.join([_ for _ in self.df.columns if _ not in set(["y", "id"])]),
             }]
-        self._init_data()
         self.feature_binning()
 
     def _init_data(self) -> None:

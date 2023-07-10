@@ -22,14 +22,14 @@ from common.xregister import xregister
 
 def get_lossfunc(name: str):
     if name in dir(torch_nn):
-        loss_func = getattr(torch_nn, name)
+        lossfunc = getattr(torch_nn, name)
     elif name in dir(sys.modules[__name__]):
-        loss_func = getattr(sys.modules[__name__], name)
+        lossfunc = getattr(sys.modules[__name__], name)
     elif name in xregister.registered_object:
-        loss_func = xregister(name)
+        lossfunc = xregister(name)
     else:
         raise ValueError(f"Loss function {name} is not supported in torch.")
-    return loss_func
+    return lossfunc
 
 
 class MapeLoss(Module):
