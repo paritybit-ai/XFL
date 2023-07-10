@@ -1,6 +1,6 @@
 [![License](https://img.shields.io/github/license/paritybit-ai/XFL)](https://opensource.org/licenses/Apache-2.0)
 [![Documentation Status](https://readthedocs.org/projects/xfl/badge/?version=latest)](https://xfl.readthedocs.io/en/latest/?badge=latest)
-[![coverage report](https://git.basebit.me/bag1/federated-learning/badges/master/coverage.svg)](https://git.basebit.me/bag1/federated-learning/-/commits/master)
+
 
 XFL is a high-performance, high-flexibility, high-applicability, lightweight, open and easy-to-use Federated Learning framework.
 It supports a variety of federation models in both horizontal and vertical federation scenarios. 
