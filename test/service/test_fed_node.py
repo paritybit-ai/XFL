@@ -65,12 +65,12 @@ class Test_FedNode():
         assert FedNode.listening_port == 57001
 
         FedNode.init_fednode("trainer", "node-1")
-        assert FedNode.config == {"node_id": "node-1", "scheduler": {"node_id": "node-1", "host": "localhost", "port": "55001", "use_tls": False}, "trainer": {
-            "node-1": {"host": "localhost", "port": "56001", "use_tls": False}, "assist_trainer": {"host": "localhost", "port": "57001", "use_tls": False}}}
+        assert FedNode.config == {"node_id": "node-1", "scheduler": {"node_id": "node-1", "host": "localhost", "port": "55001", "use_tls": False, 'name': 'promoter'}, "trainer": {
+            "node-1": {"host": "localhost", "port": "56001", "use_tls": False, 'name': 'promoter'}, "assist_trainer": {"host": "localhost", "port": "57001", "use_tls": False, 'name': 'promoter'}}}
         assert FedNode.scheduler_host == "localhost"
         assert FedNode.scheduler_port == "55001"
-        assert FedNode.trainers == {"node-1": {"host": "localhost", "port": "56001", "use_tls": False},
-                                    "assist_trainer": {"host": "localhost", "port": "57001", "use_tls": False}}
+        assert FedNode.trainers == {"node-1": {"host": "localhost", "port": "56001", "use_tls": False, 'name': 'promoter'},
+                                    "assist_trainer": {"host": "localhost", "port": "57001", "use_tls": False, 'name': 'promoter'}}
         assert FedNode.listening_port == 56001
 
     def test_init_fednode2(self, tmp_path):
@@ -110,12 +110,14 @@ class Test_FedNode():
 
         FedNode.init_fednode("trainer", "node-1", tmp_path)
         assert FedNode.config == {'node_id': 'node-1', 'scheduler': {'node_id': 'node-1', 'host': 'localhost', 'port': '55001', 'use_tls': False}, 
-                                  'trainer': {'assist_trainer': {'node_id': 'assist_trainer', 'host': 'localhost', 'port': '57001', 'use_tls': False}, 'node-1': {'host': 'localhost', 'port': '56001', 'use_tls': False}, 'node-2': {'host': 'localhost', 'port': '56002', 'use_tls': False}}, 'redis_server': {'host': 'localhost', 'port': '6379'}}
+                                  'trainer': {'assist_trainer': {'node_id': 'assist_trainer', 'host': 'localhost', 'port': '57001', 'use_tls': False, 'name': 'assist_trainer'}, 
+                                              'node-1': {'host': 'localhost', 'port': '56001', 'use_tls': False, 'name': 'node-1'}, 
+                                              'node-2': {'host': 'localhost', 'port': '56002', 'use_tls': False, 'name': 'node-2'}}, 'redis_server': {'host': 'localhost', 'port': '6379'}}
         assert FedNode.scheduler_host == "localhost"
         assert FedNode.scheduler_port == "55001"
-        assert FedNode.trainers == {"node-1": {"host": "localhost", "port": "56001", "use_tls": False},
-                                    'node-2': {'host': 'localhost', 'port': '56002', 'use_tls': False},
-                                    "assist_trainer": {"host": "localhost", 'node_id': 'assist_trainer', "port": "57001", "use_tls": False}}
+        assert FedNode.trainers == {"node-1": {"host": "localhost", "port": "56001", "use_tls": False, 'name': 'node-1'},
+                                    'node-2': {'host': 'localhost', 'port': '56002', 'use_tls': False, 'name': 'node-2'},
+                                    "assist_trainer": {"host": "localhost", 'node_id': 'assist_trainer', "port": "57001", "use_tls": False, 'name': 'assist_trainer'}}
         assert FedNode.listening_port == '56001'
 
     def test_add_server(self, mocker):
@@ -150,7 +152,7 @@ class Test_FedNode():
             os.getcwd(), 'python'))
         mocker.patch('builtins.open', um.mock_open(read_data=b"1"))
         root_certificates = FedNode.load_root_certificates()
-        assert root_certificates == None # b"11"
+        assert root_certificates == b"11"
 
     def test_load_client_cert(self, mocker):
         mocker.patch.object(FedNode, "config", {

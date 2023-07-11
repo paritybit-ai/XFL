@@ -26,10 +26,9 @@ def test_update_progress(mocker):
     mocker.patch.object(FedNode, 'create_channel', return_value='56001')
     mocker.patch.object(FedJob, 'current_stage', 0)
 
-    fed_control._update_progress_finish()
-    fed_control._one_layer_progress(1, 5)
-    fed_control._two_layer_progress(1, 5, 1, 5)
-    fed_control._three_layer_progress(1, 5, 1, 5, 1, 5)
+    a = fed_control.ProgressCalculator(5, 5, 5)
+    a.cal_custom_progress(1, 1, 1)
+    a.finish_progress()
 
 
 def test_trainer_control(mocker):

@@ -12,33 +12,22 @@
                     "name": "breast_cancer_wisconsin_vertical_1_train.csv",
                     "has_id": true,
                     "has_label": false,
-                    "nan_list": [
-                        999,
-                        -999
-                    ]
+                    "nan_list": []
                 }
-            ],
-            "valset": [
             ]
         },
         "output": {
             "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "model": {
-                "name": "vertical_binning_woe_iv_[STAGE_ID].json"
+            "iv": {
+                "name": "woe_iv_result_[STAGE_ID].json"
             },
             "split_points": {
                 "name": "binning_split_points_[STAGE_ID].json"
-            },
-            "result": {
-                "name": "binning_feature_mapping_[STAGE_ID].json"
-            },
-            "trainset": {
-                "name": "fintech_woe_map_train_[STAGE_ID].csv"
             }
         },
         "train_info": {
             "train_params": {
-                "max_num_cores": 4
+                "max_num_cores": 2
             }
         }
     },
@@ -60,25 +49,11 @@
         },
         "output": {
             "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "model": {
+            "corr": {
                 "name": "vertical_pearson_[STAGE_ID].pkl"
             }
         },
         "train_info": {
-            "train_params": {
-                "col_index": -1,
-                "col_names": "",
-                "encryption": {
-                    "paillier": {
-                        "key_bit_size": 2048,
-                        "precision": 6,
-                        "djn_on": true,
-                        "parallelize_on": true
-                    }
-                },
-                "max_num_cores": 999,
-                "sample_size": 9999
-            }
         }
     },
     {
@@ -98,7 +73,7 @@
             ],
             "iv_result": {
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "binning_feature_mapping_0.json"
+                "name": "woe_iv_result_0.json"
             },
             "corr_result": {
                 "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",

@@ -108,10 +108,8 @@ class TestVgg:
             service.fed_config.FedConfig, "node_id", 'node-1'
         )
         if encryption_method == "plain":
-            conf["train_info"]["params"]["aggregation_config"]["encryption"] = {
-                "method": "plain"}
-            assist_conf["train_info"]["params"]["aggregation_config"]["encryption"] = {
-                "method": "plain"}
+            conf["train_info"]["params"]["aggregation_config"]["encryption"] = {"plain": {}}
+            assist_conf["train_info"]["params"]["aggregation_config"]["encryption"] = {"plain": {}}
 
         sec_conf = conf["train_info"]["params"]["aggregation_config"]["encryption"]
 

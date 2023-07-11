@@ -119,7 +119,7 @@ vertical_xgboost_label_trainer_rule = {
                 "row": {
                     "run_goss": Bool(True),
                     "top_rate": Float(0.4).gt(0).le(1),
-                    "other_rate": Float(0.4).gt(0).le(1).add_rule(lambda x, y: x + y["train_info"]["train_params"]["downsampling"]["row"]["top_rate"] <= 1, "top_rate + other_rate <=")
+                    "other_rate": Float(0.4).gt(0).le(1).add_rule(lambda x, y: x + y["train_info"]["train_params"]["downsampling"]["row"]["top_rate"] <= 1, "top_rate + other_rate <=1")
                 }
             },
             "category": {

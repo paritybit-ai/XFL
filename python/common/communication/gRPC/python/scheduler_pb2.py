@@ -3,6 +3,7 @@
 # source: scheduler.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
@@ -17,516 +18,22 @@ import status_pb2 as status__pb2
 import control_pb2 as control__pb2
 
 
-DESCRIPTOR = _descriptor.FileDescriptor(
-  name='scheduler.proto',
-  package='scheduler',
-  syntax='proto3',
-  serialized_options=None,
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0fscheduler.proto\x12\tscheduler\x1a\rchecker.proto\x1a\x0b\x63ommu.proto\x1a\x0cstatus.proto\x1a\rcontrol.proto\"3\n\x10GetConfigRequest\x12\x0e\n\x06nodeId\x18\x01 \x01(\t\x12\x0f\n\x07message\x18\x04 \x01(\t\"Q\n\x11GetConfigResponse\x12\r\n\x05jobId\x18\x01 \x01(\x05\x12\x0e\n\x06\x63onfig\x18\x02 \x01(\t\x12\x0c\n\x04\x63ode\x18\x03 \x01(\x05\x12\x0f\n\x07message\x18\x04 \x01(\t\"t\n\rDefaultConfig\x12\x34\n\x06\x63onfig\x18\x01 \x03(\x0b\x32$.scheduler.DefaultConfig.ConfigEntry\x1a-\n\x0b\x43onfigEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x19\n\x17GetAlgorithmListRequest\"\xe7\x01\n\x18GetAlgorithmListResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x15\n\ralgorithmList\x18\x02 \x03(\t\x12S\n\x10\x64\x65\x66\x61ultConfigMap\x18\x03 \x03(\x0b\x32\x39.scheduler.GetAlgorithmListResponse.DefaultConfigMapEntry\x1aQ\n\x15\x44\x65\x66\x61ultConfigMapEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\'\n\x05value\x18\x02 \x01(\x0b\x32\x18.scheduler.DefaultConfig:\x02\x38\x01\"7\n\x12RecProgressRequest\x12\x0f\n\x07stageId\x18\x01 \x01(\x05\x12\x10\n\x08progress\x18\x02 \x01(\x05\"#\n\x13RecProgressResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\" \n\x0fGetStageRequest\x12\r\n\x05jobId\x18\x01 \x01(\x05\"\xa9\x01\n\x10GetStageResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x16\n\x0e\x63urrentStageId\x18\x02 \x01(\x05\x12\x15\n\rtotalStageNum\x18\x03 \x01(\x05\x12\x18\n\x10\x63urrentStageName\x18\x04 \x01(\t\x12\x11\n\tisRunning\x18\x05 \x01(\x08\x12+\n\x0bprogressBar\x18\x06 \x03(\x0b\x32\x16.scheduler.ProgressBar\"5\n\x0bProgressBar\x12\x0f\n\x07stageId\x18\x01 \x01(\x05\x12\x15\n\rstageProgress\x18\x02 \x01(\x05\x32\xd3\x04\n\tScheduler\x12H\n\tgetConfig\x12\x1b.scheduler.GetConfigRequest\x1a\x1c.scheduler.GetConfigResponse\"\x00\x12\x33\n\x04post\x12\x12.commu.PostRequest\x1a\x13.commu.PostResponse\"\x00(\x01\x12>\n\x07\x63ontrol\x12\x17.control.ControlRequest\x1a\x18.control.ControlResponse\"\x00\x12\x39\n\x06status\x12\x15.status.StatusRequest\x1a\x16.status.StatusResponse\"\x00\x12]\n\x10getAlgorithmList\x12\".scheduler.GetAlgorithmListRequest\x1a#.scheduler.GetAlgorithmListResponse\"\x00\x12N\n\x0brecProgress\x12\x1d.scheduler.RecProgressRequest\x1a\x1e.scheduler.RecProgressResponse\"\x00\x12\x45\n\x08getStage\x12\x1a.scheduler.GetStageRequest\x1a\x1b.scheduler.GetStageResponse\"\x00\x12V\n\x0f\x63heckTaskConfig\x12\x1f.checker.CheckTaskConfigRequest\x1a .checker.CheckTaskConfigResponse\"\x00\x62\x06proto3'
-  ,
-  dependencies=[checker__pb2.DESCRIPTOR,commu__pb2.DESCRIPTOR,status__pb2.DESCRIPTOR,control__pb2.DESCRIPTOR,])
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fscheduler.proto\x12\tscheduler\x1a\rchecker.proto\x1a\x0b\x63ommu.proto\x1a\x0cstatus.proto\x1a\rcontrol.proto\"3\n\x10GetConfigRequest\x12\x0e\n\x06nodeId\x18\x01 \x01(\t\x12\x0f\n\x07message\x18\x04 \x01(\t\"Q\n\x11GetConfigResponse\x12\r\n\x05jobId\x18\x01 \x01(\x05\x12\x0e\n\x06\x63onfig\x18\x02 \x01(\t\x12\x0c\n\x04\x63ode\x18\x03 \x01(\x05\x12\x0f\n\x07message\x18\x04 \x01(\t\"t\n\rDefaultConfig\x12\x34\n\x06\x63onfig\x18\x01 \x03(\x0b\x32$.scheduler.DefaultConfig.ConfigEntry\x1a-\n\x0b\x43onfigEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x19\n\x17GetAlgorithmListRequest\"\xe7\x01\n\x18GetAlgorithmListResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x15\n\ralgorithmList\x18\x02 \x03(\t\x12S\n\x10\x64\x65\x66\x61ultConfigMap\x18\x03 \x03(\x0b\x32\x39.scheduler.GetAlgorithmListResponse.DefaultConfigMapEntry\x1aQ\n\x15\x44\x65\x66\x61ultConfigMapEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\'\n\x05value\x18\x02 \x01(\x0b\x32\x18.scheduler.DefaultConfig:\x02\x38\x01\"7\n\x12RecProgressRequest\x12\x0f\n\x07stageId\x18\x01 \x01(\x05\x12\x10\n\x08progress\x18\x02 \x01(\x05\"#\n\x13RecProgressResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\" \n\x0fGetStageRequest\x12\r\n\x05jobId\x18\x01 \x01(\x05\"\xa9\x01\n\x10GetStageResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x16\n\x0e\x63urrentStageId\x18\x02 \x01(\x05\x12\x15\n\rtotalStageNum\x18\x03 \x01(\x05\x12\x18\n\x10\x63urrentStageName\x18\x04 \x01(\t\x12\x11\n\tisRunning\x18\x05 \x01(\x08\x12+\n\x0bprogressBar\x18\x06 \x03(\x0b\x32\x16.scheduler.ProgressBar\"5\n\x0bProgressBar\x12\x0f\n\x07stageId\x18\x01 \x01(\x05\x12\x15\n\rstageProgress\x18\x02 \x01(\x05\x32\xd3\x04\n\tScheduler\x12H\n\tgetConfig\x12\x1b.scheduler.GetConfigRequest\x1a\x1c.scheduler.GetConfigResponse\"\x00\x12\x33\n\x04post\x12\x12.commu.PostRequest\x1a\x13.commu.PostResponse\"\x00(\x01\x12>\n\x07\x63ontrol\x12\x17.control.ControlRequest\x1a\x18.control.ControlResponse\"\x00\x12\x39\n\x06status\x12\x15.status.StatusRequest\x1a\x16.status.StatusResponse\"\x00\x12]\n\x10getAlgorithmList\x12\".scheduler.GetAlgorithmListRequest\x1a#.scheduler.GetAlgorithmListResponse\"\x00\x12N\n\x0brecProgress\x12\x1d.scheduler.RecProgressRequest\x1a\x1e.scheduler.RecProgressResponse\"\x00\x12\x45\n\x08getStage\x12\x1a.scheduler.GetStageRequest\x1a\x1b.scheduler.GetStageResponse\"\x00\x12V\n\x0f\x63heckTaskConfig\x12\x1f.checker.CheckTaskConfigRequest\x1a .checker.CheckTaskConfigResponse\"\x00\x62\x06proto3')
 
 
 
-
-_GETCONFIGREQUEST = _descriptor.Descriptor(
-  name='GetConfigRequest',
-  full_name='scheduler.GetConfigRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='nodeId', full_name='scheduler.GetConfigRequest.nodeId', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='message', full_name='scheduler.GetConfigRequest.message', index=1,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=87,
-  serialized_end=138,
-)
-
-
-_GETCONFIGRESPONSE = _descriptor.Descriptor(
-  name='GetConfigResponse',
-  full_name='scheduler.GetConfigResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='jobId', full_name='scheduler.GetConfigResponse.jobId', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='config', full_name='scheduler.GetConfigResponse.config', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='code', full_name='scheduler.GetConfigResponse.code', index=2,
-      number=3, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='message', full_name='scheduler.GetConfigResponse.message', index=3,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=140,
-  serialized_end=221,
-)
-
-
-_DEFAULTCONFIG_CONFIGENTRY = _descriptor.Descriptor(
-  name='ConfigEntry',
-  full_name='scheduler.DefaultConfig.ConfigEntry',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='scheduler.DefaultConfig.ConfigEntry.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='value', full_name='scheduler.DefaultConfig.ConfigEntry.value', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=b'8\001',
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=294,
-  serialized_end=339,
-)
-
-_DEFAULTCONFIG = _descriptor.Descriptor(
-  name='DefaultConfig',
-  full_name='scheduler.DefaultConfig',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='config', full_name='scheduler.DefaultConfig.config', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[_DEFAULTCONFIG_CONFIGENTRY, ],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=223,
-  serialized_end=339,
-)
-
-
-_GETALGORITHMLISTREQUEST = _descriptor.Descriptor(
-  name='GetAlgorithmListRequest',
-  full_name='scheduler.GetAlgorithmListRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=341,
-  serialized_end=366,
-)
-
-
-_GETALGORITHMLISTRESPONSE_DEFAULTCONFIGMAPENTRY = _descriptor.Descriptor(
-  name='DefaultConfigMapEntry',
-  full_name='scheduler.GetAlgorithmListResponse.DefaultConfigMapEntry',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='scheduler.GetAlgorithmListResponse.DefaultConfigMapEntry.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='value', full_name='scheduler.GetAlgorithmListResponse.DefaultConfigMapEntry.value', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=b'8\001',
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=519,
-  serialized_end=600,
-)
-
-_GETALGORITHMLISTRESPONSE = _descriptor.Descriptor(
-  name='GetAlgorithmListResponse',
-  full_name='scheduler.GetAlgorithmListResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='code', full_name='scheduler.GetAlgorithmListResponse.code', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='algorithmList', full_name='scheduler.GetAlgorithmListResponse.algorithmList', index=1,
-      number=2, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='defaultConfigMap', full_name='scheduler.GetAlgorithmListResponse.defaultConfigMap', index=2,
-      number=3, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[_GETALGORITHMLISTRESPONSE_DEFAULTCONFIGMAPENTRY, ],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=369,
-  serialized_end=600,
-)
-
-
-_RECPROGRESSREQUEST = _descriptor.Descriptor(
-  name='RecProgressRequest',
-  full_name='scheduler.RecProgressRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='stageId', full_name='scheduler.RecProgressRequest.stageId', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='progress', full_name='scheduler.RecProgressRequest.progress', index=1,
-      number=2, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=602,
-  serialized_end=657,
-)
-
-
-_RECPROGRESSRESPONSE = _descriptor.Descriptor(
-  name='RecProgressResponse',
-  full_name='scheduler.RecProgressResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='code', full_name='scheduler.RecProgressResponse.code', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=659,
-  serialized_end=694,
-)
-
-
-_GETSTAGEREQUEST = _descriptor.Descriptor(
-  name='GetStageRequest',
-  full_name='scheduler.GetStageRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='jobId', full_name='scheduler.GetStageRequest.jobId', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=696,
-  serialized_end=728,
-)
-
-
-_GETSTAGERESPONSE = _descriptor.Descriptor(
-  name='GetStageResponse',
-  full_name='scheduler.GetStageResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='code', full_name='scheduler.GetStageResponse.code', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='currentStageId', full_name='scheduler.GetStageResponse.currentStageId', index=1,
-      number=2, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='totalStageNum', full_name='scheduler.GetStageResponse.totalStageNum', index=2,
-      number=3, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='currentStageName', full_name='scheduler.GetStageResponse.currentStageName', index=3,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='isRunning', full_name='scheduler.GetStageResponse.isRunning', index=4,
-      number=5, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='progressBar', full_name='scheduler.GetStageResponse.progressBar', index=5,
-      number=6, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=731,
-  serialized_end=900,
-)
-
-
-_PROGRESSBAR = _descriptor.Descriptor(
-  name='ProgressBar',
-  full_name='scheduler.ProgressBar',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='stageId', full_name='scheduler.ProgressBar.stageId', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='stageProgress', full_name='scheduler.ProgressBar.stageProgress', index=1,
-      number=2, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=902,
-  serialized_end=955,
-)
-
-_DEFAULTCONFIG_CONFIGENTRY.containing_type = _DEFAULTCONFIG
-_DEFAULTCONFIG.fields_by_name['config'].message_type = _DEFAULTCONFIG_CONFIGENTRY
-_GETALGORITHMLISTRESPONSE_DEFAULTCONFIGMAPENTRY.fields_by_name['value'].message_type = _DEFAULTCONFIG
-_GETALGORITHMLISTRESPONSE_DEFAULTCONFIGMAPENTRY.containing_type = _GETALGORITHMLISTRESPONSE
-_GETALGORITHMLISTRESPONSE.fields_by_name['defaultConfigMap'].message_type = _GETALGORITHMLISTRESPONSE_DEFAULTCONFIGMAPENTRY
-_GETSTAGERESPONSE.fields_by_name['progressBar'].message_type = _PROGRESSBAR
-DESCRIPTOR.message_types_by_name['GetConfigRequest'] = _GETCONFIGREQUEST
-DESCRIPTOR.message_types_by_name['GetConfigResponse'] = _GETCONFIGRESPONSE
-DESCRIPTOR.message_types_by_name['DefaultConfig'] = _DEFAULTCONFIG
-DESCRIPTOR.message_types_by_name['GetAlgorithmListRequest'] = _GETALGORITHMLISTREQUEST
-DESCRIPTOR.message_types_by_name['GetAlgorithmListResponse'] = _GETALGORITHMLISTRESPONSE
-DESCRIPTOR.message_types_by_name['RecProgressRequest'] = _RECPROGRESSREQUEST
-DESCRIPTOR.message_types_by_name['RecProgressResponse'] = _RECPROGRESSRESPONSE
-DESCRIPTOR.message_types_by_name['GetStageRequest'] = _GETSTAGEREQUEST
-DESCRIPTOR.message_types_by_name['GetStageResponse'] = _GETSTAGERESPONSE
-DESCRIPTOR.message_types_by_name['ProgressBar'] = _PROGRESSBAR
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
+_GETCONFIGREQUEST = DESCRIPTOR.message_types_by_name['GetConfigRequest']
+_GETCONFIGRESPONSE = DESCRIPTOR.message_types_by_name['GetConfigResponse']
+_DEFAULTCONFIG = DESCRIPTOR.message_types_by_name['DefaultConfig']
+_DEFAULTCONFIG_CONFIGENTRY = _DEFAULTCONFIG.nested_types_by_name['ConfigEntry']
+_GETALGORITHMLISTREQUEST = DESCRIPTOR.message_types_by_name['GetAlgorithmListRequest']
+_GETALGORITHMLISTRESPONSE = DESCRIPTOR.message_types_by_name['GetAlgorithmListResponse']
+_GETALGORITHMLISTRESPONSE_DEFAULTCONFIGMAPENTRY = _GETALGORITHMLISTRESPONSE.nested_types_by_name['DefaultConfigMapEntry']
+_RECPROGRESSREQUEST = DESCRIPTOR.message_types_by_name['RecProgressRequest']
+_RECPROGRESSRESPONSE = DESCRIPTOR.message_types_by_name['RecProgressResponse']
+_GETSTAGEREQUEST = DESCRIPTOR.message_types_by_name['GetStageRequest']
+_GETSTAGERESPONSE = DESCRIPTOR.message_types_by_name['GetStageResponse']
+_PROGRESSBAR = DESCRIPTOR.message_types_by_name['ProgressBar']
 GetConfigRequest = _reflection.GeneratedProtocolMessageType('GetConfigRequest', (_message.Message,), {
   'DESCRIPTOR' : _GETCONFIGREQUEST,
   '__module__' : 'scheduler_pb2'
@@ -613,103 +120,38 @@ ProgressBar = _reflection.GeneratedProtocolMessageType('ProgressBar', (_message.
   })
 _sym_db.RegisterMessage(ProgressBar)
 
+_SCHEDULER = DESCRIPTOR.services_by_name['Scheduler']
+if _descriptor._USE_C_DESCRIPTORS == False:
 
-_DEFAULTCONFIG_CONFIGENTRY._options = None
-_GETALGORITHMLISTRESPONSE_DEFAULTCONFIGMAPENTRY._options = None
-
-_SCHEDULER = _descriptor.ServiceDescriptor(
-  name='Scheduler',
-  full_name='scheduler.Scheduler',
-  file=DESCRIPTOR,
-  index=0,
-  serialized_options=None,
-  create_key=_descriptor._internal_create_key,
-  serialized_start=958,
-  serialized_end=1553,
-  methods=[
-  _descriptor.MethodDescriptor(
-    name='getConfig',
-    full_name='scheduler.Scheduler.getConfig',
-    index=0,
-    containing_service=None,
-    input_type=_GETCONFIGREQUEST,
-    output_type=_GETCONFIGRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='post',
-    full_name='scheduler.Scheduler.post',
-    index=1,
-    containing_service=None,
-    input_type=commu__pb2._POSTREQUEST,
-    output_type=commu__pb2._POSTRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='control',
-    full_name='scheduler.Scheduler.control',
-    index=2,
-    containing_service=None,
-    input_type=control__pb2._CONTROLREQUEST,
-    output_type=control__pb2._CONTROLRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='status',
-    full_name='scheduler.Scheduler.status',
-    index=3,
-    containing_service=None,
-    input_type=status__pb2._STATUSREQUEST,
-    output_type=status__pb2._STATUSRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='getAlgorithmList',
-    full_name='scheduler.Scheduler.getAlgorithmList',
-    index=4,
-    containing_service=None,
-    input_type=_GETALGORITHMLISTREQUEST,
-    output_type=_GETALGORITHMLISTRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='recProgress',
-    full_name='scheduler.Scheduler.recProgress',
-    index=5,
-    containing_service=None,
-    input_type=_RECPROGRESSREQUEST,
-    output_type=_RECPROGRESSRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='getStage',
-    full_name='scheduler.Scheduler.getStage',
-    index=6,
-    containing_service=None,
-    input_type=_GETSTAGEREQUEST,
-    output_type=_GETSTAGERESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='checkTaskConfig',
-    full_name='scheduler.Scheduler.checkTaskConfig',
-    index=7,
-    containing_service=None,
-    input_type=checker__pb2._CHECKTASKCONFIGREQUEST,
-    output_type=checker__pb2._CHECKTASKCONFIGRESPONSE,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-])
-_sym_db.RegisterServiceDescriptor(_SCHEDULER)
-
-DESCRIPTOR.services_by_name['Scheduler'] = _SCHEDULER
-
+  DESCRIPTOR._options = None
+  _DEFAULTCONFIG_CONFIGENTRY._options = None
+  _DEFAULTCONFIG_CONFIGENTRY._serialized_options = b'8\001'
+  _GETALGORITHMLISTRESPONSE_DEFAULTCONFIGMAPENTRY._options = None
+  _GETALGORITHMLISTRESPONSE_DEFAULTCONFIGMAPENTRY._serialized_options = b'8\001'
+  _GETCONFIGREQUEST._serialized_start=87
+  _GETCONFIGREQUEST._serialized_end=138
+  _GETCONFIGRESPONSE._serialized_start=140
+  _GETCONFIGRESPONSE._serialized_end=221
+  _DEFAULTCONFIG._serialized_start=223
+  _DEFAULTCONFIG._serialized_end=339
+  _DEFAULTCONFIG_CONFIGENTRY._serialized_start=294
+  _DEFAULTCONFIG_CONFIGENTRY._serialized_end=339
+  _GETALGORITHMLISTREQUEST._serialized_start=341
+  _GETALGORITHMLISTREQUEST._serialized_end=366
+  _GETALGORITHMLISTRESPONSE._serialized_start=369
+  _GETALGORITHMLISTRESPONSE._serialized_end=600
+  _GETALGORITHMLISTRESPONSE_DEFAULTCONFIGMAPENTRY._serialized_start=519
+  _GETALGORITHMLISTRESPONSE_DEFAULTCONFIGMAPENTRY._serialized_end=600
+  _RECPROGRESSREQUEST._serialized_start=602
+  _RECPROGRESSREQUEST._serialized_end=657
+  _RECPROGRESSRESPONSE._serialized_start=659
+  _RECPROGRESSRESPONSE._serialized_end=694
+  _GETSTAGEREQUEST._serialized_start=696
+  _GETSTAGEREQUEST._serialized_end=728
+  _GETSTAGERESPONSE._serialized_start=731
+  _GETSTAGERESPONSE._serialized_end=900
+  _PROGRESSBAR._serialized_start=902
+  _PROGRESSBAR._serialized_end=955
+  _SCHEDULER._serialized_start=958
+  _SCHEDULER._serialized_end=1553
 # @@protoc_insertion_point(module_scope)

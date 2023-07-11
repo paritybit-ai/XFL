@@ -21,25 +21,28 @@
             "pretrain_model": {}
         },
         "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "model": {
-                "type": "file",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "horizontal_linear_regression.pt"
+                "name": "horizontal_linear_regression_[STAGE_ID].model"
             },
-            "metrics": {},
-            "evaluation": {}
+            "metric_val": {
+                "name": "lr_metric_val_[STAGE_ID].csv"
+            }
         },
         "train_info": {
             "device": "cpu",
-            "interaction_params": {},
-            "params": {
+            "interaction_params": {
+            },
+            "train_params": {
                 "global_epoch": 30,
-                "local_epoch": 0,
-                "batch_size": 256,
-                "aggregation_config": {
-                    "type": "fedavg",
-                    "encryption": {
-                        "method": "otp",
+                "val_batch_size": 256,
+                "aggregation": {
+                    "method": {
+                        "fedavg": {}
+                    }
+                },
+                "encryption": {
+                    "otp": {
                         "key_bitlength": 64,
                         "data_type": "torch.Tensor",
                         "key_exchange": {
@@ -52,16 +55,27 @@
                         }
                     }
                 },
-                "lossfunc_config": {
+                "optimizer": {
+                    "Adam": {
+                        "lr":0.01,
+                        "amsgrad": true
+                    }
+                },
+                "lr_scheduler": {
+                    "StepLR": {
+                        "step_size": 10,
+                        "gamma": 0.1
+                    }
+                },
+                "lossfunc": {
                     "L1Loss": {}
                 },
-                "metric_config": {
+                "metric": {
                     "mae": {},
                     "mse": {},
                     "mape": {}
                 },
-                "early_stopping": {},
-                "extra_config": {}
+                "early_stopping": {}
             }
         }
     }

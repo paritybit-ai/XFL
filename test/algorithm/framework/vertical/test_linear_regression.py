@@ -202,8 +202,7 @@ class TestVerticalLinearRegressionTrainer:
             paillier_key = private_context.to_public().serialize()
             public_context = Paillier.context_from(paillier_key)
 
-        mocker.patch("algorithm.framework.vertical.linear_regression.label_trainer._two_layer_progress")
-        mocker.patch("algorithm.framework.vertical.linear_regression.label_trainer._update_progress_finish")
+        mocker.patch("service.fed_control._send_progress")
         mocker.patch.object(
             DualChannel, "__init__", return_value=None
         )

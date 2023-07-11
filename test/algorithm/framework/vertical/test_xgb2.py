@@ -25,6 +25,7 @@ import numpy as np
 
 import service.fed_config
 from service.fed_config import FedConfig
+from service.fed_node import FedNode
 from algorithm.core.paillier_acceleration import embed
 from algorithm.core.tree.xgboost_loss import get_xgb_loss_inst
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
@@ -61,6 +62,8 @@ def prepare_data(tmp_factory):
         tmp_factory.join("test_host.csv"), index=True, index_label='id'
     )
     Commu.node_id = "node-1"
+    FedNode.node_id = "node-1"
+    FedNode.config = {"trainer": []}
     Commu.trainer_ids = ['node-1', 'node-2']
 
 
@@ -490,7 +493,7 @@ class TestVerticalXGBoost:
                 conf["train_info"]["train_params"]["encryption"] = {"plain": {}}
             del conf["input"]["testset"]
 
-        mocker.patch("algorithm.framework.vertical.xgboost.decision_tree_label_trainer._three_layer_progress")
+        mocker.patch("service.fed_control._send_progress")
         mocker.patch.object(
             BroadcastChannel, "__init__", return_value=None
         )

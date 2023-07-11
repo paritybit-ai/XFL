@@ -26,6 +26,7 @@ from google.protobuf import json_format
 
 import service.fed_config
 from service.fed_config import FedConfig
+from service.fed_node import FedNode
 from algorithm.core.paillier_acceleration import embed
 from algorithm.core.tree.xgboost_loss import get_xgb_loss_inst
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
@@ -62,7 +63,9 @@ def prepare_data(tmp_factory):
         tmp_factory.join("test_host.csv"), index=True, index_label='id'
     )
     Commu.node_id = "node-1"
+    FedNode.node_id = "node-1"
     Commu.trainer_ids = ['node-1', 'node-2']
+    service.fed_node.FedNode.node_name = 'node-1'
 
 
 @pytest.fixture(scope='module', autouse=True)
@@ -222,6 +225,10 @@ class TestVerticalXGBoost:
         mocker.patch.object(
             BroadcastChannel, "broadcast", return_value=None
         )
+        
+        mocker.patch.object(
+            BroadcastChannel, "collect", return_value=[{}]
+        )
 
         mocker.patch.object(
             service.fed_config.FedConfig, "get_label_trainer", return_value=["node-1"]
@@ -282,10 +289,13 @@ class TestVerticalXGBoost:
             conf["train_info"]["train_params"]["num_bins"] = num_bins
             del conf["input"]["testset"]
 
-        mocker.patch("algorithm.framework.vertical.xgboost.label_trainer._update_progress_finish")
-        mocker.patch("algorithm.framework.vertical.xgboost.decision_tree_label_trainer._three_layer_progress")
+        mocker.patch("service.fed_control._send_progress")
         mocker.patch.object(
             BroadcastChannel, "__init__", return_value=None
+        )
+        
+        mocker.patch.object(
+            BroadcastChannel, "collect", return_value=[]
         )
 
         mocker.patch.object(
@@ -295,6 +305,13 @@ class TestVerticalXGBoost:
         xgb_label_trainer = VerticalXgboostLabelTrainer(conf)
         mocker.patch.object(
             xgb_label_trainer.channels["check_dataset_com"], "collect", return_value=[]
+        )
+        mocker.patch.object(
+            xgb_label_trainer.channels["sync"], "collect", return_value=[{}]
+        )
+
+        mocker.patch.object(
+             FedNode, "config",  return_value={"trainer": {}}
         )
         xgb_label_trainer.fit()
         self.check_label_trainer_output(tmp_factory)
@@ -468,10 +485,17 @@ class TestVerticalXGBoost:
         mocker.patch.object(
             BroadcastChannel, "broadcast", return_value=None
         )
+        
+        mocker.patch.object(
+            BroadcastChannel, "collect", return_value=[{}]
+        )
 
         xgb_label_trainer = VerticalXgboostLabelTrainer(conf)
         mocker.patch.object(
             xgb_label_trainer.channels["check_dataset_com"], "collect", return_value=[]
+        )
+        mocker.patch.object(
+            FedNode, "config",  return_value={"trainer": {}}
         )
         xgb_label_trainer.fit()
         self.check_label_trainer_output(tmp_factory)

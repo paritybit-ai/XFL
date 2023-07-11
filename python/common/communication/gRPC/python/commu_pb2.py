@@ -3,6 +3,7 @@
 # source: commu.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
@@ -13,92 +14,12 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor.FileDescriptor(
-  name='commu.proto',
-  package='commu',
-  syntax='proto3',
-  serialized_options=None,
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0b\x63ommu.proto\x12\x05\x63ommu\")\n\x0bPostRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x0c\"\x1c\n\x0cPostResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x62\x06proto3'
-)
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0b\x63ommu.proto\x12\x05\x63ommu\")\n\x0bPostRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x0c\"\x1c\n\x0cPostResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x62\x06proto3')
 
 
 
-
-_POSTREQUEST = _descriptor.Descriptor(
-  name='PostRequest',
-  full_name='commu.PostRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='commu.PostRequest.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='value', full_name='commu.PostRequest.value', index=1,
-      number=2, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"",
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=22,
-  serialized_end=63,
-)
-
-
-_POSTRESPONSE = _descriptor.Descriptor(
-  name='PostResponse',
-  full_name='commu.PostResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='code', full_name='commu.PostResponse.code', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=65,
-  serialized_end=93,
-)
-
-DESCRIPTOR.message_types_by_name['PostRequest'] = _POSTREQUEST
-DESCRIPTOR.message_types_by_name['PostResponse'] = _POSTRESPONSE
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
+_POSTREQUEST = DESCRIPTOR.message_types_by_name['PostRequest']
+_POSTRESPONSE = DESCRIPTOR.message_types_by_name['PostResponse']
 PostRequest = _reflection.GeneratedProtocolMessageType('PostRequest', (_message.Message,), {
   'DESCRIPTOR' : _POSTREQUEST,
   '__module__' : 'commu_pb2'
@@ -113,5 +34,11 @@ PostResponse = _reflection.GeneratedProtocolMessageType('PostResponse', (_messag
   })
 _sym_db.RegisterMessage(PostResponse)
 
+if _descriptor._USE_C_DESCRIPTORS == False:
 
+  DESCRIPTOR._options = None
+  _POSTREQUEST._serialized_start=22
+  _POSTREQUEST._serialized_end=63
+  _POSTRESPONSE._serialized_start=65
+  _POSTRESPONSE._serialized_end=93
 # @@protoc_insertion_point(module_scope)

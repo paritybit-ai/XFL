@@ -14,11 +14,9 @@
 
 
 import copy
-import json
 import os
 from pathlib import Path
 from typing import Dict, Optional
-
 import numpy as np
 import pandas as pd
 from pathos.pools import ThreadPool
@@ -31,16 +29,14 @@ from common.checker.matcher import get_matched_config
 from common.checker.x_types import All
 from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
 from common.crypto.paillier.paillier import Paillier
-from common.evaluation.metrics import ThresholdCutter
 from common.utils.algo_utils import earlyStopping
 from common.utils.logger import logger
 from common.utils.utils import save_model_config
 from service.fed_config import FedConfig
+from service.fed_node import FedNode
 from .base import VerticalXgboostBase
 from .decision_tree_label_trainer import VerticalDecisionTreeLabelTrainer
-from service.fed_job import FedJob
-from service.fed_node import FedNode
-from service.fed_control import _update_progress_finish
+from service.fed_control import ProgressCalculator
 from common.utils.model_io import ModelIO
 
 
@@ -117,11 +113,17 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         self.best_round = -1
         self.best_prediction_val = None
         self.best_prediction_train = None
+        if self.train_features is not None:
+            input_schema = ','.join([_ for _ in self.train_features.columns if _ not in set(["y", "id"])])
+        else:
+            input_schema = ""
+
         self.export_conf = [{
             "class_name": "VerticalXGBooster",
             "identity": self.identity,
             "filename": self.output.get("proto_model", {}).get("name", ''),
             # "filename": self.output.get("proto_model", {"name": "vertical_xgboost_guest.pmodel"})["name"],
+            "input_schema": input_schema,
             "version": '1.4.0'
         }]
 
@@ -148,6 +150,11 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
         self.channels["sync"].broadcast(config_to_sync)
 
     def fit(self):
+        f_names = self.channels["sync"].collect()
+        self.remote_f_names = {}
+        for name_dict in f_names:
+            self.remote_f_names.update(name_dict)
+            
         self.check_dataset()
         boosting_tree = BoostingTree()
 
@@ -278,7 +285,7 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
             self._write_loss(train_loss, val_loss, tree_idx)
 
         # update the progress of 100 to show the training is finished
-        _update_progress_finish()
+        ProgressCalculator.finish_progress()
 
         # model preserve
         if self.xgb_config.early_stopping_param["patience"] <= 0:
@@ -537,13 +544,25 @@ class VerticalXgboostLabelTrainer(VerticalXgboostBase):
     #     return prediction
 
     def update_feature_importance(self, tree_feature_importance):
-        for (owner_id, fid) in tree_feature_importance:
-            if (owner_id, fid) not in self.feature_importances_:
+        for (owner_name, fid) in tree_feature_importance:
+            if owner_name == FedConfig.node_name:
+                f_name = self.train_names[fid]
+            else:
+                f_name = self.remote_f_names[owner_name][fid]
+                
+            if (owner_name, f_name) not in self.feature_importances_:
                 self.feature_importances_[
-                    (owner_id, fid)] = tree_feature_importance[(owner_id, fid)]
+                    (owner_name, f_name)] = tree_feature_importance[(owner_name, fid)]
             else:
                 self.feature_importances_[
-                    (owner_id, fid)] += tree_feature_importance[(owner_id, fid)]
+                    (owner_name, f_name)] += tree_feature_importance[(owner_name, fid)]
+            
+            # if (owner_id, fid) not in self.feature_importances_:
+            #     self.feature_importances_[
+            #         (owner_id, fid)] = tree_feature_importance[(owner_id, fid)]
+            # else:
+            #     self.feature_importances_[
+            #         (owner_id, fid)] += tree_feature_importance[(owner_id, fid)]
         logger.debug("cur feature importance {}".format(
             self.feature_importances_))
 

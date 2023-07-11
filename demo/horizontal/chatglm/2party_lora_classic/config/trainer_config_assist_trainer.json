@@ -1,0 +1,71 @@
+[
+    {
+        "identity": "assist_trainer",
+        "model_info": {
+            "name": "horizontal_chatglm"
+        },
+        "input": {
+            "pretrained_model": {
+                "path": "../demo/horizontal/chatglm/chatglm-demo"
+            }
+        },
+        "output": {
+            "path":  "/opt/checkpoints/[JOB_ID]/[NODE_ID]"
+        },
+        "train_info": {
+            "train_params": {
+                "aggregation": {
+                    "agg_steps": 0.2
+                },
+                "encryption": {
+                    "otp": {
+                        "key_bitlength": 64,
+                        "data_type": "torch.Tensor",
+                        "key_exchange": {
+                            "key_bitlength": 3072,
+                            "optimized": true
+                        },
+                        "csprng": {
+                            "name": "hmac_drbg",
+                            "method": "sha512"
+                        }
+                    }
+                },
+                "peft": {
+                    "LORA": {
+                        "task_type": "CAUSAL_LM",
+                        "r": 8,
+                        "target_modules": ["query_key_value"],
+                        "lora_alpha": 32,
+                        "lora_dropout": 0.1,
+                        "fan_in_fan_out": false,
+                        "bias": "none",
+                        "modules_to_save": null
+                    }
+                },
+                "trainer": {
+                    "per_device_train_batch_size": 2,
+                    "gradient_accumulation_steps": 16,
+                    "learning_rate": 1e-3,
+                    "weight_decay": 0,
+                    "adam_beta1": 0.9,
+                    "adam_beta2": 0.999,
+                    "adam_epsilon": 1e-8,
+                    "max_grad_norm": 1.0,
+                    "num_train_epochs": 1,
+                    "save_strategy": "steps",
+                    "torch_compile": false,
+                    "no_cuda": true,
+                    "seed": 42
+                },
+                "dataset": {
+                    "max_src_length": 100,
+                    "max_dst_length": 100,
+                    "prompt_pattern":"{}：\n问：{}\n答：",
+                    "key_query": "input",
+                    "key_answer": "output"
+                }
+            }
+        }
+    }
+]

@@ -59,7 +59,7 @@
                     "BCELoss": {}
                 },
                 "metric_config": {
-                    "accuracy": {},
+                    "acc": {},
                     "precision": {},
                     "recall": {},
                     "f1_score": {},

@@ -4,18 +4,17 @@
         "name": "horizontal_binning_woe_iv"
     },
     "output": {
-        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "path": "/opt/checkpoints/unit_test1",
         "result": {
             "name": "woe_iv_result_[STAGE_ID].json"
         }
     },
     "train_info": {
         "train_params": {
-            "aggregation": {
-                "encryption": {
-                    "method": "otp",
+            "encryption": {
+                "otp": {
                     "key_bitlength": 64,
-                    "data_type": "torch.Tensor",
+                    "data_type": "numpy.ndarray",
                     "key_exchange": {
                         "key_bitlength": 3072,
                         "optimized": true

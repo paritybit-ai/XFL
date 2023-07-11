@@ -66,12 +66,16 @@ def extract_file_recursively(from_path: str, to_path: str) -> None:
         elif suffix == ".gz":
             with gzip.open(from_path, "rb") as rfh, open(to_path, "wb") as wfh:
                 wfh.write(rfh.read())
+        elif suffix == ".zip":
+            with zipfile.ZipFile(from_path, "r") as f:
+                for file in f.namelist():
+                    f.extract(file, to_path)
 
     suffixes = pathlib.Path(from_path).suffixes
     suffix = suffixes[-1]
 
     if len(suffixes) == 1:
-        if suffix not in [".gz",".tar"]:
+        if suffix not in [".gz", ".tar", ".zip"]:
             return 
         extract(from_path, to_path, suffix)
         os.remove(from_path)

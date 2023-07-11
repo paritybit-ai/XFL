@@ -284,7 +284,7 @@ class TestVerticalKmeansTrainer:
             return VerticalKmeansAssistTrainer.get_cluster(vkt.dist_table)
 
         def mock_converged_flag():
-            return vkt.local_tol < vkt.tol
+            return bool(vkt.local_tol < vkt.tol)
 
         mocker.patch.object(
             vkt.channels.get("init_center", DualChannel), "recv",
@@ -302,9 +302,9 @@ class TestVerticalKmeansTrainer:
         assert vkt.is_converged
 
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].pkl")
-        with open("/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].pkl", "rb") as f:
-            model = pickle.load(f)
+            "/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model")
+        with open("/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model", "rb") as f:
+            model = json.load(f)
             assert model["k"] == vkt.k
             assert model["iter"] <= vkt.max_iter
             assert model["is_converged"]
@@ -355,7 +355,7 @@ class TestVerticalKmeansTrainer:
             return VerticalKmeansAssistTrainer.get_cluster(vkt.dist_table)
 
         def mock_converged_flag():
-            return vkt.local_tol < vkt.tol
+            return bool(vkt.local_tol < vkt.tol)
 
         mocker.patch.object(
             vkt.channels.get("init_center", DualChannel), "recv", return_value=np.random.choice(1000, vkt.k, replace=False)
@@ -372,9 +372,9 @@ class TestVerticalKmeansTrainer:
         assert vkt.is_converged
 
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].pkl")
-        with open("/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].pkl", "rb") as f:
-            model = pickle.load(f)
+            "/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model")
+        with open("/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model", "rb") as f:
+            model = json.load(f)
             assert model["k"] == vkt.k
             assert model["iter"] <= vkt.max_iter
             assert model["is_converged"]
@@ -430,7 +430,7 @@ class TestVerticalKmeansTrainer:
             return VerticalKmeansAssistTrainer.get_cluster(vkt.dist_table)
 
         def mock_converged_flag():
-            return vkt.local_tol < vkt.tol
+            return bool(vkt.local_tol < vkt.tol)
 
         mocker.patch.object(
             vkt.channels["cluster_result"], "recv", side_effect=mock_get_cluster
@@ -444,9 +444,9 @@ class TestVerticalKmeansTrainer:
         assert vkt.is_converged
 
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].pkl")
-        with open("/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].pkl", "rb") as f:
-            model = pickle.load(f)
+            "/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model")
+        with open("/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model", "rb") as f:
+            model = json.load(f)
             assert model["k"] == vkt.k
             assert model["iter"] <= vkt.max_iter
             assert model["is_converged"]
@@ -468,8 +468,7 @@ class TestVerticalKmeansTrainer:
         conf = get_scheduler_conf
         conf["computing_engine"] = computing_engine
         # mock 类初始化需要的函数，避免建立通信通道时报错
-        mocker.patch("algorithm.framework.vertical.kmeans.assist_trainer._one_layer_progress")
-        mocker.patch("algorithm.framework.vertical.kmeans.assist_trainer._update_progress_finish")
+        mocker.patch("service.fed_control._send_progress")
         mocker.patch.object(
             DualChannel, "__init__", return_value=None
         )

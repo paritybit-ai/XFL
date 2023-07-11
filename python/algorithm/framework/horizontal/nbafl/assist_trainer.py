@@ -13,30 +13,23 @@
 # limitations under the License.
 
 
-from algorithm.core.horizontal.template.torch.fedavg.assist_trainer import FedAvgAssistTrainer
-from common.utils.logger import logger
 import numpy as np
-from algorithm.model.logistic_regression import LogisticRegression
 import torch
-from torch import nn
-from torch.utils.data import DataLoader, TensorDataset
-from common.communication.gRPC.python.channel import BroadcastChannel, DualChannel
+from common.communication.gRPC.python.channel import DualChannel
 from service.fed_config import FedConfig
-import os
-from algorithm.core.data_io import CsvReader
+from functools import partial
+from common.utils.logger import logger
 from .common import Common
+from algorithm.core.horizontal.template.agg_type import \
+    register_agg_type_for_assist_trainer
 
 
-class HorizontalNbaflAssistTrainer(Common, FedAvgAssistTrainer):
+class HorizontalNbaflAssistTrainer(Common):
     def __init__(self, train_conf: dict):
         super().__init__(train_conf)
+        register_agg_type_for_assist_trainer(self, "torch", "fedavg")
+
         self.load_model()
-
-        self.mu = self.train_params['mu']
-        self.delta = self.train_params['delta']
-        self.c = np.sqrt(2 * np.log(1.25 / self.delta))
-        self.epsilon = self.train_params['epsilon']
-
         self.sample_size_channel = {}
 
         # Init size channel
@@ -48,32 +41,41 @@ class HorizontalNbaflAssistTrainer(Common, FedAvgAssistTrainer):
 
         # Get sample size
         self.register_hook(
-            place="before_global_epoch", rank=2,
+            place="before_global_epoch", rank=1,
             func=self._get_sample_size, desc="Get sample size"
         )
         # Calculate downlink noise
         self.register_hook(
-            place="before_global_epoch", rank=3,
+            place="before_global_epoch", rank=2,
             func=self._calc_downlink_sigma, desc="Calculate downlink noise"
         )
         # Add noise
         self.register_hook(
-            place="after_local_epoch", rank=2,
+            place="after_local_epoch", rank=1,
             func=self._add_noise, desc="Add downlink noise"
         )
         # Validation
         self.register_hook(
-            place="after_local_epoch", rank=3,
-            func=self.val_loop, desc="Valdiation"
+            place="after_local_epoch", rank=2,
+            func=partial(self.val_loop, "val"), desc="validation on valset"
+        )
+        self.register_hook(
+            place="after_global_epoch", rank=1,
+            func=partial(self._save_model, True), desc="save final model"
         )
 
     def _calc_downlink_sigma(self, context):
         logger.info("Calculating downlink sigma")
-        if self.train_params['global_epoch'] > self.train_params['num_client'] * np.sqrt(self.train_params['num_client']):
+        if self.common_config.train_params['global_epoch'] > \
+            self.common_config.train_params['num_client'] * \
+                np.sqrt(self.common_config.train_params['num_client']):
             sigma_d = (
-                2 * self.train_params['C'] * self.c * np.sqrt(
-                    self.train_params['global_epoch'] ** 2 - np.power(self.train_params['num_client'], 3))
-                / (self.min_sample_num * self.train_params['num_client'] * self.train_params['epsilon'])
+                2 * self.common_config.train_params['C'] * self.c * np.sqrt(
+                    self.common_config.train_params['global_epoch'] ** 2 - \
+                        np.power(self.common_config.train_params['num_client'], 3)) / \
+                            (self.min_sample_num * \
+                             self.common_config.train_params['num_client'] * \
+                                self.common_config.train_params['epsilon'])
             )
         else:
             sigma_d = 0.0
@@ -104,36 +106,3 @@ class HorizontalNbaflAssistTrainer(Common, FedAvgAssistTrainer):
 
     def train_loop(self):
         pass
-
-    def val_loop(self, context):
-        self.model.eval()
-        val_loss = 0
-        pred_list = []
-        label_list = []
-        metric_output = {}
-
-        loss_func = next(iter(self.loss_func.items()))[1]
-
-        with torch.no_grad():
-            for batch_idx, (feature, label) in enumerate(self.val_dataloader):
-                pred = self.model(feature)
-                loss = loss_func(pred, label)
-                val_loss += loss
-                pred_list.append(pred.detach().cpu().squeeze(-1).numpy())
-                label_list.append(label.detach().cpu().squeeze(-1).numpy())
-
-        preds = np.concatenate(pred_list, axis=0)
-        labels = np.concatenate(label_list, axis=0)
-        if len(preds.shape) == 1:
-            preds = np.array(preds > 0.5, dtype=np.int32)
-        elif len(preds.shape) == 2:
-            preds = preds.argmax(axis=-1)
-
-        logger.info("Validation loss: {}".format(
-            val_loss/len(self.val_dataloader.dataset)))
-        metrics_conf: dict = self.train_params["metric_config"]
-        for method in self.metrics:
-            metric_output[method] = self.metrics[method](
-                labels, preds, **metrics_conf[method])
-            logger.info("Validation {}: {}".format(
-                method, metric_output[method]))

@@ -61,6 +61,16 @@ class FedNode(object):
                 cls.listening_port = 56001
             cls.config = parse_config(os.getenv("__ENIGMA_FEDAPP_TASK_NETWORK__"))
             cls.config["node_id"] = cls.node_id
+            
+            for name in cls.config["trainer"]:
+                if cls.node_id == name:
+                    cls.node_name = cls.config["trainer"][cls.node_id]["name"]
+                    
+            if not hasattr(cls, "node_name"):
+                for name in cls.config["scheduler"]:
+                    if cls.node_id == name:
+                        cls.node_name = cls.config["scheduler"][cls.node_id]["name"]
+
             cls.scheduler_host = cls.config["scheduler"]["host"]
             cls.scheduler_port = cls.config["scheduler"]["port"]
             cls.trainers = cls.config["trainer"]
@@ -76,6 +86,10 @@ class FedNode(object):
                 conf_dict = json.load(f)
                 cls.config = FedConfParser.parse_dict_conf(conf_dict, debug_node_id)
                 cls.node_id = cls.config["node_id"]
+                cls.node_name = cls.config["node_id"]
+                
+                for node_id in cls.config["trainer"]:
+                    cls.config["trainer"][node_id]["name"] = node_id
                 
                 if identity == "scheduler":
                     cls.listening_port = cls.config["scheduler"]["port"]

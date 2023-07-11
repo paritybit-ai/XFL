@@ -7,8 +7,8 @@
         "trainset": [
             {
                 "type": "csv",
-                "path": "../../../../dataset/horizontal_breast",
-                "name": "breast_horizontal_guest.csv",
+                "path": "/opt/dataset/unit_test",
+                "name": "train_data.csv",
                 "has_id": true,
                 "has_label": true
             }
@@ -16,22 +16,6 @@
     },
     "train_info": {
         "train_params": {
-            "aggregation": {
-                "encryption": {
-                    "method": "otp",
-                    "key_bitlength": 64,
-                    "data_type": "torch.Tensor",
-                    "key_exchange": {
-                        "key_bitlength": 3072,
-                        "optimized": true
-                    },
-                    "csprng": {
-                        "name": "hmac_drbg",
-                        "method": "sha512"
-                    }
-                },
-                "weight": 1
-            },
             "binning": {
                 "method": "equal_width",
                 "bins": 5

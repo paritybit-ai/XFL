@@ -73,7 +73,7 @@ def get_conf():
     yield conf
 
 
-class TestLocalNormalization:
+class TestLocalFeturePreprocess:
     @pytest.mark.parametrize('datatype', ["csv", "json"])
     def test_default(self, get_conf, datatype):
         conf = copy.deepcopy(get_conf)

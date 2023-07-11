@@ -52,16 +52,17 @@
             "aggregation_config": {
                 "type": "fedavg",
                 "encryption": {
-                    "method": "otp",
-                    "key_bitlength": 64,
-                    "data_type": "numpy.ndarray",
-                    "key_exchange": {
-                        "key_bitlength": 3072,
-                        "optimized": true
-                    },
-                    "csprng": {
-                        "name": "hmac_drbg",
-                        "method": "sha512"
+                    "otp": {
+                        "key_bitlength": 64,
+                        "data_type": "torch.Tensor",
+                        "key_exchange": {
+                            "key_bitlength": 3072,
+                            "optimized": true
+                        },
+                        "csprng": {
+                            "name": "hmac_drbg",
+                            "method": "sha512"
+                        }
                     }
                 }
             },
@@ -78,7 +79,7 @@
                 }
             },
             "metric_config": {
-                "accuracy": {},
+                "acc": {},
                 "f1_score": {"average":"micro"},
                 "precision": {"average":"micro"},
                 "recall": {"average":"micro"}

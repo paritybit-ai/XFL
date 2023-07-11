@@ -19,7 +19,6 @@ from logging import FileHandler, LogRecord
 
 LOG_PATH = "/opt/log"
 
-
 class ColorFormatter(logging.Formatter):
     log_colors = {
         'CRITICAL': '\033[0;31m',

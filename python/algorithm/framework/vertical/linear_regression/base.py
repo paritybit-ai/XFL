@@ -58,6 +58,7 @@ class VerticalLinearRegressionBase(VerticalModelBase):
         super()._parse_config()
         self.model_name = self.model_info.get("name")
         self.save_model_name = self.output.get("model", {}).get("name")
+        self.save_onnx_model_name = self.output.get("onnx_model", {}).get("name", "")
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
         self.global_epoch = self.train_params.get("global_epoch")
@@ -154,3 +155,5 @@ class VerticalLinearRegressionBase(VerticalModelBase):
             logger.info("Train data shape: {}.".format(list(torch.tensor(self.train).shape)))
 
         logger.info("Dataloader initiation completed.")
+        
+

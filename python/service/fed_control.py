@@ -17,56 +17,53 @@ from common.communication.gRPC.python import (
     control_pb2, status_pb2, trainer_pb2_grpc, scheduler_pb2, scheduler_pb2_grpc
 )
 from common.utils.logger import logger
-from service.fed_job import FedJob
 from service.fed_node import FedNode
 
 
-def _update_progress_finish():
-    '''
-        Update progress to scheduler. Progress is 100.
-    '''
-    _send_progress(100)
-    return
+class ProgressCalculator:
+    def __init__(self, *args):
+        self.param_num = len(args)
+        self.iter_list = []
+        self.max_list = args
+        self.tick_list = [100]
+        for max_item in self.max_list:
+            last_tick = self.tick_list[-1]
+            assert max_item > 0
+            self.tick_list.append(last_tick / max_item)
+            
+    def cal_progress(self):
+        '''
+            the iter_item always begin from 1.
+        '''
+        progress = self.tick_list[-1]
+        for iter_item, tick_item in zip(self.iter_list, self.tick_list[1:]):
+            progress += (iter_item - 1) * tick_item
+        
+        _send_progress(int(progress))
+    
+    def cal_custom_progress(self, *args):
+        if len(args) != self.param_num:
+            raise ValueError("The number of args is not equal to the number of max values.")
+        self.iter_list = args
+        self.cal_progress()
+    
+    def cal_horizontal_progress(self, context: dict):
+        self.iter_list = [context["g_epoch"]]
+        if len(self.iter_list) != self.param_num:
+            raise ValueError("The number of args is not equal to the number of max values.")
+        self.cal_progress()
+    
+    @staticmethod
+    def finish_progress(context: dict=None):
+        _send_progress(100)
 
-def _three_layer_progress(iter_k, max_k, iter_j, max_j, iter_i, max_i):
-    '''
-        Update progress to scheduler. Progress is calculated by:
-        ((((iter_k + 1) / max_k) + iter_j) / max_j + iter_i) / max_i * 100
-    '''
-    tick_i = 1 / max_i * 100
-    tick_j = 1 / max_j
-    tick_k = (iter_k + 1) / max_k
-    p = int(((tick_k + iter_j) * tick_j + iter_i) * tick_i)
-    _send_progress(p)
-    return
-
-def _two_layer_progress(iter_j, max_j, iter_i, max_i):
-    '''
-        Update progress to scheduler. Progress is calculated by:
-        ((iter_j + 1) / max_j + iter_i) / max_i * 100
-    '''
-    tick_i = 1 / max_i * 100
-    tick_j = (iter_j + 1) / max_j
-    p = int((tick_j + iter_i) * tick_i)
-    _send_progress(p)
-    return
-
-def _one_layer_progress(iter_i, max_i):
-    '''
-        Update progress to scheduler. Progress is calculated by:
-        iter_i / max_i * 100
-    '''
-    tick_i = 1 / max_i * 100
-    p = int(iter_i * tick_i)
-    _send_progress(p)
-    return
 
 def _send_progress(progress):
     progress = progress if progress <= 100 else 100
     channel = FedNode.create_channel("scheduler")
     stub = scheduler_pb2_grpc.SchedulerStub(channel)
     request = scheduler_pb2.RecProgressRequest()
-    request.stageId = FedJob.current_stage
+    # request.stageId = FedJob.current_stage
     request.progress = progress
     stub.recProgress(request)
     return

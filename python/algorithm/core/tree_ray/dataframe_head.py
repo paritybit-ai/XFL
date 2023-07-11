@@ -131,10 +131,10 @@ class XgbDataFrameHead:
                     values = x.index.values.tolist()
                     values_unique = values[:num_bins - 1]
                     values_group = values[num_bins - 1:]
-                    uniques = np.array(values_unique + [values_group], dtype=np.object)
+                    uniques = np.array(values_unique + [values_group], dtype=object)
                     return [uniques]
                 else:
-                    return [x.index.values.astype(np.object)]  # [x.index.values.astype(np.int64)]
+                    return [x.index.values.astype(object)]  # [x.index.values.astype(np.int64)]
             else:
                 min_v, max_v = x
                 split_points = np.linspace(min_v, max_v, num_bins + 1)[1:-1]

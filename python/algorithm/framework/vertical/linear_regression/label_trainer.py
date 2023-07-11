@@ -17,6 +17,7 @@ import copy
 import secrets
 from functools import reduce
 from pathlib import Path
+from typing import Optional
 from common.checker.x_types import All
 
 import numpy as np
@@ -29,11 +30,11 @@ from common.communication.gRPC.python.channel import BroadcastChannel, DualChann
 from common.crypto.paillier.paillier import Paillier
 from common.utils.algo_utils import earlyStopping
 from common.utils.logger import logger
-from common.utils.model_preserver import ModelPreserver
 from common.utils.utils import save_model_config
+from common.utils.model_io import ModelIO
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
-from service.fed_control import _two_layer_progress, _update_progress_finish
+from service.fed_control import ProgressCalculator
 from .base import VerticalLinearRegressionBase
 
 
@@ -48,18 +49,21 @@ class VerticalLinearRegressionLabelTrainer(VerticalLinearRegressionBase):
         """
         self.sync_channel = BroadcastChannel(name="sync")
         self._sync_config(train_conf)
-
         super().__init__(train_conf, label=True, *args, **kwargs)
+        if self.random_seed:
+            self.set_seed(self.random_seed)
+
+        self.progress_calculator = ProgressCalculator(self.global_epoch, len(self.train_dataloader))
         self._init_model(bias=True)
         self.export_conf = [{
             "class_name": "VerticalLinearRegression",
             "identity": self.identity,
-            "filename": self.save_model_name,
+            "filename": self.save_onnx_model_name,
             "input_dim": self.data_dim,
-            "bias": True
+            "bias": True,
+            "version": "1.4.0"
         }]
-        if self.random_seed:
-            self.set_seed(self.random_seed)
+
         self.es = earlyStopping(key=self.early_stopping_config["key"],
                                 patience=self.early_stopping_config["patience"],
                                 delta=self.early_stopping_config["delta"])
@@ -333,7 +337,7 @@ class VerticalLinearRegressionLabelTrainer(VerticalLinearRegressionBase):
                 self.model.linear.bias -= (gradient_label_trainer_b * self.optimizer_config["lr"])
 
                 # calculate and update the progress of the training
-                _two_layer_progress(batch_idx, len(self.train_dataloader), epoch-1, self.global_epoch)
+                self.progress_calculator.cal_custom_progress(epoch, batch_idx+1)
 
             loss_epoch = loss_epoch * (1 / len(self.train))
             logger.info("Loss of {} epoch is {}".format(epoch, loss_epoch))
@@ -367,22 +371,43 @@ class VerticalLinearRegressionLabelTrainer(VerticalLinearRegressionBase):
                     [early_stop_flag, best_model_flag, self.early_stopping_config["patience"]], use_pickle=True)
             # if need to save results by epoch
             if self.save_frequency > 0 and epoch % self.save_frequency == 0:
-                ModelPreserver.save(save_dir=self.save_dir, model_name=self.save_model_name,
-                                    state_dict=self.model.state_dict(), epoch=epoch)
+                # ModelPreserver.save(save_dir=self.save_dir, model_name=self.save_model_name,
+                #                     state_dict=self.model.state_dict(), epoch=epoch)
+                self.save_model(epoch=epoch)
             # if early stopping, break
             if early_stop_flag:
                 # update the progress of 100 to show the training is finished
-                _update_progress_finish()
+                ProgressCalculator.finish_progress()
                 break
 
         # save model for infer
-        save_model_config(stage_model_config=self.export_conf, save_path=Path(self.save_dir))
+        self.save_model(epoch=None)
         # if not early stopping, save probabilities and model
         self._save_prob()
-        ModelPreserver.save(save_dir=self.save_dir, model_name=self.save_model_name,
-                            state_dict=self.best_model.state_dict(), final=True)
         # calculate feature importance
         self._save_feature_importance(self.dual_channels)
+        
+    def save_model(self, epoch: Optional[int] = None):
+        if not epoch:
+            save_model_config(stage_model_config=self.export_conf,
+                              save_path=Path(self.save_dir))
+
+        if self.save_model_name:
+            ModelIO.save_torch_model(
+                state_dict=self.best_model.state_dict(),
+                save_dir=self.save_dir,
+                model_name=self.save_model_name,
+                meta_dict={},
+                epoch=epoch
+            )
+        if self.save_onnx_model_name:
+            ModelIO.save_torch_onnx(
+                model=self.best_model,
+                input_dim=(self.data_dim,),
+                save_dir=self.save_dir,
+                model_name=self.save_onnx_model_name,
+                epoch=epoch
+            )
 
     def _save_prob(self):
         if self.interaction_params.get("write_training_prediction"):

@@ -18,9 +18,11 @@ import numpy as np
 from sklearn import metrics as sklearn_metrics
 
 from common.xregister import xregister
+from common.utils.auto_descriptor.torch.metrics import metrics
+
 
 metric_dict = {
-    "accuracy": "accuracy_score",
+    # "accuracy": "accuracy_score",
     "acc": "accuracy_score",
     "precision": "precision_score",
     "recall": "recall_score",
@@ -50,6 +52,14 @@ def get_metric(name: str):
     return metric
 
 
+# def list_metrics():
+#     names = set(metric_dict.keys()) + \
+#                 set(metrics.keys()) - set(metric_dict.values()) + \
+#                        set(dir(sys.modules[__name__])) + \   # 不太对，多了
+#                            set(xregister.registered_object.keys())
+#     return names
+    
+
 def ks(y_true, y_pred):
     fpr, tpr, _ = sklearn_metrics.roc_curve(y_true, y_pred)
     ks = max(np.max(tpr - fpr), 0)
@@ -60,3 +70,7 @@ def root_mean_squared_error(y_true, y_pred):
     mse_value = sklearn_metrics.mean_squared_error(y_true, y_pred)
     rmse_value = math.sqrt(mse_value)
     return rmse_value
+
+
+# if __name__ == "__main__":
+#     print(dir(sys.modules[__name__]))

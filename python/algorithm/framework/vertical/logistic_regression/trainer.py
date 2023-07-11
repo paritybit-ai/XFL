@@ -48,7 +48,8 @@ class VerticalLogisticRegressionTrainer(VerticalLogisticRegressionBase):
             "filename": self.save_onnx_model_name,
             "input_dim": self.data_dim,
             "bias": False,
-            "version": "1.4.0"
+            "version": "1.4.0",
+            "input_schema": self.schema,
         }]
         if self.random_seed is None:
             self.random_seed = self.sync_channel.recv()
@@ -294,7 +295,8 @@ class VerticalLogisticRegressionTrainer(VerticalLogisticRegressionBase):
                     logger.debug(f"Send pred, SHA256: {hashlib.sha256(pickle.dumps(pred_trainer)).hexdigest()}")
 
     def _save_feature_importance(self, channel):
-        weight = (FedNode.node_id, self.best_model.state_dict()["linear.weight"][0])
+        # weight = (FedNode.node_id, self.best_model.state_dict()["linear.weight"][0])
+        weight = (FedNode.node_name, self.best_model.state_dict()["linear.weight"][0], self.train_f_names)
         channel.send(weight)
         if BLOCKCHAIN:
             logger.debug(f"Send weight, SHA256: {hashlib.sha256(pickle.dumps(weight)).hexdigest()}")

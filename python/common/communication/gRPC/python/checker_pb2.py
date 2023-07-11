@@ -3,6 +3,7 @@
 # source: checker.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
@@ -13,524 +14,21 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor.FileDescriptor(
-  name='checker.proto',
-  package='checker',
-  syntax='proto3',
-  serialized_options=None,
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\rchecker.proto\x12\x07\x63hecker\"\x1b\n\x0c\x44ictPathInfo\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x1d\n\x0cListPathInfo\x12\r\n\x05index\x18\x01 \x01(\x05\"l\n\x08PathInfo\x12)\n\x08\x64ictPath\x18\x01 \x01(\x0b\x32\x15.checker.DictPathInfoH\x00\x12)\n\x08listPath\x18\x02 \x01(\x0b\x32\x15.checker.ListPathInfoH\x00\x42\n\n\x08pathInfo\">\n\x08ItemInfo\x12#\n\x08pathInfo\x18\x01 \x03(\x0b\x32\x11.checker.PathInfo\x12\r\n\x05notes\x18\x02 \x01(\t\"N\n\x16\x43rossStagePositionInfo\x12\x0f\n\x07stageId\x18\x01 \x01(\x05\x12#\n\x08pathInfo\x18\x02 \x03(\x0b\x32\x11.checker.PathInfo\"`\n\x12\x43rossStageItemInfo\x12\x13\n\x0b\x64umpedValue\x18\x01 \x01(\t\x12\x35\n\x0cpositionList\x18\x02 \x03(\x0b\x32\x1f.checker.CrossStagePositionInfo\"\x9f\x01\n\x0bStageResult\x12\x0f\n\x07stageId\x18\x01 \x01(\x05\x12\x1b\n\x13\x64umpedCheckedConfig\x18\x02 \x01(\t\x12)\n\x0eunmatchedItems\x18\x03 \x03(\x0b\x32\x11.checker.ItemInfo\x12\x13\n\x0bpassedRules\x18\x04 \x01(\x05\x12\x14\n\x0c\x63heckedRules\x18\x05 \x01(\x05\x12\x0c\n\x04\x63ode\x18\x06 \x01(\x05\"O\n\x10MultiStageResult\x12-\n\x0fstageResultList\x18\x01 \x03(\x0b\x32\x14.checker.StageResult\x12\x0c\n\x04\x63ode\x18\x02 \x01(\x05\"\xca\x01\n\x10\x43rossStageResult\x12:\n\x15\x64uplicatedInputOutput\x18\x01 \x03(\x0b\x32\x1b.checker.CrossStageItemInfo\x12\x35\n\x10\x62lankInputOutput\x18\x02 \x03(\x0b\x32\x1b.checker.CrossStageItemInfo\x12\x35\n\x10nonexistentInput\x18\x03 \x03(\x0b\x32\x1b.checker.CrossStageItemInfo\x12\x0c\n\x04\x63ode\x18\x04 \x01(\x05\"M\n\x16\x43heckTaskConfigRequest\x12\x19\n\x11\x64umpedTrainConfig\x18\x01 \x01(\t\x12\x18\n\x10\x65xistedInputPath\x18\x02 \x03(\t\"\xa2\x01\n\x17\x43heckTaskConfigResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x33\n\x10multiStageResult\x18\x03 \x01(\x0b\x32\x19.checker.MultiStageResult\x12\x33\n\x10\x63rossStageResult\x18\x04 \x01(\x0b\x32\x19.checker.CrossStageResultb\x06proto3'
-)
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rchecker.proto\x12\x07\x63hecker\"\x1b\n\x0c\x44ictPathInfo\x12\x0b\n\x03key\x18\x01 \x01(\t\"\x1d\n\x0cListPathInfo\x12\r\n\x05index\x18\x01 \x01(\x05\"l\n\x08PathInfo\x12)\n\x08\x64ictPath\x18\x01 \x01(\x0b\x32\x15.checker.DictPathInfoH\x00\x12)\n\x08listPath\x18\x02 \x01(\x0b\x32\x15.checker.ListPathInfoH\x00\x42\n\n\x08pathInfo\">\n\x08ItemInfo\x12#\n\x08pathInfo\x18\x01 \x03(\x0b\x32\x11.checker.PathInfo\x12\r\n\x05notes\x18\x02 \x01(\t\"N\n\x16\x43rossStagePositionInfo\x12\x0f\n\x07stageId\x18\x01 \x01(\x05\x12#\n\x08pathInfo\x18\x02 \x03(\x0b\x32\x11.checker.PathInfo\"`\n\x12\x43rossStageItemInfo\x12\x13\n\x0b\x64umpedValue\x18\x01 \x01(\t\x12\x35\n\x0cpositionList\x18\x02 \x03(\x0b\x32\x1f.checker.CrossStagePositionInfo\"\x9f\x01\n\x0bStageResult\x12\x0f\n\x07stageId\x18\x01 \x01(\x05\x12\x1b\n\x13\x64umpedCheckedConfig\x18\x02 \x01(\t\x12)\n\x0eunmatchedItems\x18\x03 \x03(\x0b\x32\x11.checker.ItemInfo\x12\x13\n\x0bpassedRules\x18\x04 \x01(\x05\x12\x14\n\x0c\x63heckedRules\x18\x05 \x01(\x05\x12\x0c\n\x04\x63ode\x18\x06 \x01(\x05\"O\n\x10MultiStageResult\x12-\n\x0fstageResultList\x18\x01 \x03(\x0b\x32\x14.checker.StageResult\x12\x0c\n\x04\x63ode\x18\x02 \x01(\x05\"\xca\x01\n\x10\x43rossStageResult\x12:\n\x15\x64uplicatedInputOutput\x18\x01 \x03(\x0b\x32\x1b.checker.CrossStageItemInfo\x12\x35\n\x10\x62lankInputOutput\x18\x02 \x03(\x0b\x32\x1b.checker.CrossStageItemInfo\x12\x35\n\x10nonexistentInput\x18\x03 \x03(\x0b\x32\x1b.checker.CrossStageItemInfo\x12\x0c\n\x04\x63ode\x18\x04 \x01(\x05\"M\n\x16\x43heckTaskConfigRequest\x12\x19\n\x11\x64umpedTrainConfig\x18\x01 \x01(\t\x12\x18\n\x10\x65xistedInputPath\x18\x02 \x03(\t\"\xa2\x01\n\x17\x43heckTaskConfigResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x33\n\x10multiStageResult\x18\x03 \x01(\x0b\x32\x19.checker.MultiStageResult\x12\x33\n\x10\x63rossStageResult\x18\x04 \x01(\x0b\x32\x19.checker.CrossStageResultb\x06proto3')
 
 
 
-
-_DICTPATHINFO = _descriptor.Descriptor(
-  name='DictPathInfo',
-  full_name='checker.DictPathInfo',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='checker.DictPathInfo.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=26,
-  serialized_end=53,
-)
-
-
-_LISTPATHINFO = _descriptor.Descriptor(
-  name='ListPathInfo',
-  full_name='checker.ListPathInfo',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='index', full_name='checker.ListPathInfo.index', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=55,
-  serialized_end=84,
-)
-
-
-_PATHINFO = _descriptor.Descriptor(
-  name='PathInfo',
-  full_name='checker.PathInfo',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='dictPath', full_name='checker.PathInfo.dictPath', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='listPath', full_name='checker.PathInfo.listPath', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-    _descriptor.OneofDescriptor(
-      name='pathInfo', full_name='checker.PathInfo.pathInfo',
-      index=0, containing_type=None,
-      create_key=_descriptor._internal_create_key,
-    fields=[]),
-  ],
-  serialized_start=86,
-  serialized_end=194,
-)
-
-
-_ITEMINFO = _descriptor.Descriptor(
-  name='ItemInfo',
-  full_name='checker.ItemInfo',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='pathInfo', full_name='checker.ItemInfo.pathInfo', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='notes', full_name='checker.ItemInfo.notes', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=196,
-  serialized_end=258,
-)
-
-
-_CROSSSTAGEPOSITIONINFO = _descriptor.Descriptor(
-  name='CrossStagePositionInfo',
-  full_name='checker.CrossStagePositionInfo',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='stageId', full_name='checker.CrossStagePositionInfo.stageId', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='pathInfo', full_name='checker.CrossStagePositionInfo.pathInfo', index=1,
-      number=2, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=260,
-  serialized_end=338,
-)
-
-
-_CROSSSTAGEITEMINFO = _descriptor.Descriptor(
-  name='CrossStageItemInfo',
-  full_name='checker.CrossStageItemInfo',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='dumpedValue', full_name='checker.CrossStageItemInfo.dumpedValue', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='positionList', full_name='checker.CrossStageItemInfo.positionList', index=1,
-      number=2, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=340,
-  serialized_end=436,
-)
-
-
-_STAGERESULT = _descriptor.Descriptor(
-  name='StageResult',
-  full_name='checker.StageResult',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='stageId', full_name='checker.StageResult.stageId', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='dumpedCheckedConfig', full_name='checker.StageResult.dumpedCheckedConfig', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='unmatchedItems', full_name='checker.StageResult.unmatchedItems', index=2,
-      number=3, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='passedRules', full_name='checker.StageResult.passedRules', index=3,
-      number=4, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='checkedRules', full_name='checker.StageResult.checkedRules', index=4,
-      number=5, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='code', full_name='checker.StageResult.code', index=5,
-      number=6, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=439,
-  serialized_end=598,
-)
-
-
-_MULTISTAGERESULT = _descriptor.Descriptor(
-  name='MultiStageResult',
-  full_name='checker.MultiStageResult',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='stageResultList', full_name='checker.MultiStageResult.stageResultList', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='code', full_name='checker.MultiStageResult.code', index=1,
-      number=2, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=600,
-  serialized_end=679,
-)
-
-
-_CROSSSTAGERESULT = _descriptor.Descriptor(
-  name='CrossStageResult',
-  full_name='checker.CrossStageResult',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='duplicatedInputOutput', full_name='checker.CrossStageResult.duplicatedInputOutput', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='blankInputOutput', full_name='checker.CrossStageResult.blankInputOutput', index=1,
-      number=2, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='nonexistentInput', full_name='checker.CrossStageResult.nonexistentInput', index=2,
-      number=3, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='code', full_name='checker.CrossStageResult.code', index=3,
-      number=4, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=682,
-  serialized_end=884,
-)
-
-
-_CHECKTASKCONFIGREQUEST = _descriptor.Descriptor(
-  name='CheckTaskConfigRequest',
-  full_name='checker.CheckTaskConfigRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='dumpedTrainConfig', full_name='checker.CheckTaskConfigRequest.dumpedTrainConfig', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='existedInputPath', full_name='checker.CheckTaskConfigRequest.existedInputPath', index=1,
-      number=2, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=886,
-  serialized_end=963,
-)
-
-
-_CHECKTASKCONFIGRESPONSE = _descriptor.Descriptor(
-  name='CheckTaskConfigResponse',
-  full_name='checker.CheckTaskConfigResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='code', full_name='checker.CheckTaskConfigResponse.code', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='message', full_name='checker.CheckTaskConfigResponse.message', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='multiStageResult', full_name='checker.CheckTaskConfigResponse.multiStageResult', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='crossStageResult', full_name='checker.CheckTaskConfigResponse.crossStageResult', index=3,
-      number=4, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=966,
-  serialized_end=1128,
-)
-
-_PATHINFO.fields_by_name['dictPath'].message_type = _DICTPATHINFO
-_PATHINFO.fields_by_name['listPath'].message_type = _LISTPATHINFO
-_PATHINFO.oneofs_by_name['pathInfo'].fields.append(
-  _PATHINFO.fields_by_name['dictPath'])
-_PATHINFO.fields_by_name['dictPath'].containing_oneof = _PATHINFO.oneofs_by_name['pathInfo']
-_PATHINFO.oneofs_by_name['pathInfo'].fields.append(
-  _PATHINFO.fields_by_name['listPath'])
-_PATHINFO.fields_by_name['listPath'].containing_oneof = _PATHINFO.oneofs_by_name['pathInfo']
-_ITEMINFO.fields_by_name['pathInfo'].message_type = _PATHINFO
-_CROSSSTAGEPOSITIONINFO.fields_by_name['pathInfo'].message_type = _PATHINFO
-_CROSSSTAGEITEMINFO.fields_by_name['positionList'].message_type = _CROSSSTAGEPOSITIONINFO
-_STAGERESULT.fields_by_name['unmatchedItems'].message_type = _ITEMINFO
-_MULTISTAGERESULT.fields_by_name['stageResultList'].message_type = _STAGERESULT
-_CROSSSTAGERESULT.fields_by_name['duplicatedInputOutput'].message_type = _CROSSSTAGEITEMINFO
-_CROSSSTAGERESULT.fields_by_name['blankInputOutput'].message_type = _CROSSSTAGEITEMINFO
-_CROSSSTAGERESULT.fields_by_name['nonexistentInput'].message_type = _CROSSSTAGEITEMINFO
-_CHECKTASKCONFIGRESPONSE.fields_by_name['multiStageResult'].message_type = _MULTISTAGERESULT
-_CHECKTASKCONFIGRESPONSE.fields_by_name['crossStageResult'].message_type = _CROSSSTAGERESULT
-DESCRIPTOR.message_types_by_name['DictPathInfo'] = _DICTPATHINFO
-DESCRIPTOR.message_types_by_name['ListPathInfo'] = _LISTPATHINFO
-DESCRIPTOR.message_types_by_name['PathInfo'] = _PATHINFO
-DESCRIPTOR.message_types_by_name['ItemInfo'] = _ITEMINFO
-DESCRIPTOR.message_types_by_name['CrossStagePositionInfo'] = _CROSSSTAGEPOSITIONINFO
-DESCRIPTOR.message_types_by_name['CrossStageItemInfo'] = _CROSSSTAGEITEMINFO
-DESCRIPTOR.message_types_by_name['StageResult'] = _STAGERESULT
-DESCRIPTOR.message_types_by_name['MultiStageResult'] = _MULTISTAGERESULT
-DESCRIPTOR.message_types_by_name['CrossStageResult'] = _CROSSSTAGERESULT
-DESCRIPTOR.message_types_by_name['CheckTaskConfigRequest'] = _CHECKTASKCONFIGREQUEST
-DESCRIPTOR.message_types_by_name['CheckTaskConfigResponse'] = _CHECKTASKCONFIGRESPONSE
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
+_DICTPATHINFO = DESCRIPTOR.message_types_by_name['DictPathInfo']
+_LISTPATHINFO = DESCRIPTOR.message_types_by_name['ListPathInfo']
+_PATHINFO = DESCRIPTOR.message_types_by_name['PathInfo']
+_ITEMINFO = DESCRIPTOR.message_types_by_name['ItemInfo']
+_CROSSSTAGEPOSITIONINFO = DESCRIPTOR.message_types_by_name['CrossStagePositionInfo']
+_CROSSSTAGEITEMINFO = DESCRIPTOR.message_types_by_name['CrossStageItemInfo']
+_STAGERESULT = DESCRIPTOR.message_types_by_name['StageResult']
+_MULTISTAGERESULT = DESCRIPTOR.message_types_by_name['MultiStageResult']
+_CROSSSTAGERESULT = DESCRIPTOR.message_types_by_name['CrossStageResult']
+_CHECKTASKCONFIGREQUEST = DESCRIPTOR.message_types_by_name['CheckTaskConfigRequest']
+_CHECKTASKCONFIGRESPONSE = DESCRIPTOR.message_types_by_name['CheckTaskConfigResponse']
 DictPathInfo = _reflection.GeneratedProtocolMessageType('DictPathInfo', (_message.Message,), {
   'DESCRIPTOR' : _DICTPATHINFO,
   '__module__' : 'checker_pb2'
@@ -608,5 +106,29 @@ CheckTaskConfigResponse = _reflection.GeneratedProtocolMessageType('CheckTaskCon
   })
 _sym_db.RegisterMessage(CheckTaskConfigResponse)
 
+if _descriptor._USE_C_DESCRIPTORS == False:
 
+  DESCRIPTOR._options = None
+  _DICTPATHINFO._serialized_start=26
+  _DICTPATHINFO._serialized_end=53
+  _LISTPATHINFO._serialized_start=55
+  _LISTPATHINFO._serialized_end=84
+  _PATHINFO._serialized_start=86
+  _PATHINFO._serialized_end=194
+  _ITEMINFO._serialized_start=196
+  _ITEMINFO._serialized_end=258
+  _CROSSSTAGEPOSITIONINFO._serialized_start=260
+  _CROSSSTAGEPOSITIONINFO._serialized_end=338
+  _CROSSSTAGEITEMINFO._serialized_start=340
+  _CROSSSTAGEITEMINFO._serialized_end=436
+  _STAGERESULT._serialized_start=439
+  _STAGERESULT._serialized_end=598
+  _MULTISTAGERESULT._serialized_start=600
+  _MULTISTAGERESULT._serialized_end=679
+  _CROSSSTAGERESULT._serialized_start=682
+  _CROSSSTAGERESULT._serialized_end=884
+  _CHECKTASKCONFIGREQUEST._serialized_start=886
+  _CHECKTASKCONFIGREQUEST._serialized_end=963
+  _CHECKTASKCONFIGRESPONSE._serialized_start=966
+  _CHECKTASKCONFIGRESPONSE._serialized_end=1128
 # @@protoc_insertion_point(module_scope)

@@ -25,7 +25,7 @@ from algorithm.core.data_io import CsvReader
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
 from sklearn.impute import SimpleImputer
-from service.fed_control import _update_progress_finish
+from service.fed_control import ProgressCalculator
 from common.utils.utils import save_model_config
 
 
@@ -320,4 +320,4 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
             self.val.to_csv(save_val_path, index=self.input["trainset"][0]["has_id"])
             logger.info("Preprocessed valset done")
 
-        _update_progress_finish()        
+        ProgressCalculator.finish_progress()     

@@ -1,59 +1,48 @@
 {
     "identity": "assist_trainer",
     "model_info": {
-        "name": "horizontal_bert",
+        "name": "horizontal_bert_torch",
         "config": {
-            "from_pretrained": true,
-            "num_labels": 2
+            "from_pretrained": false,
+            "num_labels": 2,
+            "hidden_size": 144,
+            "num_hidden_layers": 12,
+            "num_attention_head": 12,
+            "intermediate_size": 144
         }
     },
     "input": {
         "valset": [
             {
-                "path": "./dataset/SST-2/2party",
-                "name": "SST-2_val.tsv"
+                "path": "/opt/dataset/unit_test",
+                "name": "test_data.tsv"
             }
         ],
-        "pretrain_model": {
-        }
+        "pretrain_model": {}
     },
     "output": {
+        "path": "/opt/checkpoints/unit_test",
         "model": {
-            "type": "file",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "name": "horizontal_bert.tf"
+            "name": "horizontal_bert_[STAGE_ID].model"
         },
-        "metrics": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "header": true
-        },
-        "evaluation": {
-            "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "header": true
+        "metric_val": {
+            "name": "bert_metric_val_[STAGE_ID].csv"
         }
     },
     "train_info": {
         "device": "cpu",
-        "interaction_params": {
-            "save_frequency": -1,
-            "save_probabilities": true,
-            "save_probabilities_bins_number": 10,
-            "write_training_prediction": true,
-            "write_validation_prediction": true,
-            "echo_training_metrics": true
-        },
-        "params": {
-            "global_epoch": 10,
-            "local_epoch": 1,
-            "batch_size": 16,
-            "aggregation_config": {
-                "type": "fedavg",
-                "encryption": {
-                    "method": "otp",
+        "train_params": {
+            "global_epoch": 2,
+            "val_batch_size": 2,
+            "aggregation": {
+                "method": {
+                    "fedavg": {}
+                }
+            },
+            "encryption": {
+                "otp": {
                     "key_bitlength": 64,
-                    "data_type": "numpy.ndarray",
+                    "data_type": "torch.Tensor",
                     "key_exchange": {
                         "key_bitlength": 3072,
                         "optimized": true
@@ -64,11 +53,22 @@
                     }
                 }
             },
-            "lossfunc_config": {
-                "SparseCategoricalCrossentropy": {}
+            "optimizer": {
+                "Adam": {
+                    "lr": 1e-4,
+                    "eps": 1e-8              
+                }
             },
-            "metric_config": {
-                "accuracy": {},
+            "lr_scheduler": {
+                "CosineAnnealingLR": {
+                    "T_max":100
+                }
+            },
+            "lossfunc": {
+                "CrossEntropyLoss": {}
+            },
+            "metric": {
+                "acc": {},
                 "f1_score": {"average":"micro"},
                 "precision": {"average":"micro"},
                 "recall": {"average":"micro"}
@@ -77,8 +77,6 @@
                 "key": "acc",
                 "patience": -1,
                 "delta": 0
-            },
-            "extra_config": {
             }
         }
     }

@@ -13,19 +13,23 @@
 # limitations under the License.
 
 
-from algorithm.core.horizontal.template.torch.fedtype import _get_assist_trainer
 from functools import partial
 from .common import Common
+from algorithm.core.horizontal.template.agg_type import register_agg_type_for_assist_trainer
 
 
-class HorizontalDensenetAssistTrainer(Common, _get_assist_trainer()):
+class HorizontalDensenetAssistTrainer(Common):
     def __init__(self, train_conf: dict):
-        _get_assist_trainer().__init__(self, train_conf)
-        
+        super().__init__(train_conf)
+        agg_type = list(self.common_config.aggregation["method"].keys())[0]
+        register_agg_type_for_assist_trainer(self, 'torch', agg_type)
+        self.register_hook(place="after_local_epoch", rank=1,
+                           func=partial(self._save_model, False), desc="save model ")
         self.register_hook(place="after_local_epoch", rank=2,
                            func=partial(self.val_loop, "val"), desc="validation on valset")
-        self.register_hook(place="after_local_epoch", rank=3,
-                           func=self._save_model, desc="save model")
+        self.register_hook(place="after_global_epoch", rank=1,
+                           func=partial(self._save_model, True), desc="save final model")
         
     def train_loop(self):
         pass
+    

@@ -13,38 +13,22 @@
 # limitations under the License.
 
 
-import os
-import numpy as np
-import torch
-from torch import nn
-from pathlib import Path
-
 from functools import partial
-
-from algorithm.core.data_io import CsvReader
 from common.utils.logger import logger
-
-from algorithm.model.horizontal_k_means import HorizontalKMeans
-
-from common.utils.config_parser import TrainConfigParser
-from common.utils.logger import logger
-
-from sklearn.metrics import davies_bouldin_score
-from sklearn.cluster import KMeans
 from .common import Common
+from algorithm.core.horizontal.template.agg_type import register_agg_type_for_assist_trainer
 
-from algorithm.core.horizontal.template.torch.fedavg.assist_trainer import FedAvgAssistTrainer
 
-
-class HorizontalKmeansAssistTrainer(Common, FedAvgAssistTrainer):
+class HorizontalKmeansAssistTrainer(Common):
     def __init__(self, train_conf: dict):
-        FedAvgAssistTrainer.__init__(self, train_conf)
-
+        super().__init__(train_conf)
+        register_agg_type_for_assist_trainer(self, 'torch', "fedavg")
+        self.register_hook(place="after_local_epoch", rank=1,
+                           func=partial(self._save_model, False), desc="save model ")
         self.register_hook(place="after_local_epoch", rank=2,
                            func=partial(self.val_loop, "val"), desc="validation on valset")
-        self.register_hook(place="after_local_epoch", rank=3,
-                           func=self._save_model, desc="save model")
-        logger.info("Assister initialized")
-
+        self.register_hook(place="after_global_epoch", rank=1,
+                           func=partial(self._save_model, True), desc="save final model")
+        
     def train_loop(self):
         pass

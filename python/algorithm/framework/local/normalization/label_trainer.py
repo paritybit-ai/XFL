@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 from scipy.linalg import norm
 from google.protobuf import json_format
-from service.fed_control import _update_progress_finish
+from service.fed_control import ProgressCalculator
 from common.utils.config_parser import TrainConfigParser
 from common.utils.logger import logger
 from common.utils.utils import save_model_config
@@ -44,7 +44,8 @@ class LocalNormalizationLabelTrainer(TrainConfigParser):
         self._init_data()
         self.export_conf = [{
             "class_name": "LocalNormalization",
-            "filename": self.save_pmodel_name
+            "filename": self.save_pmodel_name,
+            "input_schema": ','.join([_ for _ in self.train_data.columns if _ not in set(["y", "id"])]),
         }]
 
     def _parse_config(self) -> None:
@@ -203,13 +204,14 @@ class LocalNormalizationLabelTrainer(TrainConfigParser):
                 "cannot find the param axis, which is required for normalization.")
 
         self.save(normalizer_dict)
-        _update_progress_finish()
+        ProgressCalculator.finish_progress()
 
     def save(self, normalizer):
         if self.save_dir:
             self.save_dir = Path(self.save_dir)
         else:
             return
+        print(normalizer, "----")
 
         if self.save_pmodel_name:
             save_model_config(stage_model_config=self.export_conf,

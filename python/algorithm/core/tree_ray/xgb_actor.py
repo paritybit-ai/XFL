@@ -203,13 +203,13 @@ class XgbDataFrameActor(XgbBaseActor):
             dtype = np.uint32
                 
         def f(x: pd.Series):
-            """1. Categorial_1 -- |np.object|
+            """1. Categorial_1 -- |object|
             #    2. Categorial_2 -- |np.int64|
                2. Continuous   -- |np.float64|
             """
             x = x.iloc[0]
             
-            if x.dtype == np.object:
+            if x.dtype == object:
                 if isinstance(x[-1], list):
                     value_map = {v: i for i, v in enumerate(x[:-1])}
                     value_map.update({v: len(x)-1 for v in x[-1]})

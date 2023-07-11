@@ -31,7 +31,7 @@ from service.fed_config import FedConfig
 from service.fed_control import get_trainer_status, trainer_control
 from service.fed_job import FedJob
 from service.fed_node import FedNode
-from tqdm import trange
+from tqdm import tqdm, trange
 
 
 class SchedulerService(object):
@@ -305,8 +305,13 @@ class SchedulerService(object):
         if self.is_bar:
             if (self.progress_bar is None and FedJob.progress[FedJob.current_stage] == 0) or \
                 (self.progress_bar and self.progress_bar.desc != f"Stage {FedJob.current_stage}"):
-                    self.progress_bar = trange(FedJob.max_progress, desc=f"Stage {FedJob.current_stage}")
-                    
+                self.progress_bar = trange(
+                    FedJob.max_progress, desc=f"Stage {FedJob.current_stage}", 
+                    leave=True, unit="%"
+                )
+                # wait for the progress bar to be printed
+                time.sleep(0.1)
+
         response = scheduler_pb2.RecProgressResponse()
         response.code = 1
         if request.progress > FedJob.progress[FedJob.current_stage]:

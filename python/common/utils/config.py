@@ -48,16 +48,19 @@ def parse_config(s):
                 config["scheduler"]["host"] = host
                 config["scheduler"]["port"] = port
                 config["scheduler"]["use_tls"] = use_tls
+                config["scheduler"]["name"] = json_str["nodes"][node_id]["name"]
             elif "assist-trainer" in endpoint["fuwuEndpointId"]:
                 config["trainer"]["assist_trainer"] = {}
                 config["trainer"]["assist_trainer"]["host"] = host
                 config["trainer"]["assist_trainer"]["port"] = port
                 config["trainer"]["assist_trainer"]["use_tls"] = use_tls
+                config["trainer"]["assist_trainer"]["name"] = json_str["nodes"][node_id]["name"]
             elif "trainer" in endpoint["fuwuEndpointId"]:
                 config["trainer"][node_id] = {}
                 config["trainer"][node_id]["host"] = host
                 config["trainer"][node_id]["port"] = port
                 config["trainer"][node_id]["use_tls"] = use_tls
+                config["trainer"][node_id]["name"] = json_str["nodes"][node_id]["name"]
     return config
 
 

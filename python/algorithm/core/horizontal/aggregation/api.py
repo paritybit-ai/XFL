@@ -17,17 +17,19 @@ from typing import Union
 
 from .aggregation_otp import AggregationOTPRoot, AggregationOTPLeaf
 from .aggregation_plain import AggregationPlainRoot, AggregationPlainLeaf
+from service.fed_config import FedConfig
 
 
-def _get_aggregation_inst(role: str, sec_conf: dict, *args, **kwargs) -> Union[AggregationPlainLeaf, AggregationPlainRoot]:
+def _get_aggregation_inst(role: str, sec_conf: dict, root_id: str = '', leaf_ids: list[str] = []) -> Union[AggregationPlainLeaf, AggregationPlainRoot]:
+# def _get_aggregation_inst(role: str, sec_conf: dict, root_id: str, leaf_ids: list[str]) -> Union[AggregationPlainLeaf, AggregationPlainRoot]:
     """ get a proper FedAvg instance. role: "label_trainer" or "assist_trainer"
     """
-
-    if not sec_conf:
+    if not sec_conf or len(leaf_ids) == 1 or len(FedConfig.get_label_trainer() + FedConfig.get_trainer()) == 1:
         method = "plain"
-        sec_conf = {"method": "plain"}
+        sec_conf = {}
     else:
-        method = sec_conf.get("method", "plain")
+        method = list(sec_conf.keys())[0]
+        sec_conf = sec_conf[method]
 
     opt = {
         "otp": {
@@ -41,7 +43,7 @@ def _get_aggregation_inst(role: str, sec_conf: dict, *args, **kwargs) -> Union[A
     }
 
     try:
-        return opt[method][role](sec_conf, *args, **kwargs)
+        return opt[method][role](sec_conf, root_id, leaf_ids)
     except KeyError as e:
         raise KeyError("Combination of method {} and role {} is not supported for creating FedAvg instance".format(method, role)) from e
     except Exception as e:
@@ -54,3 +56,5 @@ def get_aggregation_root_inst(sec_conf: dict, root_id: str = '', leaf_ids: list[
 
 def get_aggregation_leaf_inst(sec_conf: dict, root_id: str = '', leaf_ids: list[str] = []) -> Union[AggregationPlainLeaf, AggregationOTPLeaf]:
     return _get_aggregation_inst('leaf', sec_conf, root_id, leaf_ids)
+
+

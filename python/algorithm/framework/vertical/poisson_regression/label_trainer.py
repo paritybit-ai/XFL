@@ -15,6 +15,7 @@
 
 import copy
 import secrets
+import random
 from functools import reduce
 from pathlib import Path
 from common.checker.x_types import All
@@ -33,7 +34,7 @@ from common.utils.model_preserver import ModelPreserver
 from common.utils.utils import save_model_config
 from service.fed_config import FedConfig
 from service.fed_node import FedNode
-from service.fed_control import _two_layer_progress, _update_progress_finish
+from service.fed_control import ProgressCalculator
 from .base import VerticalPoissonRegressionBase
 
 
@@ -48,18 +49,23 @@ class VerticalPoissonRegressionLabelTrainer(VerticalPoissonRegressionBase):
         """
         self.sync_channel = BroadcastChannel(name="sync")
         self._sync_config(train_conf)
-
         super().__init__(train_conf, label=True, *args, **kwargs)
+        if self.random_seed is None:
+            self.random_seed = random.randint(-(1 << 32), 1 << 32)
+            self.sync_channel.broadcast(self.random_seed)
+        self.set_seed(self.random_seed)
+
+        self.progress_calculator = ProgressCalculator(self.global_epoch, len(self.train_dataloader))
         self._init_model(bias=True)
         self.export_conf = [{
             "class_name": "VerticalPoissonRegression",
             "identity": self.identity,
             "filename": self.save_model_name,
             "input_dim": self.data_dim,
-            "bias": True
+            "bias": True,
+            "version": "1.4.0"
         }]
-        if self.random_seed:
-            self.set_seed(self.random_seed)
+
         self.es = earlyStopping(key=self.early_stopping_config["key"],
                                 patience=self.early_stopping_config["patience"],
                                 delta=self.early_stopping_config["delta"])
@@ -314,7 +320,7 @@ class VerticalPoissonRegressionLabelTrainer(VerticalPoissonRegressionBase):
                 self.model.linear.bias -= (gradient_label_trainer_b * self.optimizer_config["lr"])
 
                 # calculate and update the progress of the training
-                _two_layer_progress(batch_idx, len(self.train_dataloader), epoch-1, self.global_epoch)
+                self.progress_calculator.cal_custom_progress(epoch, batch_idx+1)
 
             loss_epoch = loss_epoch * (1 / len(self.train))
             logger.info("Loss of {} epoch is {}".format(epoch, loss_epoch))
@@ -354,7 +360,7 @@ class VerticalPoissonRegressionLabelTrainer(VerticalPoissonRegressionBase):
             # if early stopping, break
             if early_stop_flag:
                 # update the progress of 100 to show the training is finished
-                _update_progress_finish()
+                ProgressCalculator.finish_progress()
                 break
 
         # save model for infer

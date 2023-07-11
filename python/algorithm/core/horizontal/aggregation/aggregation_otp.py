@@ -25,7 +25,7 @@ from common.communication.gRPC.python.commu import Commu
 from common.crypto.csprng.drbg import get_drbg_inst
 from common.crypto.csprng.drbg_base import DRBGBase
 from common.crypto.key_agreement.diffie_hellman import DiffieHellman
-from common.crypto.one_time_pad.component import OneTimePadContext, OneTimeKey
+from common.crypto.one_time_pad.component import OneTimePadContext, OneTimeKey, OneTimePadCiphertext
 from common.crypto.one_time_pad.one_time_add import OneTimeAdd
 from service.fed_config import FedConfig
 from .aggregation_base import AggregationRootBase, AggregationLeafBase
@@ -155,6 +155,12 @@ class AggregationOTPLeaf(AggregationLeafBase):
 class AggregationOTPRoot(AggregationRootBase):
     def __init__(self, sec_conf: dict, root_id: str = '', leaf_ids: list[str] = []) -> None:
         super().__init__(sec_conf, root_id, leaf_ids)
+        # # one-time-pad
+        # self.otp_context = OneTimePadContext(modulus_exp=sec_conf["key_bitlength"],
+        #                                      data_type=sec_conf["data_type"])
+        
+        # modulus_exp=sec_conf["key_bitlength"]
+        # self.dtype = np.uint64 if self.otp_context.modulus_exp == 64 else object
         
     def _calc_aggregated_params(self, received_value: List, average=True) -> OrderedDict:
         total_weight = sum([item[1] for item in received_value])
@@ -164,10 +170,17 @@ class AggregationOTPRoot(AggregationRootBase):
         else:
             parameters = received_value[0][0]
             
+        all_cipher = True if isinstance(list(parameters.values())[0], OneTimePadCiphertext) else False
+        idx = 1 if all_cipher else 2
+            
         for k in parameters.keys():
-            for item in received_value[1:]:
-                received_value[0][0][k] += item[0][k]
-            received_value[0][0][k] = received_value[0][0][k].decode()
+            for item in received_value[idx:]:
+                received_value[idx-1][0][k] += item[0][k]
+
+            received_value[idx-1][0][k] = received_value[idx-1][0][k].decode()
             if average:
-                received_value[0][0][k] /= total_weight
+                if all_cipher:
+                    received_value[0][0][k] /= total_weight
+                else:
+                    received_value[0][0][k] = (received_value[0][0][k] + received_value[1][0][k]) / total_weight
         return received_value[0][0]

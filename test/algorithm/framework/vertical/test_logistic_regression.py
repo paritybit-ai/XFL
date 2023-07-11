@@ -26,6 +26,7 @@ import torch
 from google.protobuf import json_format
 
 import service.fed_config
+import service.fed_node
 import service.fed_control
 from algorithm.framework.vertical.logistic_regression.label_trainer import \
     VerticalLogisticRegressionLabelTrainer
@@ -131,6 +132,7 @@ def env():
     Commu.node_id = "node-1"
     Commu.trainer_ids = ['node-1', 'node-2']
     Commu.scheduler_id = 'assist_trainer'
+    service.fed_node.FedNode.node_name = 'node-1'
     if not os.path.exists("/opt/dataset/unit_test"):
         os.makedirs("/opt/dataset/unit_test")
     if not os.path.exists("/opt/checkpoints/unit_test"):

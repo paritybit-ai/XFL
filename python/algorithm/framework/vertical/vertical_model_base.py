@@ -25,6 +25,7 @@ from sklearn.metrics import roc_curve
 import json
 from sklearn.metrics import precision_recall_curve
 from algorithm.core.tree.feature_importance import FeatureImportance
+from algorithm.core.tree.feature_importance import FeatureImportance
 
 
 class VerticalModelBase(TrainConfigParser):

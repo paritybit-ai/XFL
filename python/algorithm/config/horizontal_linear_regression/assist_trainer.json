@@ -1,87 +1,82 @@
 {
-        "identity": "assist_trainer",
-        "model_info": {
-            "name": "horizontal_linear_regression",
-            "config": {
-                "input_dim": 13,
-                "bias": true
+    "identity": "assist_trainer",
+    "model_info": {
+        "name": "horizontal_linear_regression",
+        "config": {
+            "input_dim": 5,
+            "bias": true
+        }
+    },
+    "input": {
+        "valset": [
+            {
+                "type": "csv",
+                "path": "/opt/dataset/unit_test",
+                "name": "test_data.csv",
+                "has_label": true,
+                "has_id": true
             }
+        ],
+        "pretrain_model": {}
+    },
+    "output": {
+        "path": "/opt/checkpoints/unit_test",
+        "model": {
+            "name": "horizontal_linear_regression_[STAGE_ID].model"
         },
-        "input": {
-            "valset": [
-                {
-                    "type": "csv",
-                    "path": "../dataset/horizontal_house_price",
-                    "name": "house_price_test.csv",
-                    "has_label": true,
-                    "has_id": true
+        "metric_val": {
+            "name": "lr_metric_val_[STAGE_ID].csv"
+        }
+    },
+    "train_info": {
+        "device": "cpu",
+        "interaction_params": {
+            "save_frequency": -1,
+            "write_validation_prediction": true
+        },
+        "train_params": {
+            "global_epoch": 30,
+            "val_batch_size": 64,
+            "aggregation": {
+                "method": {
+                    "fedavg": {}
                 }
-            ],
-            "pretrain_model": {
-            }
-        },
-        "output": {
-            "model": {
-                "type": "file",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "horizontal_linear_regression.pt"
             },
-            "metrics": {
-                "type": "csv",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "header": true
-            },
-            "evaluation": {
-                "type": "csv",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "header": true
-            }
-        },
-        "train_info": {
-            "device": "cpu",
-            "interaction_params": {
-                "save_frequency": -1,
-                "save_probabilities": true,
-                "save_probabilities_bins_number": 10,
-                "write_training_prediction": true,
-                "write_validation_prediction": true,
-                "echo_training_metrics": true
-            },
-            "params": {
-                "global_epoch": 100,
-                "local_epoch": 0,
-                "batch_size": 256,
-                "aggregation_config": {
-                    "type": "fedavg",
-                    "encryption": {
-                        "method": "otp",
-                        "key_bitlength": 64,
-                        "data_type": "torch.Tensor",
-                        "key_exchange": {
-                            "key_bitlength": 3072,
-                            "optimized": true
-                        },
-                        "csprng": {
-                            "name": "hmac_drbg",
-                            "method": "sha512"
-                        }
+            "encryption": {
+                "otp": {
+                    "key_bitlength": 64,
+                    "data_type": "torch.Tensor",
+                    "key_exchange": {
+                        "key_bitlength": 3072,
+                        "optimized": true
+                    },
+                    "csprng": {
+                        "name": "hmac_drbg",
+                        "method": "sha512"
                     }
-                },
-                "lossfunc_config": {
-                    "L1Loss": {}
-                },
-                "metric_config": {
-                    "mae": {},
-                    "mse": {},
-                    "mape": {}
-                },
-                "early_stopping": {
-                    "key": "acc",
-                    "patience": -1,
-                    "delta": 0
-                },
-                "extra_config": {
                 }
-            }
+            },
+            "optimizer": {
+                "Adam": {
+                    "lr":0.01,
+                    "amsgrad": true
+                }
+            },
+            "lr_scheduler": {
+                "StepLR": {
+                    "step_size": 10,
+                    "gamma": 0.1
+                }
+            },
+            "lossfunc": {
+                "L1Loss": {}
+            },
+            "metric": {
+                "mae": {},
+                "mse": {},
+                "mape": {}
+            },
+            "early_stopping": {}
         }
     }
+}

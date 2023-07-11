@@ -40,7 +40,10 @@ vertical_linear_regression_label_trainer_rule = {
     "output": {
         "path": String("/opt/checkpoints/[JOB_ID]/[NODE_ID]"),
         "model": {
-            "name": String("vertical_linear_regression_[STAGE_ID].pt")
+            "name": String("vertical_linear_regression_[STAGE_ID].model")
+        },
+        "onnx_model": {
+            "name": String("vertical_linear_regression_[STAGE_ID].onnx")
         },
         "metric_train": {
             "name": String("linear_reg_metric_train_[STAGE_ID].csv")
@@ -90,6 +93,16 @@ vertical_linear_regression_label_trainer_rule = {
                 "mape": {},
                 "mae": {},
                 "rmse": {}
+            },
+            "optimizer": {
+                "lr": Float(0.01),
+                "p": OneOf(0, 1, 2).set_default(2),
+                "alpha": Float(1e-4)
+            },
+            "early_stopping": {
+                "key": "loss",
+                "patience": Integer(-1),
+                "delta": Float(0)
             },
             "random_seed": Optional(Integer(50))
         }

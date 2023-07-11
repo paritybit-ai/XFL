@@ -13,27 +13,23 @@
 # limitations under the License.
 
 
-
-import tensorflow as tf
-import tensorflow.keras as keras
-from transformers import TFBertForSequenceClassification, BertConfig
+from transformers import BertConfig, BertForSequenceClassification
+import torch.nn as nn
 
 
-class BertForSst2(keras.Model):
+class BertForSst2Torch(nn.Module):
     def __init__(self, from_pretrained=True, num_labels=None, **kwargs):
         super().__init__()
         if from_pretrained:
             config = BertConfig.from_pretrained("bert-base-uncased", num_labels=num_labels)
-            self.bert = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', config=config)
+            self.bert = BertForSequenceClassification.from_pretrained('bert-base-uncased', config=config)
         else:
             config = BertConfig(num_labels=num_labels, **kwargs)
-            self.bert = TFBertForSequenceClassification(config=config)
-            self.bert(self.bert.dummy_inputs)
-        self.softmax = keras.layers.Softmax(axis=-1)
+            self.bert = BertForSequenceClassification(config=config)
+        self.softmax = nn.Softmax(dim=-1)
 
-    def call(self, input_ids, attention_mask, token_type_ids, labels):
+    def forward(self, input_ids, attention_mask, token_type_ids, labels):
         loss, logits = self.bert(input_ids = input_ids, attention_mask = attention_mask, 
                               token_type_ids=token_type_ids, labels = labels)[:2]
         prob = self.softmax(logits)
         return loss, logits, prob
-

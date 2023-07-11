@@ -36,7 +36,7 @@
             "name": "xgb_metric_train_[STAGE_ID].csv"
         },
         "metric_val": {
-            "name": "xgb_metrics_val_[STAGE_ID].csv"
+            "name": "xgb_metric_val_[STAGE_ID].csv"
         },
         "prediction_train": {
             "name": "xgb_prediction_train_[STAGE_ID].csv"
@@ -61,79 +61,9 @@
         }
     },
     "train_info": {
-        "interaction_params": {
-            "save_frequency": 1,
-            "echo_training_metrics": true,
-            "write_training_prediction": true,
-            "write_validation_prediction": true
-        },
         "train_params": {
-            "lossfunc": {
-                "BCEWithLogitsLoss": {}
-            },
-            "num_trees": 2,
-            "learning_rate": 0.3,
-            "gamma": 0,
-            "lambda_": 1,
-            "max_depth": 2,
-            "num_bins": 5,
-            "min_split_gain": 0,
-            "min_sample_split": 0,
-            "feature_importance_type": "gain",
-            "downsampling": {
-                "column": {
-                    "rate": 1.0
-                },
-                "row": {
-                    "run_goss": false,
-                    "top_rate": 0.4,
-                    "other_rate": 0.4
-                }
-            },
-            "category": {
-                "cat_smooth": 1,
-                "cat_features": {
-                    "col_index": "",
-                    "col_names": [],
-                    "max_num_value": 0,
-                    "col_index_type": "inclusive",
-                    "col_names_type": "inclusive",
-                    "max_num_value_type": "union"
-                }
-            },
-            "metric": {
-                "decision_table": {
-                    "method": "equal_frequency",
-                    "bins": 10
-                },
-                "acc": {},
-                "precision": {},
-                "recall": {},
-                "f1_score": {},
-                "auc": {},
-                "ks": {}
-            },
-            "early_stopping": {
-                "key": "ks",
-                "patience": -1,
-                "delta": 0.001
-            },
-            "encryption": {
-                "otp": {
-                    "key_bitlength": 64,
-                    "data_type": "numpy.ndarray",
-                    "key_exchange": {
-                        "key_bitlength": 3072,
-                        "optimized": true
-                    },
-                    "csprng": {
-                        "name": "hmac_drbg",
-                        "method": "sha512"
-                    }
-                }
-            },
             "max_num_cores": 999,
-            "batch_size_val": 40960
+            "val_batch_size": 40960
         }
     }
 }

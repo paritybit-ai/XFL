@@ -17,7 +17,6 @@ import json
 import os
 import random
 import shutil
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -172,7 +171,7 @@ class TestBinningWoeIv:
         label_train_conf = get_label_trainer_conf
         if binning == "equal_frequency":
             label_train_conf["train_info"]["train_params"]["binning"]["method"] = "equal_frequency"
-        mocker.patch("algorithm.framework.vertical.binning_woe_iv.label_trainer._two_layer_progress")
+        mocker.patch("service.fed_control._send_progress")
         mocker.patch.object(
             BroadcastChannel, "__init__", return_value=None
         )

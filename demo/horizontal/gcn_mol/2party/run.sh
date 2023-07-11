@@ -25,6 +25,14 @@ fi
 export PYTHONPATH=$PYTHONPATH:$PROJECT_HOME/python:$PROJECT_HOME/python/common/communication/gRPC/python
 
 datapath="${PROJECT_HOME}/dataset"
+datapath="${PROJECT_HOME}/dataset"
+if [ ! -d "${PROJECT_HOME}/dataset/hiv/2party" ]; then
+  if [ ! -f "${PROJECT_HOME}/python/xfl.py" ]; then
+    python "${PROJECT_HOME}/common/dataset/hiv.py" --splits 2 --party "1" "2" --mode horizontal
+  else
+    python "${PROJECT_HOME}/python/common/dataset/hiv.py" --splits 2 --party "1" "2" --mode horizontal
+  fi
+fi
 
 type="horizontal"
 operator="gcn_mol"

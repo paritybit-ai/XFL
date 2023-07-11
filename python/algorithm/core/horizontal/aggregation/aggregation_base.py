@@ -16,10 +16,13 @@
 import abc
 import math
 import pickle
-from typing import List, OrderedDict, Tuple, Dict
+from typing import List, OrderedDict, Tuple, Dict, Optional
 
 from common.communication.gRPC.python.channel import DualChannel
 from service.fed_config import FedConfig
+from common.crypto.one_time_pad.component import (
+    OneTimeKey, OneTimePadContext, OneTimePadCiphertext
+)
 
 MAX_BLOCK_SIZE = 524288000 # 500M
 MOV = b"@" # middle of value
@@ -100,7 +103,7 @@ class AggregationLeafBase(object):
             elif recv_value[-1] == MOV[0]:
                 continue    
         params = pickle.loads(pickle_params)
-        return params     
+        return params
 
 
 class AggregationRootBase(object):
@@ -137,7 +140,10 @@ class AggregationRootBase(object):
     def set_initial_params(self, params: OrderedDict) -> None:
         self.initial_parameters = params
 
-    def aggregate(self, average=True) -> OrderedDict:
+    def aggregate(self, 
+                  average: bool = True, 
+                  parameters: Optional[OrderedDict] = None, 
+                  parameters_weight: Optional[float] = None) -> OrderedDict:
         """ receive local gradient/weights from trainer, then calculate average gradient/weights.
         """
         # received_values = []
@@ -190,6 +196,9 @@ class AggregationRootBase(object):
             #             continue
             # if all(collect_flg):
             #     break
+            
+        if parameters:
+            received_values.insert(0, (parameters, parameters_weight))
 
         # received_values = list(map(lambda x: pickle.loads(x), received_values))
         aggregated_params = self._calc_aggregated_params(received_values, average)

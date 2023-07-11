@@ -13,32 +13,40 @@
 # limitations under the License.
 
 
-from algorithm.core.horizontal.template.tensorflow.fedavg.label_trainer import FedAvgLabelTrainer
+from algorithm.core.horizontal.template.agg_type import \
+    register_agg_type_for_label_trainer
 from common.utils.logger import logger
 from .common import Common
-from tqdm import tqdm
-import tensorflow as tf
+from functools import partial
 
 
-class HorizontalBertLabelTrainer(Common, FedAvgLabelTrainer):
+class HorizontalBertLabelTrainer(Common):
     def __init__(self, train_conf: dict):
-        FedAvgLabelTrainer.__init__(self, train_conf)
+        super().__init__(train_conf)
+        agg_type = list(self.common_config.aggregation["method"].keys())[0]
+        self.register_hook(
+            place="after_train_loop", rank=1,
+            func=partial(self.val_loop, "train"), desc="validation on trainset"
+        )
+        register_agg_type_for_label_trainer(self, 'torch', agg_type)
         
     def train_loop(self):
+        self.model.train()
         train_loss = 0
     
-        loss_func = list(self.loss_func.values())[0]
+        lossfunc = list(self.lossfunc.values())[0]
         optimizer = list(self.optimizer.values())[0]
+        lr_scheduler = list(self.lr_scheduler.values())[0] if self.lr_scheduler.values() else None
         
-        for idx, (input_ids, token_type_ids, attention_masks, labels) in enumerate(tqdm(self.train_dataloader)):
-            with tf.GradientTape() as tape:
-                _,_,prob = self.model(input_ids, token_type_ids, attention_masks, labels)
-                loss = loss_func(labels, prob)
-                grads = tape.gradient(loss, self.model.trainable_weights)
-                optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
-                train_loss += float(loss)
-
+        for batch_id, (input_ids, token_type_ids, attention_masks, labels) in enumerate(self.train_dataloader):
+            _,_,pred = self.model(input_ids, token_type_ids, attention_masks, labels)
+            loss = lossfunc(pred, labels)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            train_loss += loss.item()
         train_loss /= len(self.train_dataloader)
+        if lr_scheduler:
+            lr_scheduler.step()
         self.context["train_loss"] = train_loss
         logger.info(f"Train loss: {train_loss}")
-        

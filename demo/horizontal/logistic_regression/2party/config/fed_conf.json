@@ -1,7 +1,7 @@
 {
     "fed_info": {
        "scheduler": {
-            "assist_trainer": "localhost:55001"
+            "scheduler": "localhost:55001"
         },
         "trainer": {
             "node-1": "localhost:56001",

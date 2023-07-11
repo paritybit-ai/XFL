@@ -1,0 +1,35 @@
+[
+    {
+        "identity": "label_trainer",
+        "model_info": {
+            "name": "horizontal_chatglm",
+            "config": {
+            }
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "QA",
+                    "path": "../dataset/poetry_small/hhpoetry-3.json"
+                }
+            ],
+            "pretrained_model": {
+                "path": "../demo/horizontal/chatglm/chatglm-demo"
+            }
+        },
+        "output": {
+            "path":  "/opt/checkpoints/[JOB_ID]/[NODE_ID]"
+        },
+        "train_info": {
+            "train_params": {
+                "trainer": {
+                    "per_device_train_batch_size": 2,
+                    "gradient_accumulation_steps": 4,
+                    "no_cuda": false,
+                    "torch_compile": false,
+                    "save_strategy": "steps"
+                }
+            }
+        }
+    }
+]

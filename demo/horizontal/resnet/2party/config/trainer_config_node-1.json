@@ -2,11 +2,7 @@
     {
         "identity": "label_trainer",
         "model_info": {
-            "name": "horizontal_resnet",
-            "config": {
-                "num_classes": 10,
-                "layers": 50
-            }
+            "name": "horizontal_resnet"
         },
         "input": {
             "trainset": [
@@ -18,70 +14,24 @@
             ]
         },
         "output": {
-            "metrics": {
-                "type": "csv",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "header": true
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "model": {
+                "name": "horizontal_resnet_[STAGE_ID].model"
             },
-            "evaluation": {
-                "type": "csv",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "header": true
+            "metric_train": {
+                "name": "resnet_metric_train_[STAGE_ID].csv"
             }
         },
         "train_info": {
             "device": "cuda:0",
             "interaction_params": {
                 "save_frequency": -1,
-                "save_probabilities": true,
-                "save_probabilities_bins_number": 10,
                 "write_training_prediction": true,
-                "write_validation_prediction": false,
                 "echo_training_metrics": true
             },
-            "params": {
-                "global_epoch": 15,
+            "train_params": {
                 "local_epoch": 2,
-                "batch_size": 128,
-                "aggregation_config": {
-                    "type": "fedavg",
-                    "encryption": {
-                        "method": "otp",
-                        "key_bitlength": 64,
-                        "data_type": "torch.Tensor",
-                        "key_exchange": {
-                            "key_bitlength": 3072,
-                            "optimized": true
-                        },
-                        "csprng": {
-                            "name": "hmac_drbg",
-                            "method": "sha512"
-                        }
-                    }
-                },
-                "optimizer_config": {
-                    "Adam": {
-                        "lr": 0.001,
-                        "amsgrad": true,
-                        "weight_decay": 0.001
-                    }
-                },
-                "lossfunc_config": {
-                    "CrossEntropyLoss": {}
-                },
-                "metric_config": {
-                    "accuracy": {},
-                    "f1_score": {"average":"micro"},
-                    "precision": {"average":"micro"},
-                    "recall": {"average":"micro"}
-                },
-                "early_stopping": {
-                    "key": "acc",
-                    "patience": -1,
-                    "delta": 0
-                },
-                "extra_config": {
-                }
+                "train_batch_size": 64
             }
         }
     }

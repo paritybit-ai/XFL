@@ -76,10 +76,17 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
         else:
             raise TypeError(
                 f"Encryption param type {type(self.xgb_config.encryption_param)} not valid.")
+
+        if self.train_features is not None:
+            input_schema = ','.join([_ for _ in self.train_features.columns if _ not in set(["y", "id"])])
+        else:
+            input_schema = ""
+
         self.export_conf = [{
             "class_name": "VerticalXGBooster",
             "identity": self.identity,
-            "filename": self.output.get("proto_model", {}).get("name", '')
+            "filename": self.output.get("proto_model", {}).get("name", ''),
+            "input_schema": input_schema,
         }]
 
         ray.init(num_cpus=get_core_num(self.xgb_config.max_num_cores),
@@ -90,6 +97,7 @@ class VerticalXgboostTrainer(VerticalXgboostBase):
         return config
 
     def fit(self):
+        self.channels["sync"].send({FedNode.node_name: self.train_names})
         self.check_dataset()
         # nodes_dict = {}
         node_dict = NodeDict()

@@ -36,7 +36,14 @@ def check_stage_train_conf(conf):
     role = conf.get("identity")
     name = conf.get('model_info', {}).get('name')
     
-    # name = 'vertical_logistic_regression'
+    if not name:
+        res = {
+            "result": [],
+            "itemized_result": [],
+            "summary": [],
+            "message": []
+        }
+        return res
     
     fed_type = name.split('_')[0]
     operator_name = '_'.join(name.split('_')[1:])
@@ -161,7 +168,6 @@ def check_cross_stage_input_output(conf: list, ignore_list: list = []):
                             "value": os.path.join(local_path, local_name)
                         }
                     )
-                
                     
         input_dict[stage_id] = input_path
         

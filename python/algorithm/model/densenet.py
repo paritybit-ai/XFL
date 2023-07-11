@@ -57,7 +57,6 @@ class TransitionBlock(nn.Module):
         self.conv = nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=1, padding=0, bias=False)
         self.drop_out = drop_out
 
-
     def forward(self, x):
         out = self.conv(self.relu(self.bn(x)))
         if self.drop_out:

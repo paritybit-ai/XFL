@@ -15,7 +15,6 @@
 
 import gc
 from typing import Dict, List, Optional, Union
-
 import numpy as np
 import pandas as pd
 from pathos.pools import ThreadPool
@@ -35,8 +34,9 @@ from common.crypto.paillier.utils import get_core_num
 from common.utils.constants import PAILLIER, PLAIN
 from common.utils.logger import logger
 from service.fed_config import FedConfig
-from service.fed_control import _three_layer_progress
+from service.fed_control import ProgressCalculator
 from .debug_params import EMBEDING
+from service.fed_node import FedNode
 
 
 class VerticalDecisionTreeLabelTrainer(object):
@@ -58,6 +58,7 @@ class VerticalDecisionTreeLabelTrainer(object):
                 f"Encryption method {tree_param.encryption_param.method} not supported.")
 
         self.tree_param = tree_param
+        self.progress_calculator = ProgressCalculator(self.tree_param.num_trees, self.tree_param.max_depth)
         self.y = y
         self.y_pred = y_pred
         self.cat_columns = cat_columns
@@ -239,7 +240,7 @@ class VerticalDecisionTreeLabelTrainer(object):
             party_id: [] for party_id in self.summed_grad_hess_channs
         }
         
-        is_continue_flags = np.array([True for party_id in self.summed_grad_hess_channs], dtype=np.bool)
+        is_continue_flags = np.array([True for party_id in self.summed_grad_hess_channs], dtype=bool)
 
         def decrypt_hist(hist_list: List[np.ndarray], num_cores: int, out_origin: bool = True) -> list:
             len_list = [len(item) for item in hist_list]
@@ -395,14 +396,20 @@ class VerticalDecisionTreeLabelTrainer(object):
 
         owner_id = split_info.owner_id
         fid = split_info.feature_idx
+        
+        owner_name = owner_id
+        for node_id in FedNode.config["trainer"]:
+            if owner_id == node_id:
+                owner_name = FedNode.config["trainer"][owner_id]["name"]
+                break
 
-        if (owner_id, fid) not in self.feature_importance:
-            self.feature_importance[(owner_id, fid)] = FeatureImportance(
+        if (owner_name, fid) not in self.feature_importance:
+            self.feature_importance[(owner_name, fid)] = FeatureImportance(
                 0, 0, self.feature_importance_type)
 
-        self.feature_importance[(owner_id, fid)].add_split(inc_split)
+        self.feature_importance[(owner_name, fid)].add_split(inc_split)
         if inc_gain is not None:
-            self.feature_importance[(owner_id, fid)].add_gain(inc_gain)
+            self.feature_importance[(owner_name, fid)].add_gain(inc_gain)
 
     def fit(self) -> Tree:
         tree = Tree(self.party_id, self.tree_index)
@@ -415,10 +422,7 @@ class VerticalDecisionTreeLabelTrainer(object):
             logger.info(f"Decision tree depth {depth} training start..")
             this_depth_nodes = tree.search_nodes(depth)
 
-            # node_id is used to calculate the progress of the training
-            node_id = 0
             for node in this_depth_nodes:
-                node_id += 1
                 logger.info(f"Depth {depth} - node {node.id} start training.")
                 self.tree_node_chann.broadcast(node, use_pickle=True)
                 best_split_info_dict: Dict[str, BestSplitInfo] = {}
@@ -442,9 +446,6 @@ class VerticalDecisionTreeLabelTrainer(object):
                 ]
                 best_split_info = best_split_info_dict[best_split_party_id]
 
-                # calculate and update the progress of the training
-                _three_layer_progress(node_id-1, len(this_depth_nodes), depth, self.tree_param.max_depth, self.tree_index - 1, self.tree_param.num_trees)
-
                 if best_split_info.gain < self.tree_param.min_split_gain or \
                         min(best_split_info.num_left_bin,
                             best_split_info.num_right_bin) < self.tree_param.min_sample_split:
@@ -455,7 +456,7 @@ class VerticalDecisionTreeLabelTrainer(object):
                 if best_split_info.feature_owner == self.party_id:
                     for party_id in self.min_split_info_channs:
                         self.min_split_info_channs[party_id].send([-1, -1, -1], use_pickle=True)
-                    
+
                     split_info = SplitInfo(owner_id=best_split_info.feature_owner,
                                            feature_idx=best_split_info.feature_idx,
                                            is_category=best_split_info.is_category,
@@ -494,6 +495,9 @@ class VerticalDecisionTreeLabelTrainer(object):
                 self.update_feature_importance(split_info)
                 logger.info(f"Depth {depth} - node {node.id} finish training.")
                 gc.collect()
+
+            # calculate and update the progress of the training
+            self.progress_calculator.cal_custom_progress(self.tree_index, depth+1)
 
         self.tree_node_chann.broadcast(None, use_pickle=True)
         logger.info(f"Decision tree {self.tree_index} training finished")

@@ -46,6 +46,11 @@ class FedConfig(object):
     
     @classmethod
     @property
+    def node_name(cls):
+        return FedNode.node_name
+    
+    @classmethod
+    @property
     def redis_host(cls):
         return FedNode.redis_host
     

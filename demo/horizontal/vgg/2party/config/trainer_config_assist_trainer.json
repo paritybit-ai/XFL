@@ -16,44 +16,29 @@
                     "name": "cifar10_test.npz"
                 }
             ],
-            "pretrain_model": {
-            }
+            "pretrain_model": {}
         },
         "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "model": {
-                "type": "file",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "name": "horizontal_vgg.pt"
+                "name": "horizontal_vgg_[STAGE_ID].model"
             },
-            "metrics": {
-                "type": "csv",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "header": true
-            },
-            "evaluation": {
-                "type": "csv",
-                "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-                "header": true
+            "metric_val": {
+                "name": "vgg_metric_val_[STAGE_ID].csv"
             }
         },
         "train_info": {
-            "device": "cuda:0",
-            "interaction_params": {
-                "save_frequency": -1,
-                "save_probabilities": true,
-                "save_probabilities_bins_number": 10,
-                "write_training_prediction": true,
-                "write_validation_prediction": true,
-                "echo_training_metrics": true
-            },
-            "params": {
-                "global_epoch": 200,
-                "local_epoch": 1,
-                "batch_size": 128,
-                "aggregation_config": {
-                    "type": "fedavg",
-                    "encryption": {
-                        "method": "otp",
+            "device": "cpu",
+            "train_params": {
+                "global_epoch": 2,
+                "val_batch_size": 128,
+                "aggregation": {
+                    "method": {
+                        "fedavg": {}
+                    }
+                },
+                "encryption": {
+                    "otp": {
                         "key_bitlength": 64,
                         "data_type": "torch.Tensor",
                         "key_exchange": {
@@ -66,11 +51,23 @@
                         }
                     }
                 },
-                "lossfunc_config": {
+                "optimizer": {
+                    "SGD": {
+                        "lr": 0.01,
+                        "momentum": 0.9,
+                        "weight_decay": 5e-4
+                    }
+                },
+                "lr_scheduler": {
+                    "CosineAnnealingLR": {
+                        "T_max":100
+                    }
+                },
+                "lossfunc": {
                     "CrossEntropyLoss": {}
                 },
-                "metric_config": {
-                    "accuracy": {},
+                "metric": {
+                    "acc": {},
                     "f1_score": {"average":"micro"},
                     "precision": {"average":"micro"},
                     "recall": {"average":"micro"}
@@ -79,8 +76,6 @@
                     "key": "acc",
                     "patience": -1,
                     "delta": 0
-                },
-                "extra_config": {
                 }
             }
         }

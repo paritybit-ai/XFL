@@ -17,30 +17,19 @@
                         -999
                     ]
                 }
-            ],
-            "valset": [
             ]
         },
         "output": {
             "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "model": {
-                "name": "vertical_binning_woe_iv_[STAGE_ID].json"
-            },
-            "result": {
+            "iv": {
                 "name": "woe_iv_result_[STAGE_ID].json"
             },
             "split_points": {
                 "name": "binning_split_points_[STAGE_ID].json"
-            },
-            "trainset": {
-                "name": "fintech_woe_map_train_[STAGE_ID].csv"
             }
         },
         "train_info": {
             "train_params": {
-                "interaction_params": {
-                    "save_model": true
-                },
                 "encryption": {
                     "paillier": {
                         "key_bit_size": 2048,
@@ -50,7 +39,7 @@
                     }
                 },
                 "binning": {
-                    "method": "equal_width",
+                    "method": "equal_frequency",
                     "bins": 5
                 }
             }
@@ -74,7 +63,7 @@
         },
         "output": {
             "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
-            "model": {
+            "corr": {
                 "name": "vertical_pearson_[STAGE_ID].pkl"
             }
         },
@@ -123,6 +112,9 @@
             "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
             "trainset": {
                 "name": "temp/selected_train_[STAGE_ID].csv"
+            },
+            "valset": {
+                "name": "temp/selected_val_[STAGE_ID].csv"
             },
             "model": {
                 "name": "vertical_feature_selection_[STAGE_ID].pkl"

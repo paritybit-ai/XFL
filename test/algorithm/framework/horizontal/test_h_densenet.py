@@ -20,14 +20,18 @@ from random import SystemRandom
 import pickle
 import numpy as np
 import pytest
+from gmpy2 import powmod
 
-import service.fed_config
+from service.fed_config import FedConfig
+from service.fed_node import FedNode
+from algorithm.framework.horizontal.densenet.assist_trainer import HorizontalDensenetAssistTrainer
+from algorithm.framework.horizontal.densenet.label_trainer import HorizontalDensenetLabelTrainer
 from algorithm.core.horizontal.aggregation.aggregation_otp import AggregationOTPRoot, AggregationOTPLeaf
 from algorithm.core.horizontal.aggregation.aggregation_plain import AggregationPlainRoot, AggregationPlainLeaf
 from common.communication.gRPC.python.channel import DualChannel
 from common.communication.gRPC.python.commu import Commu
 from common.crypto.key_agreement.contants import primes_hex
-from gmpy2 import powmod
+
 
 MOV = b"@" # middle of value
 EOV = b"&" # end of value
@@ -48,14 +52,6 @@ def prepare_data():
 def get_assist_trainer_conf():
     with open("python/algorithm/config/horizontal_densenet/assist_trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
-        conf["input"]["valset"][0]["name"] = "test_data.npz"
-        conf["output"]["model"]["path"] = "/opt/checkpoints/unit_test"
-        conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
-        conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
-        conf["model_info"]["config"]["layers"] = "unit_test"
-        conf["train_info"]["params"]["batch_size"] = 16
-        conf["train_info"]["params"]["global_epoch"] = 2
     yield conf
 
 
@@ -63,13 +59,6 @@ def get_assist_trainer_conf():
 def get_trainer_conf():
     with open("python/algorithm/config/horizontal_densenet/trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
-        conf["input"]["trainset"][0]["name"] = "train_data.npz"
-        conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
-        conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
-        conf["model_info"]["config"]["layers"] = "unit_test"
-        conf["train_info"]["params"]["batch_size"] = 16
-        conf["train_info"]["params"]["global_epoch"] = 2
     yield conf
 
 
@@ -98,31 +87,20 @@ class TestDensenet:
         conf = get_trainer_conf
         assist_conf = get_assist_trainer_conf
         mocker.patch.object(
-            service.fed_config.FedConfig, "get_label_trainer", return_value=['node-1', 'node-2']
+            FedConfig, "get_label_trainer", return_value=['node-1', 'node-2']
         )
         mocker.patch.object(
-            service.fed_config.FedConfig, "get_assist_trainer", return_value='assist_trainer'
+            FedConfig, "get_assist_trainer", return_value='assist_trainer'
         )
-        mocker.patch.object(
-            service.fed_config.FedConfig, "node_id", 'node-1'
-        )
+        mocker.patch.object(FedNode, "node_id", "node-1")
+        mocker.patch.object(FedConfig, "node_id", 'node-1')
         
         if encryption_method == "plain":
-            conf["train_info"]["params"]["aggregation_config"]["encryption"] = {
-                "method": "plain"}
-            assist_conf["train_info"]["params"]["aggregation_config"]["encryption"] = {
-                "method": "plain"}
+            assist_conf["train_info"]["train_params"]["encryption"] = {"plain": {}}
 
-        sec_conf = conf["train_info"]["params"]["aggregation_config"]["encryption"]
-
-        def mock_recv(*args, **kwargs):
-            return params_plain_recv
-
-        def mock_collect(*args, **kwargs):
-            return params_collect
-
-        def mock_agg(*args, **kwargs):
-            return agg_otp
+            sec_conf = assist_conf["train_info"]["train_params"]["encryption"]["plain"]
+        else:
+            sec_conf = assist_conf["train_info"]["train_params"]["encryption"]["otp"]
         
         if encryption_method == "plain":
             fed_method = AggregationPlainLeaf(sec_conf)
@@ -140,14 +118,26 @@ class TestDensenet:
             a = rand_num_generator.randint(lower_bound, upper_bound)
             g_power_a = powmod(2, a, primes[1])
             mocker.patch.object(DualChannel, "swap", return_value=(1, g_power_a))
+            Commu.node_id = "node-1"
             fed_method = AggregationOTPLeaf(sec_conf)
             fed_assist_method = AggregationOTPRoot(sec_conf)
 
-        service.fed_config.FedConfig.stage_config = conf
-        from algorithm.framework.horizontal.densenet.assist_trainer import HorizontalDensenetAssistTrainer
-        from algorithm.framework.horizontal.densenet.label_trainer import HorizontalDensenetLabelTrainer
+        mocker.patch.object(
+            DualChannel, "__init__", return_value=None
+        )
+        mocker.patch.object(
+            DualChannel, "send", return_value=None
+        )
+        recv_mocker = mocker.patch.object(
+            DualChannel, "recv", 
+            return_value = {
+                "model_info":assist_conf["model_info"], "train_info": assist_conf["train_info"]
+            }
+        )
+
         rest = HorizontalDensenetLabelTrainer(conf)
         rest_a = HorizontalDensenetAssistTrainer(assist_conf)
+        esflag_recv = pickle.dumps(False) + EOV
         params_plain_recv = pickle.dumps(rest_a.model.state_dict()) + EOV
         params_send = fed_method._calc_upload_value(
             rest.model.state_dict(), len(rest.train_dataloader.dataset))
@@ -155,19 +145,16 @@ class TestDensenet:
         agg_otp = fed_assist_method._calc_aggregated_params(list(map(lambda x: pickle.loads(x), [params_collect, params_collect])))
 
         def mock_recv(*args, **kwargs):
-            if recv_mocker.call_count % 4 in [1,2]:
+            if recv_mocker.call_count % 2 == 1:
+                return esflag_recv
+            else:
                 return params_plain_recv
-            elif recv_mocker.call_count % 4 in [0,3] :
-                return params_collect
+        
+        def mock_agg(*args, **kwargs):
+            return agg_otp
 
         recv_mocker = mocker.patch.object(
             DualChannel, "recv", side_effect=mock_recv
-        )
-        mocker.patch.object(
-            DualChannel, "__init__", return_value=None
-        )
-        mocker.patch.object(
-            DualChannel, "send", return_value=None
         )
         mocker.patch.object(
             AggregationOTPRoot, "aggregate", side_effect=mock_agg

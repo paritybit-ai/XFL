@@ -13,22 +13,21 @@
 # limitations under the License.
 
 
-from algorithm.core.horizontal.template.torch.fedavg.label_trainer import FedAvgLabelTrainer
-from common.utils.logger import logger
 import torch
-from torch import nn
-from torch.utils.data import DataLoader, TensorDataset
-import numpy as np
 from common.communication.gRPC.python.channel import DualChannel
 from service.fed_config import FedConfig
-import os
-from algorithm.core.data_io import CsvReader
+from functools import partial
+from algorithm.core.horizontal.template.agg_type import \
+    register_agg_type_for_label_trainer
+from common.utils.logger import logger
 from .common import Common
 
 
-class HorizontalNbaflLabelTrainer(Common, FedAvgLabelTrainer):
+class HorizontalNbaflLabelTrainer(Common):
     def __init__(self, train_conf: dict):
         super().__init__(train_conf)
+        register_agg_type_for_label_trainer(self, "torch", "fedavg")
+
         self.sample_size_channel = DualChannel(
             name="sample_size_" + FedConfig.node_id,
             ids=[FedConfig.get_assist_trainer(), FedConfig.node_id]
@@ -37,38 +36,40 @@ class HorizontalNbaflLabelTrainer(Common, FedAvgLabelTrainer):
         self.prev_params = [
             param.data.detach().clone() for param in self.model.parameters()
         ]
-        self.mu = self.train_params['mu']
-        self.delta = self.train_params['delta']
-        self.c = np.sqrt(2 * np.log(1.25 / self.delta))
-        self.epsilon = self.train_params['epsilon']
 
         # Update sample size
         self.register_hook(
-            place="before_global_epoch", rank=2,
+            place="before_global_epoch", rank=1,
             func=self._update_sample_size, desc="Update local sample size"
         )
         # Calculate update sigma
         self.register_hook(
-            place="before_global_epoch", rank=3,
+            place="before_global_epoch", rank=2,
             func=self._calc_uplink_sigma, desc="Calculate uplink sigma"
         )
 
         # Update prev param
         self.register_hook(
-            place="after_local_epoch", rank=-2,
+            place="after_local_epoch", rank=1,
             func=self._update_prev_param, desc="Update prev param"
         )
 
         # Clip norm
         self.register_hook(
-            place="after_local_epoch", rank=-1,
+            place="after_local_epoch", rank=2,
             func=self._clip_params, desc="Clip param norms"
         )
 
         # Add noise
         self.register_hook(
-            place="after_local_epoch", rank=0,
+            place="after_local_epoch", rank=3,
             func=self._add_noise, desc="Add uplink noise"
+        )
+
+        # Validation
+        self.register_hook(
+            place="after_train_loop", rank=1,
+            func=partial(self.val_loop, "train"), desc="validation on trainset"
         )
 
     def _update_prev_param(self, context):
@@ -86,13 +87,13 @@ class HorizontalNbaflLabelTrainer(Common, FedAvgLabelTrainer):
         for param in self.model.parameters():
             norm_ratio = torch.maximum(
                 torch.ones(param.shape),
-                torch.abs(param.data) / self.train_params['C']
+                torch.abs(param.data) / self.common_config.train_params['C']
             )
             param.data = param.data / norm_ratio
         return
 
     def _calc_uplink_sigma(self, context):
-        delta_S_u = 2 * self.train_params['C'] / \
+        delta_S_u = 2 * self.common_config.train_params['C'] / \
             len(self.train_dataloader.dataset)
         sigma_u = self.c * delta_S_u / self.epsilon
         logger.info("Uplink sigma: {}".format(sigma_u))
@@ -103,16 +104,15 @@ class HorizontalNbaflLabelTrainer(Common, FedAvgLabelTrainer):
         self.model.train()
         train_loss = 0
 
-        loss_func = next(iter(self.loss_func.items()))[1]
-        optimizer = next(iter(self.optimizer.items()))[1]
+        lossfunc = list(self.lossfunc.values())[0]
+        optimizer = list(self.optimizer.values())[0]
 
         for batch_idx, (feature, label) in enumerate(self.train_dataloader):
             pred = self.model(feature)
-            loss = loss_func(pred, label)
+            loss = lossfunc(pred, label)
             reg = self._cal_regularization()
             loss += reg
             optimizer.zero_grad()
-
             loss.backward()
             optimizer.step()
 
