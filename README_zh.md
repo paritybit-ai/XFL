@@ -1,3 +1,5 @@
+### [English](./README.md)
+
 [![License](https://img.shields.io/github/license/paritybit-ai/XFL)](https://opensource.org/licenses/Apache-2.0)
 [![Documentation Status](https://readthedocs.org/projects/xfl/badge/?version=latest)](https://xfl.readthedocs.io/zh_CN/latest/?badge=latest)
 
@@ -22,6 +24,8 @@ XFL是一个高性能、高灵活度、高适用性、轻量开放的联邦学�
   
   - 轻量： 对服务器性能要求低，部分算法可在性能较差的环境下运行
   - 开放：支持 Pytorch / Tensorflow 等主流机器学习框架，支持用户自定义横向模型
+ 
+- 支持大语言模型
 
 # [快速开始](./docs/zh_CN/source/tutorial/usage.md)
 
