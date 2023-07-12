@@ -1,3 +1,5 @@
+### [中文](./README_zh.md)
+
 [![License](https://img.shields.io/github/license/paritybit-ai/XFL)](https://opensource.org/licenses/Apache-2.0)
 [![Documentation Status](https://readthedocs.org/projects/xfl/badge/?version=latest)](https://xfl.readthedocs.io/en/latest/?badge=latest)
 
@@ -27,6 +29,8 @@ and applies secure communication protocols to ensure communication security.
   - Lightweight: low requirements on host performance.
   - Open: support mainstream machine learning frameworks such as Pytorch and Tensorflow, and user can conveniently design their own horizontal federation models.
   - Easy to use: able to run in both docker environment and Conda environment.
+ 
+- Support for large language models
 
 # Quick Start Demo
 
