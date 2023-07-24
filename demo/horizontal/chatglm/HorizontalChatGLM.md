@@ -1,6 +1,6 @@
 [ChatGLM](https://github.com/THUDM/ChatGLM-6B) is an open source, bilingual conversation language model based on the General Language Model (GLM) architecture with 6.2 billion parameters. ChatGLM-6B uses similar technology to ChatGPT and is optimised for Chinese Q&A and dialogue. With approximately 1T identifiers trained in both Chinese and English, supported by supervised fine-tuning, feedback self-help, and reinforcement learning with human feedback, ChatGLM-6B with 6.2 billion parameters is able to generate responses that are quite compatible with human preferences.
 
-XFL supports ChatGLM lateral federation fine-tuning and provides two types of fine-tuning, lora, and ptuning-v2. This tutorial will describe how to configure the lateral ChatGLM federation operator and perform federation fine-tuning training.
+XFL supports ChatGLM horizontal federation fine-tuning and provides two types of fine-tuning, lora, and ptuning-v2. This tutorial will describe how to configure the horizontal ChatGLM federation operator and perform federation fine-tuning training.
 
 # Dataset preparation
 
