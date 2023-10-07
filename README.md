@@ -27,7 +27,7 @@ and applies secure communication protocols to ensure communication security.
 - Lightweight, open and easy to use:
   
   - Lightweight: low requirements on host performance.
-  - Open: support mainstream machine learning frameworks such as Pytorch and Tensorflow, and user can conveniently design their own horizontal federation models.
+  - Open: support mainstream machine learning frameworks such as PyTorch、TensorFlow、PaddlePaddle and Jax, and user can conveniently design their own horizontal federation models.
   - Easy to use: able to run in both docker environment and Conda environment.
  
 - Support for large language models
