@@ -1,0 +1,65 @@
+[
+    {
+        "identity": "assist_trainer",
+        "model_info": {
+            "name": "horizontal_xgboost"
+        },
+        "input": {
+            "pretrain_model": {}
+        },
+        "output": {},
+        "train_info": {
+            "interaction_params": {
+                "save_frequency": 1,
+                "echo_training_metrics": true,
+                "write_training_prediction": true,
+                "write_validation_prediction": true
+            },
+            "train_params": {
+                "encryption": {
+                    "otp": {
+                        "key_bitlength": 64,
+                        "data_type": "numpy.ndarray",
+                        "key_exchange": {
+                            "key_bitlength": 3072,
+                            "optimized": true
+                        },
+                        "csprng": {
+                            "name": "hmac_drbg",
+                            "method": "sha512"
+                        }
+                    }
+                },
+                "num_trees": 10,
+                "learning_rate": 0.3,
+                "gamma": 0,
+                "lambda_": 1,
+                "max_depth": 3,
+                "num_bins": 16,
+                "min_split_gain": 0,
+                "min_sample_split": 0,
+                "feature_importance_type": "gain",
+                "lossfunc": {
+                    "BCEWithLogitsLoss": {}
+                },
+                "metric": {
+                    "decision_table": {
+                        "method": "equal_frequency",
+                        "bins": 10
+                    },
+                    "acc": {},
+                    "precision": {},
+                    "recall": {},
+                    "f1_score": {},
+                    "auc": {},
+                    "ks": {}
+                },
+                "early_stopping": {
+                    "key": "ks",
+                    "patience": -1,
+                    "delta": 0.001
+                }
+            }
+        }
+    }
+]

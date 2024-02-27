@@ -1,0 +1,71 @@
+[
+    {
+        "identity": "label_trainer",
+        "model_info": {
+            "name": "horizontal_xgboost"
+        },
+        "input": {
+            "trainset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_horizontal/2party",
+                    "name": "breast_cancer_wisconsin_horizontal_1.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ],
+            "valset": [
+                {
+                    "type": "csv",
+                    "path": "./dataset/breast_cancer_wisconsin_horizontal/2party",
+                    "name": "breast_cancer_wisconsin_horizontal_test.csv",
+                    "has_label": true,
+                    "has_id": true
+                }
+            ],
+            "pretrained_model": {
+                "path": "",
+                "name": ""
+            }
+        },
+        "output": {
+            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "model": {
+                "name": "horizontal_xgboost_[STAGE_ID].model"
+            },
+            "metric_train": {
+                "name": "xgb_metric_train_[STAGE_ID].csv"
+            },
+            "metric_val": {
+                "name": "xgb_metric_val_[STAGE_ID].csv"
+            },
+            "prediction_train": {
+                "name": "xgb_prediction_train_[STAGE_ID].csv"
+            },
+            "prediction_val": {
+                "name": "xgb_prediction_val_[STAGE_ID].csv"
+            },
+            "ks_plot_train": {
+                "name": "xgb_ks_plot_train_[STAGE_ID].csv"
+            },
+            "ks_plot_val": {
+                "name": "xgb_ks_plot_val[STAGE_ID].csv"
+            },
+            "decision_table_train": {
+                "name": "xgb_decision_table_train_[STAGE_ID].csv"
+            },
+            "decision_table_val": {
+                "name": "xgb_decision_table_val_[STAGE_ID].csv"
+            },
+            "feature_importance": {
+                "name": "xgb_feature_importance_[STAGE_ID].csv"
+            }
+        },
+        "train_info": {
+            "train_params": {
+                "max_num_cores": 999,
+                "val_batch_size": 40960
+            }
+        }
+    }
+]
