@@ -1,9 +1,9 @@
-grpcio==1.43.0
-grpcio-tools==1.43.0
+grpcio>=1.53.2
+grpcio-tools>=1.53.2
 torch>=1.10.2
 torchvision>=0.11.2
 torchaudio>=0.10.1
-scikit-learn==0.24.2
+scikit-learn>=1.0.1
 pandas>=1.4.1
 scanpy>=1.8.1
 redis>=3.5.3
@@ -21,13 +21,13 @@ pytest-httpserver>=1.0.6
 pyspark>=3.2.1
 pyarrow>=1.0.0
 dill==0.3.4
-tqdm==4.62.3
-tensorflow==2.11.1
+tqdm>=4.66.3
+tensorflow>=2.12.1
 transformers>=4.30.0
 grpc-interceptor >= 0.15.0
 multiprocess==0.70.12.2
 rdkit==2022.9.2
-dgl==0.9.1
+dgl>=2.4.1
 dgllife==0.3.0
 jax>=0.3.24
 optax>=0.1.3
