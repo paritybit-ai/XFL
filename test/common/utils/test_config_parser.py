@@ -18,7 +18,7 @@ from common.utils.config_parser import replace_variable
 
 def test_replace_variable():
     output = {
-        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
         "model": {
             "name": "vertical_xgboost_[STAGE_ID].json"
         },
@@ -31,7 +31,7 @@ def test_replace_variable():
     res = replace_variable(output, stage_id, job_id, node_id)
 
     assert res == {
-        "path": "/opt/checkpoints/001/a",
+        "path": "/tmp/xfl/checkpoints/001/a",
         "model": {
             "name": "vertical_xgboost_2.json"
         },

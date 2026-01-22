@@ -7,7 +7,7 @@
         "trainset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/unit_test",
+                "path": "/tmp/xfl/dataset/unit_test",
                 "name": "train_data.csv",
                 "has_id": true,
                 "has_label": true

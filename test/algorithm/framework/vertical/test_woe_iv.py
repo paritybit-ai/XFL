@@ -44,19 +44,19 @@ def prepare_data():
     random.shuffle(y)
     case_df['y'] = y
     case_df[['y', 'x0', 'x1', 'x2']].reset_index().rename(columns={'index': 'id'}).to_csv(
-        "/opt/dataset/unit_test/breast_cancer_wisconsin_guest_train.csv", index=False
+        "/tmp/xfl/dataset/unit_test/breast_cancer_wisconsin_guest_train.csv", index=False
     )
     case_df[['x3', 'x4']].reset_index().rename(columns={'index': 'id'}).to_csv(
-        "/opt/dataset/unit_test/breast_cancer_wisconsin_host_train.csv", index=False
+        "/tmp/xfl/dataset/unit_test/breast_cancer_wisconsin_host_train.csv", index=False
     )
     case_df[['y', 'x0', 'x1', 'x2']].reset_index().rename(columns={'index': 'id'}).iloc[:100].to_csv(
-        "/opt/dataset/unit_test/breast_cancer_wisconsin_guest_test.csv", index=False
+        "/tmp/xfl/dataset/unit_test/breast_cancer_wisconsin_guest_test.csv", index=False
     )
     case_df[['x3', 'x4']].reset_index().rename(columns={'index': 'id'}).iloc[:100].to_csv(
-        "/opt/dataset/unit_test/breast_cancer_wisconsin_host_test.csv", index=False
+        "/tmp/xfl/dataset/unit_test/breast_cancer_wisconsin_host_test.csv", index=False
     )
     case_df.reset_index().rename(columns={'index': 'id'}).to_csv(
-        "/opt/dataset/unit_test/data.csv", index=False
+        "/tmp/xfl/dataset/unit_test/data.csv", index=False
     )
 
 
@@ -64,8 +64,8 @@ def prepare_data():
 def get_label_trainer_conf():
     with open("python/algorithm/config/vertical_binning_woe_iv/label_trainer.json") as f:
         label_trainer_conf = json.load(f)
-        label_trainer_conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
-        label_trainer_conf["output"]["path"] = "/opt/checkpoints/unit_test_1"
+        label_trainer_conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
+        label_trainer_conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test_1"
         label_trainer_conf["input"]["trainset"][0]["name"] = "breast_cancer_wisconsin_guest_train.csv"
     yield label_trainer_conf
 
@@ -74,8 +74,8 @@ def get_label_trainer_conf():
 def get_trainer_conf():
     with open("python/algorithm/config/vertical_binning_woe_iv/trainer.json") as f:
         trainer_conf = json.load(f)
-        trainer_conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
-        trainer_conf["output"]["path"] = "/opt/checkpoints/unit_test_1"
+        trainer_conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
+        trainer_conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test_1"
         trainer_conf["input"]["trainset"][0]["name"] = "breast_cancer_wisconsin_host_train.csv"
     yield trainer_conf
 
@@ -85,22 +85,22 @@ def env():
     Commu.node_id = "node-1"
     Commu.trainer_ids = ['node-1', 'node-2']
     Commu.scheduler_id = 'assist_trainer'
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
     prepare_data()
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test_1"):
-        shutil.rmtree("/opt/checkpoints/unit_test_1")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test_1"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test_1")
 
 
 def simu_data():
-    case_df = pd.read_csv("/opt/dataset/unit_test/data.csv", index_col='id').reset_index(drop=True)
+    case_df = pd.read_csv("/tmp/xfl/dataset/unit_test/data.csv", index_col='id').reset_index(drop=True)
     return case_df
 
 
@@ -249,9 +249,9 @@ class TestBinningWoeIv:
         bwi.fit()
 
         # 检查是否正常留存
-        assert os.path.exists("/opt/checkpoints/unit_test_1/woe_iv_result_[STAGE_ID].json")
+        assert os.path.exists("/tmp/xfl/checkpoints/unit_test_1/woe_iv_result_[STAGE_ID].json")
 
-        with open("/opt/checkpoints/unit_test_1/woe_iv_result_[STAGE_ID].json", "r",
+        with open("/tmp/xfl/checkpoints/unit_test_1/woe_iv_result_[STAGE_ID].json", "r",
                   encoding='utf-8') as f:
             conf = json.loads(f.read())
             for k in ["woe", "iv", "count_neg", "count_pos", "ratio_pos", "ratio_neg"]:

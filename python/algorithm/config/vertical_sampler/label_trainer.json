@@ -15,7 +15,7 @@
         ]
     },
     "output": {
-        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
         "sample_id": {
             "name": "temp/sampled_id_[STAGE_ID].json"
         },

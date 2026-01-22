@@ -99,7 +99,7 @@ class VerticalXgboostBase(VerticalModelBase):
                     value_map.update({v: len(list_unique) for v in list_group})
                     codes = self.train_features[x].map(value_map)
                 else:
-                    codes, uniques = pd.factorize(self.train_features[x], na_sentinel=0)  # na_sentinel will not be activated actually
+                    codes, uniques = pd.factorize(self.train_features[x])
                     uniques = uniques.to_numpy()
                     
                 # uniques: array of values that belongs to the same category

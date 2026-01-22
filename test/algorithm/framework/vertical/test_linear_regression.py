@@ -41,48 +41,48 @@ def prepare_data():
     })
     case_df['y'] = case_df['x0'] + case_df['x1'] + case_df['x3'] + 0.5 * case_df['x2']
     case_df[['y', 'x0']].head(800).to_csv(
-        "/opt/dataset/unit_test/train_guest.csv", index=True
+        "/tmp/xfl/dataset/unit_test/train_guest.csv", index=True
     )
     case_df[['y', 'x0']].tail(200).to_csv(
-        "/opt/dataset/unit_test/test_guest.csv", index=True
+        "/tmp/xfl/dataset/unit_test/test_guest.csv", index=True
     )
     case_df[['x1', 'x2']].head(800).to_csv(
-        "/opt/dataset/unit_test/train_host1.csv", index=True
+        "/tmp/xfl/dataset/unit_test/train_host1.csv", index=True
     )
     case_df[['x1', 'x2']].tail(200).to_csv(
-        "/opt/dataset/unit_test/test_host1.csv", index=True
+        "/tmp/xfl/dataset/unit_test/test_host1.csv", index=True
     )
     case_df[['x3', 'x4']].head(800).to_csv(
-        "/opt/dataset/unit_test/train_host2.csv", index=True
+        "/tmp/xfl/dataset/unit_test/train_host2.csv", index=True
     )
     case_df[['x3', 'x4']].tail(200).to_csv(
-        "/opt/dataset/unit_test/test_host2.csv", index=True
+        "/tmp/xfl/dataset/unit_test/test_host2.csv", index=True
     )
 
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
     prepare_data()
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 @pytest.fixture()
 def get_label_trainer_conf():
     with open("python/algorithm/config/vertical_linear_regression/label_trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["trainset"][0]["name"] = "train_guest.csv"
-        conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["valset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["valset"][0]["name"] = "test_guest.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
     yield conf
 
 
@@ -90,11 +90,11 @@ def get_label_trainer_conf():
 def get_trainer1_conf():
     with open("python/algorithm/config/vertical_linear_regression/trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["trainset"][0]["name"] = "train_host1.csv"
-        conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["valset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["valset"][0]["name"] = "test_host1.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
     yield conf
 
 
@@ -138,11 +138,11 @@ class TestVerticalLinearRegressionTrainer:
         conf = get_label_trainer_conf
         with open("python/algorithm/config/vertical_linear_regression/trainer.json") as f:
             conf_t = json.load(f)
-            conf_t["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+            conf_t["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
             conf_t["input"]["trainset"][0]["name"] = "train_host1.csv"
-            conf_t["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
+            conf_t["input"]["valset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
             conf_t["input"]["valset"][0]["name"] = "test_host1.csv"
-            conf_t["output"]["path"] = "/opt/checkpoints/unit_test"
+            conf_t["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
 
         conf["train_info"]["train_params"]["global_epoch"] = 1
         conf["train_info"]["train_params"]["batch_size"] = 1000
@@ -504,16 +504,16 @@ class TestVerticalLinearRegressionTrainer:
         # fit assist_trainer
         vlr_a.fit()
 
-        assert os.path.exists("/opt/checkpoints/unit_test/vertical_linear_regression_[STAGE_ID].pt")
-        assert os.path.exists("/opt/checkpoints/unit_test/linear_reg_metric_train_[STAGE_ID].csv")
-        assert os.path.exists("/opt/checkpoints/unit_test/linear_reg_metric_val_[STAGE_ID].csv")
-        assert os.path.exists("/opt/checkpoints/unit_test/linear_reg_prediction_train_[STAGE_ID].csv")
-        assert os.path.exists("/opt/checkpoints/unit_test/linear_reg_prediction_val_[STAGE_ID].csv")
-        assert os.path.exists("/opt/checkpoints/unit_test/linear_reg_feature_importance_[STAGE_ID].csv")
+        assert os.path.exists("/tmp/xfl/checkpoints/unit_test/vertical_linear_regression_[STAGE_ID].pt")
+        assert os.path.exists("/tmp/xfl/checkpoints/unit_test/linear_reg_metric_train_[STAGE_ID].csv")
+        assert os.path.exists("/tmp/xfl/checkpoints/unit_test/linear_reg_metric_val_[STAGE_ID].csv")
+        assert os.path.exists("/tmp/xfl/checkpoints/unit_test/linear_reg_prediction_train_[STAGE_ID].csv")
+        assert os.path.exists("/tmp/xfl/checkpoints/unit_test/linear_reg_prediction_val_[STAGE_ID].csv")
+        assert os.path.exists("/tmp/xfl/checkpoints/unit_test/linear_reg_feature_importance_[STAGE_ID].csv")
 
-        feature_importance = pd.read_csv("/opt/checkpoints/unit_test/linear_reg_feature_importance_[STAGE_ID].csv")
+        feature_importance = pd.read_csv("/tmp/xfl/checkpoints/unit_test/linear_reg_feature_importance_[STAGE_ID].csv")
         assert len(feature_importance) == 5
-        train_metric = pd.read_csv("/opt/checkpoints/unit_test/linear_reg_metric_train_[STAGE_ID].csv")
+        train_metric = pd.read_csv("/tmp/xfl/checkpoints/unit_test/linear_reg_metric_train_[STAGE_ID].csv")
         assert len(train_metric.columns) == 6
-        val_metric = pd.read_csv("/opt/checkpoints/unit_test/linear_reg_metric_val_[STAGE_ID].csv")
+        val_metric = pd.read_csv("/tmp/xfl/checkpoints/unit_test/linear_reg_metric_val_[STAGE_ID].csv")
         assert len(val_metric.columns) == 6

@@ -7,7 +7,7 @@
         "trainset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/data/vertical_breast_with_validation",
+                "path": "/tmp/xfl/dataset/data/vertical_breast_with_validation",
                 "name": "breast_vertical_guest_train.csv",
                 "has_label": true,
                 "has_id": true
@@ -16,7 +16,7 @@
         "valset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/data/vertical_breast_with_validation",
+                "path": "/tmp/xfl/dataset/data/vertical_breast_with_validation",
                 "name": "breast_vertical_guest_test.csv",
                 "has_label": true,
                 "has_id": true
@@ -24,7 +24,7 @@
         ]
     },
     "output": {
-        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
         "model": {
             "name": "local_feature_preprocess_[STAGE_ID].pt"
         },

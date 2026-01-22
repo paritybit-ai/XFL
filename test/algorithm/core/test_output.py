@@ -23,19 +23,19 @@ from algorithm.core.output import TableSaver
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
 
 class TestTableSaver():
     def test_save(self):
-        ts = TableSaver('/opt/dataset/unit_test/table.tb')
+        ts = TableSaver('/tmp/xfl/dataset/unit_test/table.tb')
         ts.save(0,{"x0":1.0,"x1":2.0},prefix='unit',suffix="test", append=False)
         assert os.path.exists(
-            "/opt/dataset/unit_test/unit_table_test.tb")
+            "/tmp/xfl/dataset/unit_test/unit_table_test.tb")
 
         ts.save(1,{"x2":3.0,"x3":4.0},prefix='unit',suffix="test", append=True)
-        with open("/opt/dataset/unit_test/unit_table_test.tb",'r') as f:
+        with open("/tmp/xfl/dataset/unit_test/unit_table_test.tb",'r') as f:
                 assert f.readlines() == ['epoch,x0,x1\n', '0,1,2\n', '1,3,4\n']

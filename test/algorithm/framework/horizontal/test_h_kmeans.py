@@ -44,10 +44,10 @@ def prepare_data():
                       random_state=42, cluster_std=2.0)
     data_df = pd.DataFrame({'label': y, 'x1': X[:, 0], 'x2': X[:, 1]})
     data_df.head(400).to_csv(
-        "/opt/dataset/unit_test/horizontal_kmeans_train.csv"
+        "/tmp/xfl/dataset/unit_test/horizontal_kmeans_train.csv"
     )
     data_df.tail(50).to_csv(
-        "/opt/dataset/unit_test/horizontal_kmeans_test.csv"
+        "/tmp/xfl/dataset/unit_test/horizontal_kmeans_test.csv"
     )
 
 
@@ -68,16 +68,16 @@ def get_trainer_conf():
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
     prepare_data()
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 class TestHorizontalKMeans:

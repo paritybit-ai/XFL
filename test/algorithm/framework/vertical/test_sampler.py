@@ -35,10 +35,10 @@ def env():
     Commu.node_id = "node-1"
     Commu.trainer_ids = ['node-1', 'node-2']
     Commu.scheduler_id = 'assist_trainer'
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
     # 测试用例
     case_df = pd.DataFrame({
         'x0': np.random.random(1000),
@@ -50,25 +50,25 @@ def env():
     case_df['y'] = np.where(
         case_df['x0'] + case_df['x2'] + case_df['x3'] > 2.5, 1, 0)
     case_df[['y', 'x0', 'x1', 'x2']].to_csv(
-        "/opt/dataset/unit_test/guest.csv", index=True, index_label='id')
+        "/tmp/xfl/dataset/unit_test/guest.csv", index=True, index_label='id')
     case_df[['x3', 'x4']].to_csv(
-        "/opt/dataset/unit_test/host.csv", index=True, index_label='id')
+        "/tmp/xfl/dataset/unit_test/host.csv", index=True, index_label='id')
     yield
     # 清除测试数据
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 @pytest.fixture()
 def get_label_trainer_conf():
     with open("python/algorithm/config/vertical_sampler/label_trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["dataset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["dataset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["dataset"][0]["name"] = "guest.csv"
         conf["input"]["dataset"][0]["has_id"] = True
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
     yield conf
 
 
@@ -76,10 +76,10 @@ def get_label_trainer_conf():
 def get_trainer_conf():
     with open("python/algorithm/config/vertical_sampler/trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["dataset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["dataset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["dataset"][0]["name"] = "host.csv"
         conf["input"]["dataset"][0]["has_id"] = True
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
     yield conf
 
 
@@ -108,10 +108,10 @@ class TestVerticalSampler:
                 assert len(ls.data) == 1000
                 ls.fit()
                 assert os.path.exists(
-                    "/opt/checkpoints/unit_test/temp/sampled_data_[STAGE_ID].csv")
+                    "/tmp/xfl/checkpoints/unit_test/temp/sampled_data_[STAGE_ID].csv")
                 if ls.save_id:
                     assert os.path.exists(
-                        "/opt/checkpoints/unit_test/temp/sampled_id_[STAGE_ID].json")
+                        "/tmp/xfl/checkpoints/unit_test/temp/sampled_id_[STAGE_ID].json")
             elif fraction == {"wrong_key": 1}:
                 with pytest.raises(NotImplementedError) as e:
                     ls = VerticalSamplerLabelTrainer(conf)

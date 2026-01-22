@@ -29,10 +29,10 @@ from algorithm.framework.local.standard_scaler.label_trainer import \
 @pytest.fixture(scope="module", autouse=True)
 def env():
 	# 准备目录
-	if not os.path.exists("/opt/dataset/unit_test"):
-		os.makedirs("/opt/dataset/unit_test")
-	if not os.path.exists("/opt/checkpoints"):
-		os.makedirs("/opt/checkpoints")
+	if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+		os.makedirs("/tmp/xfl/dataset/unit_test")
+	if not os.path.exists("/tmp/xfl/checkpoints"):
+		os.makedirs("/tmp/xfl/checkpoints")
 	# 测试用例
 	case_df = pd.DataFrame({
 		'x0': np.random.random(1000),
@@ -41,28 +41,28 @@ def env():
 	})
 	case_df['y'] = np.where(case_df['x0'] + case_df['x2'] > 2.5, 1, 0)
 	case_df[['y', 'x0', 'x1', 'x2']].head(800).to_csv(
-		"/opt/dataset/unit_test/train.csv", index=True
+		"/tmp/xfl/dataset/unit_test/train.csv", index=True
 	)
 	case_df[['y', 'x0', 'x1', 'x2']].tail(200).to_csv(
-		"/opt/dataset/unit_test/test.csv", index=True
+		"/tmp/xfl/dataset/unit_test/test.csv", index=True
 	)
 	yield
 	# 清除测试数据
-	if os.path.exists("/opt/dataset/unit_test"):
-		shutil.rmtree("/opt/dataset/unit_test")
+	if os.path.exists("/tmp/xfl/dataset/unit_test"):
+		shutil.rmtree("/tmp/xfl/dataset/unit_test")
 
 
 @pytest.fixture()
 def get_conf():
 	with open("python/algorithm/config/local_normalization/label_trainer.json") as f:
 		conf = json.load(f)
-		conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+		conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
 		conf["input"]["trainset"][0]["name"] = "train.csv"
-		conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
+		conf["input"]["valset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
 		conf["input"]["valset"][0]["name"] = "test.csv"
-		conf["output"]["trainset"]["path"] = "/opt/dataset/unit_test"
+		conf["output"]["trainset"]["path"] = "/tmp/xfl/dataset/unit_test"
 		conf["output"]["trainset"]["name"] = "train.csv"
-		conf["output"]["valset"]["path"] = "/opt/dataset/unit_test"
+		conf["output"]["valset"]["path"] = "/tmp/xfl/dataset/unit_test"
 		conf["output"]["valset"]["name"] = "test.csv"
 	yield conf
 

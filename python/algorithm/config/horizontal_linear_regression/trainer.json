@@ -7,7 +7,7 @@
         "trainset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/unit_test",
+                "path": "/tmp/xfl/dataset/unit_test",
                 "name": "train_data.csv",
                 "has_label": true,
                 "has_id": true
@@ -15,7 +15,7 @@
         ]
     },
     "output": {
-        "path": "/opt/checkpoints/unit_test",
+        "path": "/tmp/xfl/checkpoints/unit_test",
         "model": {
             "name": "horizontal_linear_regression_[STAGE_ID].model"
         },

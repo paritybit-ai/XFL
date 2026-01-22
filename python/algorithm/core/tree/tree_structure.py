@@ -297,7 +297,6 @@ class BoostingTree(object):
         xgb = XGBoostModel()
         xgb.ParseFromString(bs)
         d = json_format.MessageToDict(xgb,
-                                      including_default_value_fields=True,
                                       preserving_proto_field_name=True)
         return cls.from_dict(d)
 
@@ -401,7 +400,6 @@ class NodeDict(object):
         node = NodeModel()
         node.ParseFromString(bs)
         d = json_format.MessageToDict(node,
-                                      including_default_value_fields=True,
                                       preserving_proto_field_name=True)
         return cls.from_dict(d["nodes"])
 

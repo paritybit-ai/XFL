@@ -7,7 +7,7 @@
         "dataset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/2party",
+                "path": "/tmp/xfl/dataset/2party",
                 "name": "epsilon_2party_guest_with_id.csv",
                 "has_label": true,
                 "has_id": true
@@ -15,7 +15,7 @@
         ]
     },
     "output": {
-        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
         "summary": {
             "name": "data_summary_[STAGE_ID].json"
         }

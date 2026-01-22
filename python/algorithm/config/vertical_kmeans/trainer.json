@@ -8,7 +8,7 @@
         "trainset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/breast_cancer_wisconsin/2party",
+                "path": "/tmp/xfl/dataset/breast_cancer_wisconsin/2party",
                 "name": "breast_cancer_wisconsin_host_train.csv",
                 "has_label": false,
                 "has_id": true
@@ -16,7 +16,7 @@
         ]
     },
     "output": {
-        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
         "model": {
             "name": "vertical_kmeans_[STAGE_ID].model"
         },

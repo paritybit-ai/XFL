@@ -7,7 +7,7 @@
         "trainset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/breast_cancer_wisconsin/2party",
+                "path": "/tmp/xfl/dataset/breast_cancer_wisconsin/2party",
                 "name": "breast_cancer_wisconsin_guest_train.csv",
                 "has_label": true,
                 "has_id": true
@@ -15,7 +15,7 @@
         ]
     },
     "output": {
-        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
         "corr": {
             "name": "vertical_pearson_[STAGE_ID].pkl"
         }

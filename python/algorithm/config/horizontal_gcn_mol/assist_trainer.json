@@ -17,7 +17,7 @@
         "valset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/unit_test",
+                "path": "/tmp/xfl/dataset/unit_test",
                 "name": "test_data.csv",
                 "has_label": true,
                 "has_id": false
@@ -26,7 +26,7 @@
         "pretrain_model": {}
     },
     "output": {
-        "path": "/opt/checkpoints/unit_test",
+        "path": "/tmp/xfl/checkpoints/unit_test",
         "model": {
             "name": "horizontal_gcn_mol_[STAGE_ID].model"
         },

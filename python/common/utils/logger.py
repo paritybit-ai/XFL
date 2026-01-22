@@ -17,7 +17,7 @@ import logging.config
 import os
 from logging import FileHandler, LogRecord
 
-LOG_PATH = "/opt/log"
+LOG_PATH = os.environ.get("XFL_LOG_PATH", os.path.join(os.getcwd(), "log"))
 
 class ColorFormatter(logging.Formatter):
     log_colors = {

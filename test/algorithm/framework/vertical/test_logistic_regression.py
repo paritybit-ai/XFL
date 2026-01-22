@@ -49,16 +49,16 @@ def prepare_data():
     case_df['y'] = np.where(
         case_df['x0'] + case_df['x2'] + case_df['x3'] > 2.5, 1, 0)
     case_df[['y', 'x0', 'x1', 'x2']].head(80).to_csv(
-        "/opt/dataset/unit_test/train_guest.csv", index=True
+        "/tmp/xfl/dataset/unit_test/train_guest.csv", index=True
     )
     case_df[['y', 'x0', 'x1', 'x2']].tail(20).to_csv(
-        "/opt/dataset/unit_test/test_guest.csv", index=True
+        "/tmp/xfl/dataset/unit_test/test_guest.csv", index=True
     )
     case_df[['x3', 'x4']].head(80).to_csv(
-        "/opt/dataset/unit_test/train_host.csv", index=True
+        "/tmp/xfl/dataset/unit_test/train_host.csv", index=True
     )
     case_df[['x3', 'x4']].tail(20).to_csv(
-        "/opt/dataset/unit_test/test_host.csv", index=True
+        "/tmp/xfl/dataset/unit_test/test_host.csv", index=True
     )
 
 
@@ -105,11 +105,11 @@ config_sync = {
 def get_label_trainer_conf():
     with open("python/algorithm/config/vertical_logistic_regression/label_trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["trainset"][0]["name"] = "train_guest.csv"
-        conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["valset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["valset"][0]["name"] = "test_guest.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
         conf["train_info"]["interaction_params"]["save_frequency"] = -1
     yield conf
 
@@ -118,11 +118,11 @@ def get_label_trainer_conf():
 def get_trainer_conf():
     with open("python/algorithm/config/vertical_logistic_regression/trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["trainset"][0]["name"] = "train_host.csv"
-        conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["valset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["valset"][0]["name"] = "test_host.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
         # conf["train_info"]["interaction_params"]["save_frequency"] = -1
     yield conf
 
@@ -133,20 +133,20 @@ def env():
     Commu.trainer_ids = ['node-1', 'node-2']
     Commu.scheduler_id = 'assist_trainer'
     service.fed_node.FedNode.node_name = 'node-1'
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
-    # if not os.path.exists("/opt/config/unit_test"):
-    # 	os.makedirs("/opt/config/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
+    # if not os.path.exists("/tmp/xfl/config/unit_test"):
+    # 	os.makedirs("/tmp/xfl/config/unit_test")
     prepare_data()
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    # if os.path.exists("/opt/config/unit_test"):
-    # 	shutil.rmtree("/opt/config/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    # if os.path.exists("/tmp/xfl/config/unit_test"):
+    # 	shutil.rmtree("/tmp/xfl/config/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 class TestLogisticRegression:
@@ -650,7 +650,7 @@ class TestLogisticRegression:
         mocker.patch.object(
             BroadcastChannel, "scatter", return_value=0
         )
-        get_label_trainer_conf["output"]["path"] = "/opt/checkpoints/unit_test_2"
+        get_label_trainer_conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test_2"
 
         def mock_collect(*args, **kwargs):
             if encryption_method == "ckks":
@@ -702,19 +702,19 @@ class TestLogisticRegression:
             lrt, "check_data", return_value=None
         )
         lrt.fit()
-        shutil.rmtree("/opt/checkpoints/unit_test_2")
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test_2")
 
     @staticmethod
     def check_model_output():
         # 检查是否正常输出了model_config.json
-        assert os.path.exists("/opt/checkpoints/unit_test/model_config.json")
-        with open("/opt/checkpoints/unit_test/model_config.json") as f:
+        assert os.path.exists("/tmp/xfl/checkpoints/unit_test/model_config.json")
+        with open("/tmp/xfl/checkpoints/unit_test/model_config.json") as f:
             model_config = json.load(f)
 
         # 检查model_config.json的stage是否符合预期
         assert model_config[-1]["class_name"] == "VerticalLogisticRegression"
 
-        filename = "/opt/checkpoints/unit_test/" + model_config[0]["filename"][:-5] +'.pmodel'
+        filename = "/tmp/xfl/checkpoints/unit_test/" + model_config[0]["filename"][:-5] +'.pmodel'
         dim = model_config[-1]["input_dim"]
         bias = model_config[-1]["bias"]
 
@@ -731,7 +731,6 @@ class TestLogisticRegression:
         m = LinearModel()
         m.ParseFromString(byte_str)
         model = json_format.MessageToDict(m,
-                                          including_default_value_fields=True,
                                           preserving_proto_field_name=True)
 
         assert len(model["state_dict"]["weight"]) == dim

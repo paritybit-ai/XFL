@@ -22,18 +22,18 @@ from common.utils.utils import save_model_config
 
 
 def test_save_model_config():
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test/")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test/")
         
-    p = Path("/opt/checkpoints/unit_test")
+    p = Path("/tmp/xfl/checkpoints/unit_test")
     save_model_config([{"node-1":{}},{"node-2":{}}], p)
-    assert os.path.isfile("/opt/checkpoints/unit_test/model_config.json")
+    assert os.path.isfile("/tmp/xfl/checkpoints/unit_test/model_config.json")
 
     save_model_config([{"node-3":{}},{"node-4":{}}], p)
-    assert os.path.isfile("/opt/checkpoints/unit_test/model_config.json")
-    with open("/opt/checkpoints/unit_test/model_config.json") as f:
+    assert os.path.isfile("/tmp/xfl/checkpoints/unit_test/model_config.json")
+    with open("/tmp/xfl/checkpoints/unit_test/model_config.json") as f:
         data = json.load(f)
     assert len(data) == 4
 
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test/")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test/")

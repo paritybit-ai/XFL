@@ -200,14 +200,15 @@ class BiClsMetric:
         cm = confusion_matrix(y_true, y_pred > 0.5)
         for metric_function in self.metric_functions:
             if metric_function in ("acc", "precision", "recall", "f1_score"):
-                self.metrics[metric_function] = self.metric_functions[metric_function](
-                    cm).item()
+                val = self.metric_functions[metric_function](cm)
+                self.metrics[metric_function] = val.item() if hasattr(val, 'item') else val
             elif metric_function in ("auc", "ks"):
-                self.metrics[metric_function] = self.metric_functions[metric_function](
-                    tpr, fpr).item()
+                val = self.metric_functions[metric_function](tpr, fpr)
+                self.metrics[metric_function] = val.item() if hasattr(val, 'item') else val
             elif metric_function == "BCEWithLogitsLoss":
-                self.metrics[metric_function] = self.metric_functions[metric_function](torch.tensor(y_pred),
-                                                                                       torch.tensor(y_true)).item()
+                val = self.metric_functions[metric_function](torch.tensor(y_pred),
+                                                                                       torch.tensor(y_true))
+                self.metrics[metric_function] = val.item() if hasattr(val, 'item') else val
 
     def __repr__(self):
         output = ["epoch: %d" % self.epoch]

@@ -18,7 +18,7 @@
         ]
     },
     "output": {
-        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
         "split_points": {
             "name": "binning_split_points_[STAGE_ID].json"
         }

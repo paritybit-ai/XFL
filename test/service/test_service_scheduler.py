@@ -293,7 +293,7 @@ class TestSchedulerService():
                     "trainset": [
                         {
                             "type": "csv",
-                            "path": "/opt/dataset/testing/fintech",
+                            "path": "/tmp/xfl/dataset/testing/fintech",
                             "name": "banking_guest_train_v01_20220216_TL.csv",
                             "has_id": True,
                             "has_label": True,
@@ -303,7 +303,7 @@ class TestSchedulerService():
                     ]
                 },
                 "output": {
-                    "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                    "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                     "model": {
                         "name": "vertical_binning_woe_iv_[STAGE_ID].json"
                     },
@@ -345,13 +345,13 @@ class TestSchedulerService():
                 },
                 "input": {
                     "iv_result": {
-                        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                        "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                         "name": "woe_iv_result_[STAGE_ID-1].json"
                     },
                     "trainset": [
                         {
                             "type": "csv",
-                            "path": "/opt/dataset/testing/fintech",
+                            "path": "/tmp/xfl/dataset/testing/fintech",
                             "name": "banking_guest_train_v01_20220216_TL.csv",
                             "has_id": True,
                             "has_label": True
@@ -360,7 +360,7 @@ class TestSchedulerService():
                     "valset": [
                         {
                             "type": "csv",
-                            "path": "/opt/dataset/testing/fintech",
+                            "path": "/tmp/xfl/dataset/testing/fintech",
                             "name": "banking_guest_train_v01_20220216_TL.csv",
                             "has_id": True,
                             "has_label": True
@@ -368,7 +368,7 @@ class TestSchedulerService():
                     ]
                 },
                 "output": {
-                    "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                    "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                     "model": {
                         "name": "feature_selection_[STAGE_ID].pkl"
                     },
@@ -401,7 +401,7 @@ class TestSchedulerService():
                     "trainset": [
                         {
                             "type": "csv",
-                            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                            "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                             "name": "selected_train_[STAGE_ID-1].csv",
                             "has_id": True,
                             "has_label": True
@@ -409,7 +409,7 @@ class TestSchedulerService():
                     ]
                 },
                 "output": {
-                    "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                    "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                     "corr": {
                         "name": "vertical_pearson_[STAGE_ID].pkl"
                     }
@@ -439,17 +439,17 @@ class TestSchedulerService():
                 },
                 "input": {
                     "corr_result": {
-                        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                        "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                         "name": "vertical_pearson_[STAGE_ID-1].pkl"
                     },
                     "iv_result": {
-                        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                        "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                         "name": "woe_iv_result_[STAGE_ID].json" # "name": "woe_iv_result_[STAGE_ID-3].json"
                     },
                     "trainset": [
                         {
                             "type": "csv",
-                            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                            "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                             "name": "selected_train_[STAGE_ID-2].csv",
                             "has_id": True,
                             "has_label": True
@@ -458,7 +458,7 @@ class TestSchedulerService():
                     "valset": [
                         {
                             "type": "csv",
-                            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                            "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                             "name": "selected_val_[STAGE_ID-2].csv",
                             "has_id": True,
                             "has_label": True
@@ -466,7 +466,7 @@ class TestSchedulerService():
                     ]
                 },
                 "output": {
-                    "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                    "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                     "model": {
                         "name": "feature_selection_[STAGE_ID].pkl"
                     },
@@ -503,7 +503,7 @@ class TestSchedulerService():
                     "trainset": [
                         {
                             "type": "csv",
-                            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                            "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                             "name": "selected_train_[STAGE_ID-1].csv",
                             "has_id": True,
                             "has_label": True
@@ -512,7 +512,7 @@ class TestSchedulerService():
                     "valset": [
                         {
                             "type": "csv",
-                            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                            "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                             "name": "selected_val_[STAGE_ID-1].csv",
                             "has_id": True,
                             "has_label": True
@@ -520,7 +520,7 @@ class TestSchedulerService():
                     ]
                 },
                 "output": {
-                    "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                    "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                     "model": {
                         # "name": "local_normalization_[STAGE_ID].pt"
                         "name": "vertical_logitstic_regression_[STAGE_ID].pt"
@@ -548,7 +548,7 @@ class TestSchedulerService():
                     "trainset": [
                         {
                             "type": "csv",
-                            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                            "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                             "name": "normalized_train_[STAGE_ID-1].csv",
                             "has_id": True,
                             "has_label": True
@@ -557,7 +557,7 @@ class TestSchedulerService():
                     "valset": [
                         {
                             "type": "csv",
-                            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                            "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                             "name": "normalized_val_[STAGE_ID-1].csv",
                             "has_id": True,
                             "has_label": True
@@ -569,7 +569,7 @@ class TestSchedulerService():
                     }
                 },
                 "output": {
-                    "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+                    "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
                     "model": {
                         # "name": "vertical_logitstic_regression_[STAGE_ID].pt"
                         "name": "vertical_logitstic_regression_[STAGE_ID - 1].pt"
@@ -664,7 +664,7 @@ class TestSchedulerService():
         
         assert m.replace(' ', '').replace('\n', '') == '''
         duplicatedInputOutput {
-                dumpedValue: "\\"/opt/checkpoints/JOB_ID/NODE_ID/vertical_logitstic_regression_4.pt\\""
+                dumpedValue: "\\"/tmp/xfl/checkpoints/JOB_ID/NODE_ID/vertical_logitstic_regression_4.pt\\""
                 positionList {
                     stageId: 4
                     pathInfo {
@@ -694,7 +694,7 @@ class TestSchedulerService():
                 }
                 }
                 nonexistentInput {
-                dumpedValue: "\\"/opt/dataset/testing/fintech/banking_guest_train_v01_20220216_TL.csv\\""
+                dumpedValue: "\\"/tmp/xfl/dataset/testing/fintech/banking_guest_train_v01_20220216_TL.csv\\""
                 positionList {
                     pathInfo {
                     dictPath {
@@ -704,7 +704,7 @@ class TestSchedulerService():
                 }
                 }
                 nonexistentInput {
-                dumpedValue: "\\"/opt/dataset/testing/fintech/banking_guest_train_v01_20220216_TL.csv\\""
+                dumpedValue: "\\"/tmp/xfl/dataset/testing/fintech/banking_guest_train_v01_20220216_TL.csv\\""
                 positionList {
                     stageId: 1
                     pathInfo {
@@ -715,7 +715,7 @@ class TestSchedulerService():
                 }
                 }
                 nonexistentInput {
-                dumpedValue: "\\"/opt/dataset/testing/fintech/banking_guest_train_v01_20220216_TL.csv\\""
+                dumpedValue: "\\"/tmp/xfl/dataset/testing/fintech/banking_guest_train_v01_20220216_TL.csv\\""
                 positionList {
                     stageId: 1
                     pathInfo {
@@ -726,7 +726,7 @@ class TestSchedulerService():
                 }
                 }
                 nonexistentInput {
-                dumpedValue: "\\"/opt/checkpoints/JOB_ID/NODE_ID/woe_iv_result_3.json\\""
+                dumpedValue: "\\"/tmp/xfl/checkpoints/JOB_ID/NODE_ID/woe_iv_result_3.json\\""
                 positionList {
                     stageId: 3
                     pathInfo {

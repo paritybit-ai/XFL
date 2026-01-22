@@ -14,34 +14,32 @@
 
 import os
 import shutil
-from common.utils.logger import add_job_log_handler, add_job_stage_log_handler, remove_log_handler, logger
-
-LOG_PATH = "/opt/log"
+from common.utils.logger import add_job_log_handler, add_job_stage_log_handler, remove_log_handler, logger, LOG_PATH
 
 
 def test_add_job_log_handler():
     job_handler = add_job_log_handler("unit_test", 1)
     logger.info("add_job_log_handler")
-    assert job_handler.baseFilename == "/opt/log/unit_test/1/xfl.log"
-    assert os.path.exists("/opt/log/unit_test/1/xfl.log")
-    with open("/opt/log/unit_test/1/xfl.log") as f:
+    assert job_handler.baseFilename == os.path.join(LOG_PATH, "unit_test/1/xfl.log")
+    assert os.path.exists(os.path.join(LOG_PATH, "unit_test/1/xfl.log"))
+    with open(os.path.join(LOG_PATH, "unit_test/1/xfl.log")) as f:
         assert f.readline().split()[-1] == "add_job_log_handler"
-    shutil.rmtree("/opt/log/unit_test/1")
+    shutil.rmtree(os.path.join(LOG_PATH, "unit_test/1"))
 
 
 def test_add_job_stage_log_handler():
     job_stage_handler = add_job_stage_log_handler('job0', "unit_test", 1, "test_model")
     logger.info("add_job_stage_log_handler")
     logger.info(job_stage_handler.baseFilename)
-    assert job_stage_handler.baseFilename  == "/opt/log/job0/unit_test/stage1_test_model.log"
-    assert os.path.exists("/opt/log/job0/unit_test/stage1_test_model.log")
-    with open("/opt/log/job0/unit_test/stage1_test_model.log") as f:
+    assert job_stage_handler.baseFilename  == os.path.join(LOG_PATH, "job0/unit_test/stage1_test_model.log")
+    assert os.path.exists(os.path.join(LOG_PATH, "job0/unit_test/stage1_test_model.log"))
+    with open(os.path.join(LOG_PATH, "job0/unit_test/stage1_test_model.log")) as f:
         assert f.readline().split()[-1] == "add_job_stage_log_handler"
-    shutil.rmtree("/opt/log/job0/")
+    shutil.rmtree(os.path.join(LOG_PATH, "job0/"))
 
 
 
 def test_remove_log_handler():
     job_handler = add_job_log_handler("unit_test", 1)
     remove_log_handler(job_handler)
-    shutil.rmtree("/opt/log/unit_test")
+    shutil.rmtree(os.path.join(LOG_PATH, "unit_test"))

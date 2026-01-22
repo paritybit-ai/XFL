@@ -16,7 +16,7 @@
         ]
     },
     "output": {
-        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
         "model": {
             "name": "horizontal_logitstic_regression_[STAGE_ID].model"
         },
