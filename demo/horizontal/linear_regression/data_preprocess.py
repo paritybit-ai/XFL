@@ -2,12 +2,16 @@ import random
 
 import numpy as np
 import pandas as pd
-from sklearn.datasets import load_boston
 
-bostonDataset = load_boston()
-features = pd.DataFrame(bostonDataset['data'])
-features.columns = bostonDataset['feature_names']
-label = pd.DataFrame(bostonDataset['target'])
+# Fetch dataset from original source since sklearn.datasets.load_boston is removed
+data_url = "http://lib.stat.cmu.edu/datasets/boston"
+raw_df = pd.read_csv(data_url, sep=r"\s+", skiprows=22, header=None)
+data_val = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])
+target = raw_df.values[1::2, 2]
+feature_names = ["CRIM", "ZN", "INDUS", "CHAS", "NOX", "RM", "AGE", "DIS", "RAD", "TAX", "PTRATIO", "B", "LSTAT"]
+
+features = pd.DataFrame(data_val, columns=feature_names)
+label = pd.DataFrame(target, columns=["target"])
 data = label.join(features)
 
 num = len(data)
