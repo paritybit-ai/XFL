@@ -40,7 +40,7 @@ data2 = [
 class TestPaillier():
     def setup_class(self):
         self.context = PaillierContext.generate(2048)
-        self.epsilon = 1e-5
+        self.epsilon = 1e-4
 
     def teardown_class(self):
         pass

@@ -101,10 +101,10 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
         self.missing_conf = self.train_params.get("missing", {})
         if len(self.missing_conf) > 0:
             self.missing_values_overall = self.missing_conf.get(
-                "missing_values", [np.NaN, '', None, ' ', 'nan', 'none', 'null', 'na', 'None'])
+                "missing_values", [np.nan, '', None, ' ', 'nan', 'none', 'null', 'na', 'None'])
             # transform null: None to default missing_values config
             if self.missing_values_overall is None:
-                self.missing_values_overall = [np.NaN, '', None, ' ', 'nan', 'none', 'null', 'na', 'None']
+                self.missing_values_overall = [np.nan, '', None, ' ', 'nan', 'none', 'null', 'na', 'None']
             self.missing_strategy_overall = self.missing_conf.get("strategy", "mean")
             self.missing_fillvalue_overall = self.missing_conf.get("fill_value", None)
             self.missing_feat_conf = self.missing_conf.get("missing_features", {})
@@ -209,28 +209,28 @@ class LocalFeaturePreprocessLabelTrainer(TrainConfigParser):
             if flag == "train":
                 missing_value_new = self.impute_dict[col]["missing_values"]
                 if isinstance(missing_value_new, list) and len(missing_value_new) > 0:
-                    data[col] = data[[col]].replace(self.impute_dict[col]["missing_values"], np.NaN)
-                    missing_value_new = np.NaN
+                    data[col] = data[[col]].replace(self.impute_dict[col]["missing_values"], np.nan)
+                    missing_value_new = np.nan
                 imputer = data_impute(missing_value_new, self.impute_dict[col]["strategy"],
                                       self.impute_dict[col]["fill_value"])
                 imputer.fit(data[[col]])
-                data[col] = imputer.transform(data[[col]])
+                data[col] = imputer.transform(data[[col]]).ravel()
                 imputer_list.update({col: imputer})
             elif flag == "val":
                 if isinstance(self.impute_dict[col]["missing_values"], list) and \
                         len(self.impute_dict[col]["missing_values"]) > 0:
-                    data[[col]] = data[[col]].replace(self.impute_dict[col]["missing_values"], np.NaN)
-                data[col] = imputer_list[col].transform(data[[col]])
+                    data[[col]] = data[[col]].replace(self.impute_dict[col]["missing_values"], np.nan)
+                data[col] = imputer_list[col].transform(data[[col]]).ravel()
 
         if not self.feature_flag and len(self.imputer_values_overall) > 0:
             # if all features are imputed as a whole
             imputer_values_overall = self.imputer_values_overall
-            # deal with more than one missing_values: transform the missing_values to np.NaN
+            # deal with more than one missing_values: transform the missing_values to np.nan
             if isinstance(self.imputer_values_overall, list):
-                self.train = self.train.replace(self.imputer_values_overall, np.NaN)
+                self.train = self.train.replace(self.imputer_values_overall, np.nan)
                 if self.val is not None:
-                    self.val = self.val.replace(self.imputer_values_overall, np.NaN)
-                imputer_values_overall = np.NaN
+                    self.val = self.val.replace(self.imputer_values_overall, np.nan)
+                imputer_values_overall = np.nan
             # initialization
             imupter = data_impute(imputer_values_overall, self.imputer_strategy_overall, self.imputer_fillvalue_overall)
             self.train = pd.DataFrame(imupter.fit_transform(self.train), columns=self.columns, index=self.train_ids)

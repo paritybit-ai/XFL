@@ -62,12 +62,14 @@ class OneTimeAdd(object):
         dtype = np.uint64 if context_.modulus_exp == 64 else object
 
         if not is_decrypt:
+            # Use object type to perform arithmetic with arbitrary precision Python integers
+            # to avoid OverflowError in NumPy when converting large values to C long.
+            # np.vectorize(int) converts floats to python ints.
+            truncated = np.vectorize(int, otypes=[object])(np.trunc(data * context_.scalar))
             if dtype == np.uint64:
-                out = np.mod(np.trunc(data * context_.scalar).astype("int"),
-                             context_.modulus).astype(dtype)
+                out = np.mod(truncated, context_.modulus).astype(dtype)
             else:
-                out = np.mod(np.trunc(data * context_.scalar),
-                             context_.modulus).astype(dtype)
+                out = np.mod(truncated, context_.modulus).astype(dtype)
         else:
             out = deepcopy(data)
 
