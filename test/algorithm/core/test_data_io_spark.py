@@ -31,23 +31,23 @@
 #     case_df['y'] = np.where(
 #         case_df['x1'] + case_df['x2'] > 10, 1, 0)
 #     case_df[['y', 'x0', 'x1', 'x2']].to_csv(
-#         "/opt/dataset/unit_test/test_data_io.csv", index=True
+#         "/tmp/xfl/dataset/unit_test/test_data_io.csv", index=True
 #     )
     
 
 # @pytest.fixture(scope="module", autouse=True)
 # def env():
 #     os.chdir("python")
-#     if not os.path.exists("/opt/dataset/unit_test"):
-#         os.makedirs("/opt/dataset/unit_test")
+#     if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+#         os.makedirs("/tmp/xfl/dataset/unit_test")
 #     prepare_data()
 #     yield
-#     if os.path.exists("/opt/dataset/unit_test"):
-#         shutil.rmtree("/opt/dataset/unit_test")
+#     if os.path.exists("/tmp/xfl/dataset/unit_test"):
+#         shutil.rmtree("/tmp/xfl/dataset/unit_test")
 
 # @pytest.fixture()  
 # def data():
-#     yield CsvReader("/opt/dataset/unit_test/test_data_io.csv", has_id=True, has_label=True)
+#     yield CsvReader("/tmp/xfl/dataset/unit_test/test_data_io.csv", has_id=True, has_label=True)
 
 # class TestCsvReader():
     

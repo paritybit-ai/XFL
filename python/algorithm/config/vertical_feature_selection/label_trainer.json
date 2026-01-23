@@ -7,7 +7,7 @@
         "trainset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/vertical_breast_with_validation",
+                "path": "/tmp/xfl/dataset/vertical_breast_with_validation",
                 "name": "breast_vertical_guest_train.csv",
                 "has_label": true,
                 "has_id": true
@@ -16,23 +16,23 @@
         "valset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/vertical_breast_with_validation",
+                "path": "/tmp/xfl/dataset/vertical_breast_with_validation",
                 "name": "breast_vertical_guest_test.csv",
                 "has_label": true,
                 "has_id": true
             }
         ],
         "iv_result": {
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
             "name": "vertical_binning_woe_iv.json"
         },
         "corr_result": {
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
             "name": "pearson_guest.pkl"
         }
     },
     "output": {
-        "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+        "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
         "trainset": {
             "name": "temp/selected_train_[STAGE_ID].csv"
         },

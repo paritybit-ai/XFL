@@ -13,7 +13,7 @@
         "trainset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/unit_test",
+                "path": "/tmp/xfl/dataset/unit_test",
                 "name": "train_labeled.csv",
                 "overlap_index_name": "overlap_index.npy",
                 "has_label": true,
@@ -23,7 +23,7 @@
         "valset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/unit_test",
+                "path": "/tmp/xfl/dataset/unit_test",
                 "name": "test_labeled.csv",
                 "has_label": true,
                 "has_id": true
@@ -32,7 +32,7 @@
         "pretrained_model": {}
     },
     "output": {
-        "path": "/opt/checkpoints/unit_test",
+        "path": "/tmp/xfl/checkpoints/unit_test",
         "model": {
             "name": "transfer_logitstic_regression_0.model"
         },

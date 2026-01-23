@@ -7,13 +7,13 @@
         "trainset": [
             {
                 "type": "npz",
-                "path": "/opt/dataset/unit_test",
+                "path": "/tmp/xfl/dataset/unit_test",
                 "name": "train_data.npz"
             }
         ]
     },
     "output": {
-        "path": "/opt/checkpoints/unit_test",
+        "path": "/tmp/xfl/checkpoints/unit_test",
         "model": {
             "name": "horizontal_resnet_[STAGE_ID].model"
         },

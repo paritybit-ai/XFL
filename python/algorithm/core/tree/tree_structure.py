@@ -46,7 +46,7 @@ class SplitInfo(object):
         
     @classmethod
     def from_dict(self, data: dict):
-        split_info = SplitInfo(owner_id=data['owner_id'])
+        split_info = SplitInfo(owner_id=data.get('owner_id', ""))
         for k, v in data.items():
             setattr(split_info, k, v)
         return split_info
@@ -92,7 +92,7 @@ class Node(object):
         
     @classmethod
     def from_dict(self, data: dict):
-        node = Node(id=data["id"])
+        node = Node(id=data.get("id", ""))
         for k, v in data.items():
             if k == "split_info":
                 split_info = SplitInfo.from_dict(v) if v else None
@@ -158,7 +158,7 @@ class Tree(object):
     
     @classmethod
     def from_dict(cls, data: dict):
-        tree = Tree(party_id=data["party_id"], tree_index=data["tree_index"])
+        tree = Tree(party_id=data.get("party_id", ""), tree_index=data.get("tree_index", 0))
         for k, v in data.items():
             if k == "nodes":
                 value = {node_id: Node.from_dict(node)for node_id, node in v.items()}
@@ -284,11 +284,11 @@ class BoostingTree(object):
         
     @classmethod
     def from_dict(cls, data: dict):
-        tree = BoostingTree(lr=data["lr"],
-                            max_depth=data.get("max_depth", None),
-                            trees=[Tree.from_dict(tree) for tree in data["trees"]],
+        tree = BoostingTree(lr=data.get("lr", []),
+                            max_depth=data.get("max_depth", []),
+                            trees=[Tree.from_dict(tree) for tree in data.get("trees", [])],
                             suggest_threshold=data.get("suggest_threshold", None),
-                            loss_method=data.get("loss_method", None),
+                            loss_method=data.get("loss_method", "BCEWithLogitsLoss"),
                             version=data.get('version', '1.0'))
         return tree
 
@@ -297,7 +297,6 @@ class BoostingTree(object):
         xgb = XGBoostModel()
         xgb.ParseFromString(bs)
         d = json_format.MessageToDict(xgb,
-                                      including_default_value_fields=True,
                                       preserving_proto_field_name=True)
         return cls.from_dict(d)
 
@@ -401,7 +400,6 @@ class NodeDict(object):
         node = NodeModel()
         node.ParseFromString(bs)
         d = json_format.MessageToDict(node,
-                                      including_default_value_fields=True,
                                       preserving_proto_field_name=True)
         return cls.from_dict(d["nodes"])
 

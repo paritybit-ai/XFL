@@ -21,17 +21,17 @@
     "output": {
         "model": {
             "type": "file",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
             "name": "horizontal_vgg_jax.pt"
         },
         "metrics": {
             "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
             "header": true
         },
         "evaluation": {
             "type": "csv",
-            "path": "/opt/checkpoints/[JOB_ID]/[NODE_ID]",
+            "path": "/tmp/xfl/checkpoints/[JOB_ID]/[NODE_ID]",
             "header": true
         }
     },

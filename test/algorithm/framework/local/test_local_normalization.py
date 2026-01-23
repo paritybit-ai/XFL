@@ -32,10 +32,10 @@ from common.model.python.feature_model_pb2 import NormalizationModel
 @pytest.fixture(scope="module", autouse=True)
 def env():
 	# 准备目录
-	if not os.path.exists("/opt/dataset/unit_test"):
-		os.makedirs("/opt/dataset/unit_test")
-	if not os.path.exists("/opt/checkpoints/unit_test"):
-		os.makedirs("/opt/checkpoints/unit_test")
+	if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+		os.makedirs("/tmp/xfl/dataset/unit_test")
+	if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+		os.makedirs("/tmp/xfl/checkpoints/unit_test")
 	# 测试用例
 	case_df = pd.DataFrame({
 		'x0': np.random.random(1000),
@@ -44,28 +44,28 @@ def env():
 	})
 	case_df['y'] = np.where(case_df['x0'] + case_df['x2'] > 2.5, 1, 0)
 	case_df[['y', 'x0', 'x1', 'x2']].head(800).to_csv(
-		"/opt/dataset/unit_test/train.csv", index=True, index_label='id'
+		"/tmp/xfl/dataset/unit_test/train.csv", index=True, index_label='id'
 	)
 	case_df[['y', 'x0', 'x1', 'x2']].tail(200).to_csv(
-		"/opt/dataset/unit_test/test.csv", index=True, index_label="id"
+		"/tmp/xfl/dataset/unit_test/test.csv", index=True, index_label="id"
 	)
 	yield
 	# 清除测试数据
-	if os.path.exists("/opt/dataset/unit_test"):
-		shutil.rmtree("/opt/dataset/unit_test")
-	if os.path.exists("/opt/checkpoints/unit_test"):
-		shutil.rmtree("/opt/checkpoints/unit_test")
+	if os.path.exists("/tmp/xfl/dataset/unit_test"):
+		shutil.rmtree("/tmp/xfl/dataset/unit_test")
+	if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+		shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 @pytest.fixture()
 def get_conf():
 	with open("python/algorithm/config/local_normalization/label_trainer.json") as f:
 		conf = json.load(f)
-		conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+		conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
 		conf["input"]["trainset"][0]["name"] = "train.csv"
-		conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
+		conf["input"]["valset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
 		conf["input"]["valset"][0]["name"] = "test.csv"
-		conf["output"]["path"] = "/opt/checkpoints/unit_test"
+		conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
 		conf["output"]["trainset"]["name"] = "normalized_train.csv"
 		conf["output"]["valset"]["name"] = "normalized_test.csv"
 	yield conf
@@ -78,10 +78,10 @@ class TestLocalNormalization:
 		assert len(ln.train_data) == 800
 		assert len(ln.valid_data) == 200
 		ln.fit()
-		assert os.path.exists("/opt/checkpoints/unit_test/normalized_train.csv")
-		assert os.path.exists("/opt/checkpoints/unit_test/normalized_test.csv")
-		assert len(pd.read_csv("/opt/checkpoints/unit_test/normalized_train.csv")) == 800
-		assert len(pd.read_csv("/opt/checkpoints/unit_test/normalized_test.csv")) == 200
+		assert os.path.exists("/tmp/xfl/checkpoints/unit_test/normalized_train.csv")
+		assert os.path.exists("/tmp/xfl/checkpoints/unit_test/normalized_test.csv")
+		assert len(pd.read_csv("/tmp/xfl/checkpoints/unit_test/normalized_train.csv")) == 800
+		assert len(pd.read_csv("/tmp/xfl/checkpoints/unit_test/normalized_test.csv")) == 200
 
 	@pytest.mark.parametrize('axis, norm_', [
 		(1, 'l1'), (1, 'l2'), (1, 'max'), (1, 'other'), (0, 'l1'), (0, 'l2'), (0, 'max'), (0, 'other2'), (2, 'l1')
@@ -144,7 +144,6 @@ class TestLocalNormalization:
 			m = NormalizationModel()
 			m.ParseFromString(byte_str)
 			d = json_format.MessageToDict(m,
-			                              including_default_value_fields=True,
 			                              preserving_proto_field_name=True)
 
 			assert d.get("axis") == axis

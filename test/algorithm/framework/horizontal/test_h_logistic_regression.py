@@ -47,10 +47,10 @@ def prepare_data():
     case_df['y'] = np.where(case_df['x0'] + case_df['x2'] + case_df['x3'] > 2.5, 1, 0)
     case_df = case_df[['y', 'x0', 'x1', 'x2', 'x3', 'x4']]
     case_df.head(800).to_csv(
-        "/opt/dataset/unit_test/train_data.csv", index=True
+        "/tmp/xfl/dataset/unit_test/train_data.csv", index=True
     )
     case_df.tail(200).to_csv(
-        "/opt/dataset/unit_test/test_data.csv", index=True
+        "/tmp/xfl/dataset/unit_test/test_data.csv", index=True
     )
 
 
@@ -58,9 +58,9 @@ def prepare_data():
 def get_assist_trainer_conf():
     with open("python/algorithm/config/horizontal_logistic_regression/assist_trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["valset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["valset"][0]["name"] = "test_data.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
     yield conf
 
 
@@ -68,24 +68,24 @@ def get_assist_trainer_conf():
 def get_trainer_conf():
     with open("python/algorithm/config/horizontal_logistic_regression/trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["trainset"][0]["name"] = "train_data.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
     yield conf
 
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
     prepare_data()
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 class TestLogisticRegression:

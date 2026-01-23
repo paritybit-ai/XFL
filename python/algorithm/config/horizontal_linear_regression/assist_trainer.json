@@ -11,7 +11,7 @@
         "valset": [
             {
                 "type": "csv",
-                "path": "/opt/dataset/unit_test",
+                "path": "/tmp/xfl/dataset/unit_test",
                 "name": "test_data.csv",
                 "has_label": true,
                 "has_id": true
@@ -20,7 +20,7 @@
         "pretrain_model": {}
     },
     "output": {
-        "path": "/opt/checkpoints/unit_test",
+        "path": "/tmp/xfl/checkpoints/unit_test",
         "model": {
             "name": "horizontal_linear_regression_[STAGE_ID].model"
         },

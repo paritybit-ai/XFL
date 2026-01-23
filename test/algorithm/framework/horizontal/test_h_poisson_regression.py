@@ -62,10 +62,10 @@ def prepare_data():
     )
     case_df = case_df[['y', 'x0', 'x1', 'x2', 'x3', 'x4']]
     case_df.head(800).to_csv(
-        "/opt/dataset/unit_test/train_data.csv", index=False
+        "/tmp/xfl/dataset/unit_test/train_data.csv", index=False
     )
     case_df.tail(200).to_csv(
-        "/opt/dataset/unit_test/test_data.csv", index=False
+        "/tmp/xfl/dataset/unit_test/test_data.csv", index=False
     )
 
 
@@ -85,16 +85,16 @@ def get_trainer_conf():
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
     prepare_data()
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 class TestPoissonRegression:

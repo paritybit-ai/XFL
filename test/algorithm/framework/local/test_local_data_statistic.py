@@ -32,42 +32,42 @@ from algorithm.framework.local.data_statistic.trainer import \
 @pytest.fixture(scope="module", autouse=True)
 def env():
     #
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
     #
     case_df = pd.DataFrame({
         'x01': np.random.random(1000),
-        'x00': [np.NaN, '', None, ' ', 'nan'] + [0] * 995,
+        'x00': [np.nan, '', None, ' ', 'nan'] + [0] * 995,
         'x03': 2 * np.random.random(1000) + 1.0,
         'x02': [0] * 300 + [1] * 700
     })
     case_df['y'] = np.where(case_df['x01'] + case_df['x02'] > 2.5, 1, 0)
     case_df[['y', 'x00', 'x01', 'x02', 'x03']].to_csv(
-        "/opt/dataset/unit_test/data.csv", index=True, index_label='id'
+        "/tmp/xfl/dataset/unit_test/data.csv", index=True, index_label='id'
     )
     case_df[['y', 'x00', 'x01', 'x02', 'x03']].to_csv(
-        "/opt/dataset/unit_test/data_opt.csv", index=True, index_label='id'
+        "/tmp/xfl/dataset/unit_test/data_opt.csv", index=True, index_label='id'
     )
 
     yield
     #
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test_1"):
-        shutil.rmtree("/opt/checkpoints/unit_test_1")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test_1"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test_1")
 
 
 @pytest.fixture()
 def get_conf():
     with open("python/algorithm/config/local_data_statistic/label_trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["dataset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["dataset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["dataset"][0]["name"] = "data.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test_1"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test_1"
     yield conf
 
 
@@ -75,7 +75,7 @@ class TestLocalDataStatistic:
     @pytest.mark.parametrize('dataset', [[
         {
             "type": "csv",
-            "path": "/opt/dataset/unit_test",
+            "path": "/tmp/xfl/dataset/unit_test",
             "name": "data.csv",
             "has_label": True,
             "has_id": True
@@ -84,14 +84,14 @@ class TestLocalDataStatistic:
         [
             {
                 "type": "csv",
-                "path": "/opt/dataset/unit_test",
+                "path": "/tmp/xfl/dataset/unit_test",
                 "name": "data.csv",
                 "has_label": True,
                 "has_id": True
             },
             {
                 "type": "csv",
-                "path": "/opt/dataset/unit_test",
+                "path": "/tmp/xfl/dataset/unit_test",
                 "name": "data_opt.csv",
                 "has_label": True,
                 "has_id": True

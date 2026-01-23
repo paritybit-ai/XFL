@@ -110,9 +110,25 @@ class OneTimeKey(object):
         dtype = np.uint64 if modulus_exp == 64 else object
         modulus = (1 << modulus_exp)
         if isinstance(key, list):
-            self.value = [np.array(np.mod(v, modulus)).astype(dtype) for v in key]
+            self.value = []
+            for v in key:
+                if isinstance(v, np.ndarray):
+                    res = np.mod(v.astype(object), modulus)
+                else:
+                    res = int(v) % modulus
+                
+                if isinstance(res, np.ndarray):
+                    res = res.tolist()
+                self.value.append(np.array(res, dtype=dtype))
         else:
-            self.value = np.array(np.mod(key, modulus)).astype(dtype)
+            if isinstance(key, np.ndarray):
+                res = np.mod(key.astype(object), modulus)
+            else:
+                res = int(key) % modulus
+                
+            if isinstance(res, np.ndarray):
+                res = res.tolist()
+            self.value = np.array(res, dtype=dtype)
             
     def __len__(self):
         return len(self.value)
@@ -161,7 +177,13 @@ class OneTimePadCiphertext(object):
         if self.__context.modulus_exp == 64:
             out = self.__data + other.__data
         else:
-            out = np.array(np.mod(self.__data + other.__data, self.__context.modulus), dtype=object)
+            # Use Python modulo via object array
+            modulus = self.__context.modulus
+            res = self.__data + other.__data
+            if isinstance(res, np.ndarray):
+                out = np.vectorize(lambda x: x % modulus, otypes=[object])(res)
+            else:
+                out = np.array(res % modulus, dtype=object)
         out = OneTimePadCiphertext(out, self.__context)
         return out
             
@@ -172,7 +194,13 @@ class OneTimePadCiphertext(object):
         if self.__context.modulus_exp == 64:
             out = self.__data - other.__data
         else:
-            out = np.array(np.mod(self.__data - other.__data, self.__context.modulus), dtype=object)
+            # Use Python modulo via object array
+            modulus = self.__context.modulus
+            res = self.__data - other.__data
+            if isinstance(res, np.ndarray):
+                out = np.vectorize(lambda x: x % modulus, otypes=[object])(res)
+            else:
+                out = np.array(res % modulus, dtype=object)
         out = OneTimePadCiphertext(out, self.__context)
         return out
     
@@ -194,16 +222,19 @@ class OneTimePadCiphertext(object):
         """
         if self.__data.shape == ():
             zero_shape = True
-            data = np.array([self.__data], dtype=object)
+            data = np.array([int(self.__data)], dtype=object)
         else:
             zero_shape = False
-            data = self.__data.astype(object)
+            # Ensure elements are Python ints to avoid NumPy 2.0 uint64 overflow/casting issues
+            data = np.array(self.__data.tolist(), dtype=object)
         
         idx = np.where(data > self.__context.modulus // 2)
         out = deepcopy(data)
         
         if len(idx[0]) != 0:
-            out[idx] -= self.__context.modulus
+            # Avoid in-place subtraction out[idx] -= ... to prevent potential OverflowError issues
+            # with NumPy 2.0 object arrays
+            out[idx] = out[idx] - self.__context.modulus
 
         out /= self.__context.scalar
         

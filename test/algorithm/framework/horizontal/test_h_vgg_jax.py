@@ -39,9 +39,9 @@ def prepare_data():
         64, 32, 32, 3)), np.random.randint(10, size=64)
     test_data, test_labels = data[:32], label[:32]
     train_data, train_labels = data[32:64], label[32:64]
-    np.savez("/opt/dataset/unit_test/test_data.npz",
+    np.savez("/tmp/xfl/dataset/unit_test/test_data.npz",
              data=test_data, labels=test_labels)
-    np.savez("/opt/dataset/unit_test/train_data.npz",
+    np.savez("/tmp/xfl/dataset/unit_test/train_data.npz",
              data=train_data, labels=train_labels)
 
 
@@ -49,11 +49,11 @@ def prepare_data():
 def get_assist_trainer_conf():
     with open("python/algorithm/config/horizontal_vgg_jax/assist_trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["valset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["valset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["valset"][0]["name"] = "test_data.npz"
-        conf["output"]["model"]["path"] = "/opt/checkpoints/unit_test"
-        conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
-        conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["model"]["path"] = "/tmp/xfl/checkpoints/unit_test"
+        conf["output"]["metrics"]["path"] = "/tmp/xfl/checkpoints/unit_test"
+        conf["output"]["evaluation"]["path"] = "/tmp/xfl/checkpoints/unit_test"
         conf["model_info"]["config"]["layers"] = "unit_test"
         conf["train_info"]["params"]["batch_size"] = 8
         conf["train_info"]["params"]["global_epoch"] = 2
@@ -64,10 +64,10 @@ def get_assist_trainer_conf():
 def get_trainer_conf():
     with open("python/algorithm/config/horizontal_vgg_jax/trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["trainset"][0]["name"] = "train_data.npz"
-        conf["output"]["metrics"]["path"] = "/opt/checkpoints/unit_test"
-        conf["output"]["evaluation"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["metrics"]["path"] = "/tmp/xfl/checkpoints/unit_test"
+        conf["output"]["evaluation"]["path"] = "/tmp/xfl/checkpoints/unit_test"
         conf["model_info"]["config"]["layers"] = "unit_test"
         conf["train_info"]["params"]["batch_size"] = 8
         conf["train_info"]["params"]["global_epoch"] = 2
@@ -76,16 +76,16 @@ def get_trainer_conf():
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
     prepare_data()
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 class TestVgg:

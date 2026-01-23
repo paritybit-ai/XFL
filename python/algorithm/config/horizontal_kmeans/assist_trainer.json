@@ -10,7 +10,7 @@
     "input": {
         "valset": [
             {
-                "path": "/opt/dataset/unit_test",
+                "path": "/tmp/xfl/dataset/unit_test",
                 "type": "csv",
                 "name": "horizontal_kmeans_test.csv",
                 "has_label": true,
@@ -20,7 +20,7 @@
         "pretrain_model": {}
     },
     "output": {
-        "path": "/opt/checkpoints/unit_test",
+        "path": "/tmp/xfl/checkpoints/unit_test",
         "model": {
             "name": "horizontal_kmeans_[STAGE_ID].model"
         },

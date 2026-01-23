@@ -50,16 +50,16 @@ def prepare_data():
         "x1": np.random.random(1000)
     })
     case_df[['y', 'x0', 'x1']].to_csv(
-        "/opt/dataset/unit_test/train_guest.csv", index=True, index_label='id'
+        "/tmp/xfl/dataset/unit_test/train_guest.csv", index=True, index_label='id'
     )
     case_df[['x0', 'x1']].to_csv(
-        "/opt/dataset/unit_test/train_host.csv", index=True, index_label='id'
+        "/tmp/xfl/dataset/unit_test/train_host.csv", index=True, index_label='id'
     )
     case_df[['x0', 'x1']].to_csv(
-        "/opt/dataset/unit_test/train_guest_without_id.csv", index=False
+        "/tmp/xfl/dataset/unit_test/train_guest_without_id.csv", index=False
     )
     case_df[['x0', 'x1']].to_csv(
-        "/opt/dataset/unit_test/train_host_without_id.csv", index=False
+        "/tmp/xfl/dataset/unit_test/train_host_without_id.csv", index=False
     )
 
 
@@ -94,25 +94,25 @@ def env():
     Commu.node_id = "node-1"
     Commu.trainer_ids = ['node-1', 'node-2']
     Commu.scheduler_id = 'assist_trainer'
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
     prepare_data()
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 @pytest.fixture()
 def get_label_trainer_conf():
     with open("python/algorithm/config/vertical_kmeans/label_trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["trainset"][0]["name"] = "train_guest.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
     yield conf
 
 
@@ -120,9 +120,9 @@ def get_label_trainer_conf():
 def get_trainer_conf():
     with open("python/algorithm/config/vertical_kmeans/trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["trainset"][0]["name"] = "train_host.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
     yield conf
 
 
@@ -302,8 +302,8 @@ class TestVerticalKmeansTrainer:
         assert vkt.is_converged
 
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model")
-        with open("/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model", "rb") as f:
+            "/tmp/xfl/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model")
+        with open("/tmp/xfl/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model", "rb") as f:
             model = json.load(f)
             assert model["k"] == vkt.k
             assert model["iter"] <= vkt.max_iter
@@ -372,8 +372,8 @@ class TestVerticalKmeansTrainer:
         assert vkt.is_converged
 
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model")
-        with open("/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model", "rb") as f:
+            "/tmp/xfl/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model")
+        with open("/tmp/xfl/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model", "rb") as f:
             model = json.load(f)
             assert model["k"] == vkt.k
             assert model["iter"] <= vkt.max_iter
@@ -444,8 +444,8 @@ class TestVerticalKmeansTrainer:
         assert vkt.is_converged
 
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model")
-        with open("/opt/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model", "rb") as f:
+            "/tmp/xfl/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model")
+        with open("/tmp/xfl/checkpoints/unit_test/vertical_kmeans_[STAGE_ID].model", "rb") as f:
             model = json.load(f)
             assert model["k"] == vkt.k
             assert model["iter"] <= vkt.max_iter
@@ -455,10 +455,10 @@ class TestVerticalKmeansTrainer:
 
         # 检查输出
         assert os.path.exists(
-            "/opt/checkpoints/unit_test/cluster_result_[STAGE_ID].csv")
+            "/tmp/xfl/checkpoints/unit_test/cluster_result_[STAGE_ID].csv")
         if computing_engine == "local":
             df = pd.read_csv(
-                "/opt/checkpoints/unit_test/cluster_result_[STAGE_ID].csv")
+                "/tmp/xfl/checkpoints/unit_test/cluster_result_[STAGE_ID].csv")
             assert (df["id"] == vkt.train_ids).all()
 
     # assert (df["cluster_label"] == vkt.cluster_result).all()

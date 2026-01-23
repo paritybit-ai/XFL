@@ -4,7 +4,7 @@
         "name": "horizontal_binning_woe_iv"
     },
     "output": {
-        "path": "/opt/checkpoints/unit_test1",
+        "path": "/tmp/xfl/checkpoints/unit_test1",
         "result": {
             "name": "woe_iv_result_[STAGE_ID].json"
         }

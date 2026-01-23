@@ -25,11 +25,11 @@ from common.evaluation.metrics import DecisionTable, ThresholdCutter, BiClsMetri
 
 @pytest.fixture()
 def env():
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.mkdir("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.mkdir("/tmp/xfl/checkpoints/unit_test")
     yield
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 class TestBiClsMetric:
@@ -45,14 +45,14 @@ class TestBiClsMetric:
         loss_config = {
             "BCEWithLogitsLoss": {}
         }
-        metric = BiClsMetric(1, "/opt/checkpoints/unit_test/metric.file", metric_config, loss_config)
+        metric = BiClsMetric(1, "/tmp/xfl/checkpoints/unit_test/metric.file", metric_config, loss_config)
         assert "BCEWithLogitsLoss" in metric.metric_functions
 
 
 class TestDecisionTable:
     @pytest.mark.parametrize('bins', [-1, 0, 1, 2, 5, 10, 50])
     def test_bins(self, bins, env):
-        io_file_path = "/opt/checkpoints/decision_table_{}.csv".format(bins)
+        io_file_path = "/tmp/xfl/checkpoints/decision_table_{}.csv".format(bins)
         config = {"bins": bins}
 
         if bins <= 1:
@@ -80,7 +80,7 @@ class TestDecisionTable:
 
     @pytest.mark.parametrize("method", ["equal_frequency", "equal_width", 'other'])
     def test_methods(self, method, env):
-        io_file_path = "/opt/checkpoints/decision_table_{}.csv".format(method)
+        io_file_path = "/tmp/xfl/checkpoints/decision_table_{}.csv".format(method)
         config = {"method": method}
         if method not in ("equal_frequency", "equal_width"):
             with pytest.raises(NotImplementedError) as e:
@@ -110,7 +110,7 @@ class TestDecisionTable:
                 raise NotImplementedError("test failed.")
 
     def test_threshold_cutter_by_value(self):
-        io_file_path = "/opt/checkpoints/ks_plot.csv"
+        io_file_path = "/tmp/xfl/checkpoints/ks_plot.csv"
 
         y = [1] * 100 + [0] * 400 + [1] * 400 + [0] * 100
         p = np.arange(0.5, 1, 0.0005)

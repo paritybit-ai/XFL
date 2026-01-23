@@ -44,10 +44,10 @@ def prepare_data():
         "x4": np.random.random(1000)
     })
     df[["y", "x0", "x2"]].to_csv(
-        "/opt/dataset/unit_test/train_guest.csv", index=True, index_label='id'
+        "/tmp/xfl/dataset/unit_test/train_guest.csv", index=True, index_label='id'
     )
     df[["x1", "x3", "x4"]].to_csv(
-        "/opt/dataset/unit_test/train_host.csv", index=True, index_label='id'
+        "/tmp/xfl/dataset/unit_test/train_host.csv", index=True, index_label='id'
     )
 
 
@@ -56,25 +56,25 @@ def env():
     Commu.node_id = "node-1"
     Commu.trainer_ids = ['node-1', 'node-2']
     Commu.scheduler_id = 'assist_trainer'
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
     prepare_data()
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 @pytest.fixture()
 def get_label_trainer_conf():
     with open("python/algorithm/config/vertical_pearson/label_trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["trainset"][0]["name"] = "train_guest.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
     yield conf
 
 
@@ -82,9 +82,9 @@ def get_label_trainer_conf():
 def get_trainer_conf():
     with open("python/algorithm/config/vertical_pearson/trainer.json") as f:
         conf = json.load(f)
-        conf["input"]["trainset"][0]["path"] = "/opt/dataset/unit_test"
+        conf["input"]["trainset"][0]["path"] = "/tmp/xfl/dataset/unit_test"
         conf["input"]["trainset"][0]["name"] = "train_host.csv"
-        conf["output"]["path"] = "/opt/checkpoints/unit_test"
+        conf["output"]["path"] = "/tmp/xfl/checkpoints/unit_test"
     yield conf
 
 
@@ -162,7 +162,7 @@ class TestVerticalPearsonTrainer:
             ids=["node-2", "node-3"]
         )
 
-        df = pd.read_csv("/opt/dataset/unit_test/train_guest.csv", index_col=0)
+        df = pd.read_csv("/tmp/xfl/dataset/unit_test/train_guest.csv", index_col=0)
 
         def mock_result_feature1():
             if flag_mocker1.call_count == 1:
@@ -232,7 +232,7 @@ class TestVerticalPearsonTrainer:
         )
         vpt.fit()
 
-        with open("/opt/checkpoints/unit_test/vertical_pearson_[STAGE_ID].pkl", 'rb') as f:
+        with open("/tmp/xfl/checkpoints/unit_test/vertical_pearson_[STAGE_ID].pkl", 'rb') as f:
             model = pickle.load(f)
             assert "corr" in model
             assert len(model["features"]) == 3
@@ -258,10 +258,10 @@ class TestVerticalPearsonTrainer:
         )
         vpt = VerticalPearsonLabelTrainer(get_label_trainer_conf)
         vpt.node_id = "node-1"
-        df1 = pd.read_csv("/opt/dataset/unit_test/train_guest.csv", index_col=0)
+        df1 = pd.read_csv("/tmp/xfl/dataset/unit_test/train_guest.csv", index_col=0)
         del df1['y']
         df1 = (df1 - df1.mean()) / df1.std()
-        df2 = pd.read_csv("/opt/dataset/unit_test/train_host.csv", index_col=0)
+        df2 = pd.read_csv("/tmp/xfl/dataset/unit_test/train_host.csv", index_col=0)
         df2 = (df2 - df2.mean()) / df2.std()
 
         def mock_result_feature():
@@ -285,7 +285,7 @@ class TestVerticalPearsonTrainer:
         )
         vpt.fit()
 
-        with open("/opt/checkpoints/unit_test/vertical_pearson_[STAGE_ID].pkl", 'rb') as f:
+        with open("/tmp/xfl/checkpoints/unit_test/vertical_pearson_[STAGE_ID].pkl", 'rb') as f:
             model = pickle.load(f)
             assert "corr" in model
             assert len(model["features"]) == 5
@@ -320,10 +320,10 @@ class TestVerticalPearsonTrainer:
         )
         vpt = VerticalPearsonLabelTrainer(conf)
         vpt.node_id = "node-1"
-        df1 = pd.read_csv("/opt/dataset/unit_test/train_guest.csv", index_col=0)
+        df1 = pd.read_csv("/tmp/xfl/dataset/unit_test/train_guest.csv", index_col=0)
         del df1['y']
         df1 = (df1 - df1.mean()) / df1.std()
-        df2 = pd.read_csv("/opt/dataset/unit_test/train_host.csv", index_col=0)
+        df2 = pd.read_csv("/tmp/xfl/dataset/unit_test/train_host.csv", index_col=0)
         df2 = (df2 - df2.mean()) / df2.std()
 
         def mock_result_feature():
@@ -347,7 +347,7 @@ class TestVerticalPearsonTrainer:
         )
         vpt.fit()
 
-        with open("/opt/checkpoints/unit_test/vertical_pearson_[STAGE_ID].pkl", 'rb') as f:
+        with open("/tmp/xfl/checkpoints/unit_test/vertical_pearson_[STAGE_ID].pkl", 'rb') as f:
             model = pickle.load(f)
             assert "corr" in model
             assert len(model["features"]) == 5
@@ -383,10 +383,10 @@ class TestVerticalPearsonTrainer:
         )
         vpt = VerticalPearsonLabelTrainer(conf)
         vpt.node_id = "node-1"
-        df1 = pd.read_csv("/opt/dataset/unit_test/train_guest.csv", index_col=0)
+        df1 = pd.read_csv("/tmp/xfl/dataset/unit_test/train_guest.csv", index_col=0)
         del df1['y']
         df1 = (df1 - df1.mean()) / df1.std()
-        df2 = pd.read_csv("/opt/dataset/unit_test/train_host.csv", index_col=0)
+        df2 = pd.read_csv("/tmp/xfl/dataset/unit_test/train_host.csv", index_col=0)
         df2 = (df2 - df2.mean()) / df2.std()
 
         def mock_result_feature():
@@ -412,7 +412,7 @@ class TestVerticalPearsonTrainer:
         )
         vpt.fit()
 
-        with open("/opt/checkpoints/unit_test/vertical_pearson_[STAGE_ID].pkl", 'rb') as f:
+        with open("/tmp/xfl/checkpoints/unit_test/vertical_pearson_[STAGE_ID].pkl", 'rb') as f:
             model = pickle.load(f)
             assert "corr" in model
             assert len(model["features"]) == 5
@@ -481,7 +481,7 @@ class TestVerticalPearsonTrainer:
         vpt = VerticalPearsonTrainer(get_trainer_conf)
         vpt.node_id = "node-2"
 
-        df = pd.read_csv("/opt/dataset/unit_test/train_guest.csv", index_col=0)
+        df = pd.read_csv("/tmp/xfl/dataset/unit_test/train_guest.csv", index_col=0)
 
         def mock_result_feature():
             df['x0'] = (df['x0'] - df['x0'].mean()) / df['x0'].std()
@@ -504,7 +504,7 @@ class TestVerticalPearsonTrainer:
         )
         vpt.fit()
 
-        with open("/opt/checkpoints/unit_test/vertical_pearson_[STAGE_ID].pkl", 'rb') as f:
+        with open("/tmp/xfl/checkpoints/unit_test/vertical_pearson_[STAGE_ID].pkl", 'rb') as f:
             model = pickle.load(f)
             assert "corr" in model
             assert len(model["features"]) == 3

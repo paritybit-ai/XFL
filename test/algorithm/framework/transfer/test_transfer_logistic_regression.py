@@ -48,19 +48,19 @@ def prepare_data():
     columns_labeled = ["y"] + [f"x{i:0>2d}" for i in range(15)]
     columns_1 = [f"x{i:0>2d}" for i in range(15, 30)]
     case_df[columns_labeled].head(60).to_csv(
-        "/opt/dataset/unit_test/train_labeled.csv", index=True
+        "/tmp/xfl/dataset/unit_test/train_labeled.csv", index=True
     )
     case_df[columns_labeled].tail(20).to_csv(
-        "/opt/dataset/unit_test/test_labeled.csv", index=True
+        "/tmp/xfl/dataset/unit_test/test_labeled.csv", index=True
     )
     case_df[columns_1].head(80).tail(60).to_csv(
-        "/opt/dataset/unit_test/train_1.csv", index=True
+        "/tmp/xfl/dataset/unit_test/train_1.csv", index=True
     )
     case_df[columns_1].tail(20).to_csv(
-        "/opt/dataset/unit_test/test_1.csv", index=True
+        "/tmp/xfl/dataset/unit_test/test_1.csv", index=True
     )
     overlap_index = np.linspace(20, 59, 40, dtype=np.int16)
-    np.save("/opt/dataset/unit_test/overlap_index.npy", overlap_index)
+    np.save("/tmp/xfl/dataset/unit_test/overlap_index.npy", overlap_index)
 
 
 @pytest.fixture()
@@ -77,16 +77,16 @@ def get_trainer_conf():
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
     prepare_data()
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 class TestTransferLogisticRegression:
@@ -126,7 +126,7 @@ class TestTransferLogisticRegression:
         lrlt.fit()
 
         # load pretrained model
-        lrlt.pretrain_model_path = "/opt/checkpoints/unit_test"
+        lrlt.pretrain_model_path = "/tmp/xfl/checkpoints/unit_test"
         lrlt.pretrain_model_name = "transfer_logitstic_regression_0.model"
         lrlt._set_model()
 
@@ -166,6 +166,6 @@ class TestTransferLogisticRegression:
         lrt.fit()
 
         # load pretrained model
-        lrt.pretrain_model_path = "/opt/checkpoints/unit_test"
+        lrt.pretrain_model_path = "/tmp/xfl/checkpoints/unit_test"
         lrt.pretrain_model_name = "transfer_logitstic_regression_0.model"
         lrt._set_model()

@@ -99,7 +99,7 @@ class VerticalXgboostBase(VerticalModelBase):
                     value_map.update({v: len(list_unique) for v in list_group})
                     codes = self.train_features[x].map(value_map)
                 else:
-                    codes, uniques = pd.factorize(self.train_features[x], na_sentinel=0)  # na_sentinel will not be activated actually
+                    codes, uniques = pd.factorize(self.train_features[x])
                     uniques = uniques.to_numpy()
                     
                 # uniques: array of values that belongs to the same category
@@ -147,7 +147,7 @@ class VerticalXgboostBase(VerticalModelBase):
                 return None, None, None
             data_reader = CsvReader(path, has_id=config["has_id"], has_label=config["has_label"])
             features = data_reader.features(type="pandas.dataframe")
-            features.replace({np.nan: 0, self.xgb_config.missing_value: 0}, inplace=True)
+            features = features.replace({np.nan: 0, self.xgb_config.missing_value: 0})
             ids = data_reader.ids
             names = data_reader.feature_names()
             if self.is_label_trainer:

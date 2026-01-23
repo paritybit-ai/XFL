@@ -6,7 +6,7 @@
     "input": {
         "trainset": [
             {
-                "path": "/opt/dataset/unit_test",
+                "path": "/tmp/xfl/dataset/unit_test",
                 "type": "csv",
                 "name": "horizontal_kmeans_train.csv",
                 "has_label": true,
@@ -15,7 +15,7 @@
         ]
     },
     "output": {
-        "path": "/opt/dataset/unit_test",
+        "path": "/tmp/xfl/dataset/unit_test",
         "metric_train": {
             "name": "kmeans_metric_train_[STAGE_ID].csv"
         }

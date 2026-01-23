@@ -27,24 +27,24 @@ from common.utils.data_utils import download_and_extract_data, pd_train_test_spl
 url = "/"
 
 def prepare_file():
-    with open("/opt/dataset/unit_test/test_raw.txt", "w") as f:
+    with open("/tmp/xfl/dataset/unit_test/test_raw.txt", "w") as f:
         f.write("unit_test")
 
 @pytest.fixture(scope="module", autouse=True)
 def env():
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
     prepare_file()
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
 
-@pytest.mark.parametrize('ftype, dst_file, data_folder', [("gz", "/opt/dataset/unit_test/test.txt.gz", None),("gz", "/opt/dataset/unit_test/test.txt.gz","/opt/dataset/unit_test/")])
+@pytest.mark.parametrize('ftype, dst_file, data_folder', [("gz", "/tmp/xfl/dataset/unit_test/test.txt.gz", None),("gz", "/tmp/xfl/dataset/unit_test/test.txt.gz","/tmp/xfl/dataset/unit_test/")])
 def test_download_and_extract_data(httpserver, ftype, dst_file, data_folder):
     src_file = None
     if ftype == "gz":
-        src_file = "/opt/dataset/unit_test/test_raw.txt.gz"
-        f_ungz = open("/opt/dataset/unit_test/test_raw.txt",'rb') 
+        src_file = "/tmp/xfl/dataset/unit_test/test_raw.txt.gz"
+        f_ungz = open("/tmp/xfl/dataset/unit_test/test_raw.txt",'rb') 
         f_gz = gzip.open(src_file,'wb') 
         f_gz.writelines(f_ungz) 
         f_ungz.close()
@@ -58,11 +58,11 @@ def test_download_and_extract_data(httpserver, ftype, dst_file, data_folder):
     download_and_extract_data(httpserver.url_for(url), None, dst_file, data_folder=data_folder, to_path=to_path)
 
     if ftype == "gz":
-        with open("/opt/dataset/unit_test/test.txt","r") as f: 
+        with open("/tmp/xfl/dataset/unit_test/test.txt","r") as f: 
             assert f.readline() == "unit_test"
 
 def test_cal_md5():
-    md5 = cal_md5("/opt/dataset/unit_test/test_raw.txt")
+    md5 = cal_md5("/tmp/xfl/dataset/unit_test/test_raw.txt")
     assert md5 == "d16f7309f3bfab471bad7a55b919f044"
 
 

@@ -42,10 +42,10 @@ def prepare_data():
         'label': [0,1,0,1,1,0,1,1,1,1]
     })
     case_df.head(6).to_csv(
-        "/opt/dataset/unit_test/train_data.tsv", sep='\t'
+        "/tmp/xfl/dataset/unit_test/train_data.tsv", sep='\t'
     )
     case_df.tail(4).to_csv(
-        "/opt/dataset/unit_test/test_data.tsv", sep='\t'
+        "/tmp/xfl/dataset/unit_test/test_data.tsv", sep='\t'
     )
 
 @pytest.fixture()
@@ -65,16 +65,16 @@ def get_trainer_conf():
 @pytest.fixture(scope="module", autouse=True)
 def env():
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-    if not os.path.exists("/opt/dataset/unit_test"):
-        os.makedirs("/opt/dataset/unit_test")
-    if not os.path.exists("/opt/checkpoints/unit_test"):
-        os.makedirs("/opt/checkpoints/unit_test")
+    if not os.path.exists("/tmp/xfl/dataset/unit_test"):
+        os.makedirs("/tmp/xfl/dataset/unit_test")
+    if not os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        os.makedirs("/tmp/xfl/checkpoints/unit_test")
     prepare_data()
     yield
-    if os.path.exists("/opt/dataset/unit_test"):
-        shutil.rmtree("/opt/dataset/unit_test")
-    if os.path.exists("/opt/checkpoints/unit_test"):
-        shutil.rmtree("/opt/checkpoints/unit_test")
+    if os.path.exists("/tmp/xfl/dataset/unit_test"):
+        shutil.rmtree("/tmp/xfl/dataset/unit_test")
+    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
+        shutil.rmtree("/tmp/xfl/checkpoints/unit_test")
 
 
 class TestBertTorch:

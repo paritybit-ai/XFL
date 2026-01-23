@@ -44,7 +44,7 @@ class LocalDataStatisticLabelTrainer:
         # input config
         self.config = TrainConfigParser(train_conf)
         self.input_data = self.config.input.get("dataset", [])
-        self.missing_value = [np.NaN, "", None, " ", "nan", "none", "null", "na", "None"]
+        self.missing_value = [np.nan, "", None, " ", "nan", "none", "null", "na", "None"]
         if self.input_data:
             if len(self.input_data) == 1:
                 self.input_data_path = self.input_data[0].get("path")
@@ -104,8 +104,8 @@ class LocalDataStatisticLabelTrainer:
             if tmp > 0:
                 self.missing_flag[feat] = True
             self.summary_dict["missing_ratio"][feat] = float("%.6f" % (tmp / self.summary_dict["row_num"]))
-            # replace all missing values to np.NaN
-            self.data[feat] = self.data[feat].replace(self.missing_value, np.NaN)
+            # replace all missing values to np.nan
+            self.data[feat] = self.data[feat].replace(self.missing_value, np.nan)
 
         pd.Series(self.data.columns).apply(lambda x: missing_count(x))
 
