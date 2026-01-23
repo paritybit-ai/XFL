@@ -27,7 +27,7 @@ transformers==4.30.0
 grpc-interceptor==0.15.0
 multiprocess==0.70.12.2
 rdkit==2022.9.2
-dgl==0.9.1
+dgl==2.2.0
 dgllife==0.3.0
 jax==0.3.24
 optax==0.1.3
