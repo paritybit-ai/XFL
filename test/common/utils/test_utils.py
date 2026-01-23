@@ -21,19 +21,15 @@ from pathlib import Path
 from common.utils.utils import save_model_config
 
 
-def test_save_model_config():
-    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
-        shutil.rmtree("/tmp/xfl/checkpoints/unit_test/")
-        
-    p = Path("/tmp/xfl/checkpoints/unit_test")
+def test_save_model_config(tmp_path):
+    p = tmp_path / "checkpoints" / "unit_test"
+    p.mkdir(parents=True, exist_ok=True)
+    
     save_model_config([{"node-1":{}},{"node-2":{}}], p)
-    assert os.path.isfile("/tmp/xfl/checkpoints/unit_test/model_config.json")
+    assert (p / "model_config.json").is_file()
 
     save_model_config([{"node-3":{}},{"node-4":{}}], p)
-    assert os.path.isfile("/tmp/xfl/checkpoints/unit_test/model_config.json")
-    with open("/tmp/xfl/checkpoints/unit_test/model_config.json") as f:
+    assert (p / "model_config.json").is_file()
+    with open(p / "model_config.json") as f:
         data = json.load(f)
     assert len(data) == 4
-
-    if os.path.exists("/tmp/xfl/checkpoints/unit_test"):
-        shutil.rmtree("/tmp/xfl/checkpoints/unit_test/")

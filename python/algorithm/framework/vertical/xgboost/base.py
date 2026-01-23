@@ -147,7 +147,7 @@ class VerticalXgboostBase(VerticalModelBase):
                 return None, None, None
             data_reader = CsvReader(path, has_id=config["has_id"], has_label=config["has_label"])
             features = data_reader.features(type="pandas.dataframe")
-            features.replace({np.nan: 0, self.xgb_config.missing_value: 0}, inplace=True)
+            features = features.replace({np.nan: 0, self.xgb_config.missing_value: 0})
             ids = data_reader.ids
             names = data_reader.feature_names()
             if self.is_label_trainer:
