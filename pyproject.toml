@@ -3,11 +3,11 @@ name = "xfl"
 version = "0.1.0"
 description = "XFL Project"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10,<3.13"
 dependencies = [
     "grpcio>=1.53.2",
     "grpcio-tools>=1.53.2",
-    "torch>=1.13.1",
+    "torch>=2.6.0",
     "torchvision>=0.14.1",
     "torchaudio>=0.13.1",
     "scikit-learn",
@@ -20,12 +20,12 @@ dependencies = [
     "pathos",
     "numpy<2.0.0",
     "scipy",
-    "ray>=2.8.1",
+    "ray>=2.54.0",
     "pytest",
     "pytest-mock",
     "pytest-cov",
     "pytest-httpserver",
-    "pyspark>=3.2.2,<3.3.0",
+    "pyspark>=3.4.0,<4.0.0",
     "pyarrow>=14.0.1",
     "dill",
     "tqdm",
@@ -34,8 +34,7 @@ dependencies = [
     "grpc-interceptor",
     "multiprocess",
     "rdkit",
-    "dgl; sys_platform != 'darwin'",
-    "dgllife",
+        "dgllife",
     "jax",
     "optax",
     "flax",
