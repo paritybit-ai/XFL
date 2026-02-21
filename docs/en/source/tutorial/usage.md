@@ -84,7 +84,7 @@ install python dependencies
 pip install -U pip
 
 # install dependencies
-pip install -r requirements.txt
+uv sync
 ```
 
 ### Quick start demo

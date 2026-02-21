@@ -68,8 +68,8 @@ conda activate xfl
 # 升级到最新版本
 pip install -U pip
 
-# 通过requirements.txt安装依赖
-pip install -r requirements.txt
+# 通过uv安装依赖
+uv sync
 ```
 
 ### 快速开始

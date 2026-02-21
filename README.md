@@ -55,7 +55,7 @@ brew install coreutils
 # update pip
 pip install -U pip
 # install dependencies
-pip install -r requirements.txt
+uv sync
 
 # set permission
 sudo chmod 755 /opt

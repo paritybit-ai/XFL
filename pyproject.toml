@@ -1,0 +1,55 @@
+[project]
+name = "xfl"
+version = "0.1.0"
+description = "XFL Project"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "grpcio>=1.53.2",
+    "grpcio-tools>=1.53.2",
+    "torch>=1.13.1",
+    "torchvision>=0.14.1",
+    "torchaudio>=0.13.1",
+    "scikit-learn",
+    "pandas",
+    "scanpy",
+    "redis",
+    "gmpy2",
+    "tenseal",
+    "zstd>=1.5.4.0",
+    "pathos",
+    "numpy<2.0.0",
+    "scipy",
+    "ray>=2.8.1",
+    "pytest",
+    "pytest-mock",
+    "pytest-cov",
+    "pytest-httpserver",
+    "pyspark>=3.2.2,<3.3.0",
+    "pyarrow>=14.0.1",
+    "dill",
+    "tqdm",
+    "tensorflow>=2.13.0",
+    "transformers>=4.36.0",
+    "grpc-interceptor",
+    "multiprocess",
+    "rdkit",
+    "dgl; sys_platform != 'darwin'",
+    "dgllife",
+    "jax",
+    "optax",
+    "flax",
+    "peft",
+    "onnx>=1.16.0",
+    "sentencepiece",
+    "protobuf>=5.27.2",
+]
+
+[dependency-groups]
+docs = [
+    "sphinx==5.0.2",
+    "sphinx_rtd_theme==1.0.0",
+    "sphinx-markdown-tables==0.0.15",
+    "readthedocs-sphinx-search==0.3.2",
+    "Markdown==3.3.7"
+]
